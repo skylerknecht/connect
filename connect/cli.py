@@ -45,7 +45,7 @@ def run(connect_server):
     setup_normal_menu()
     setup_server_menu(connect_server)
     while True:
-        user_input = color.display_terminal().lower()
+        user_input = color.display_terminal('connect~#').lower()
         if not user_input: # If there is no user input then continue to the next itteration of the while loop.
             continue
         historical_command = False

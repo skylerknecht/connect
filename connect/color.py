@@ -5,10 +5,10 @@ LEVEL_COLORS={
     'reset':'\033[0;0m',
 }
 
-def display_terminal():
+def display_terminal(message):
     terminal_color = LEVEL_COLORS['cyan']
     reset = LEVEL_COLORS['reset']
-    return input(f'{terminal_color}connect~#{reset} ')
+    return input(f'{terminal_color}{message}{reset} ')
 
 def error(message):
     message_color = LEVEL_COLORS['red']

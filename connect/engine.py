@@ -25,7 +25,7 @@ class Server:
         color.normal(len(self.data))
         return 0
 
-class Ingestor:
+class Receiver:
 
     def __init__(self, data, name):
         self.data = data
@@ -34,5 +34,5 @@ class Ingestor:
     def __str__(self):
         color.normal(f'{self.name} : {len(self.data)}')
 
-class DiscordIngestor(Ingestor):
+class DiscordReceiver(Receiver):
     pass
