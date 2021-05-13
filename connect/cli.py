@@ -1,4 +1,5 @@
 import re
+import readline
 import sys
 import time
 
@@ -37,11 +38,25 @@ def setup_normal_menu():
     menu_options['exit'] = (exit, 'Exits the current process.')
     menu_options['history'] = (display_command_history, 'Displays the command history. Execute a previous command by appending an index (e.g., history 0)')
 
+def setup_readline():
+    readline.parse_and_bind("tab: complete")
+    readline.set_completer(tab_complete)
+
 def setup_server_menu(connect_server):
     menu_options['receive'] = (connect_server.receive_data, 'Attempts to receive data.')
     menu_options['check data'] = (connect_server.data_size, 'Retrieves the size of the data buffer.')
 
+def tab_complete(incomplete_input, state):
+    buffer = readline.get_line_buffer().split()
+    current_options_index = len(buffer) - 1 # The current options are located at the length of the buffer - 1. (e.g. menu_options['option'].split()[0]) if we're looking for the first word in our command.
+    if incomplete_input != buffer[-1]: # If the attempted tab completed string matches the last item in the buffer, set current_options to the length of the buffer (e.g. menu_options['option'].split()[1]) if we're looking for the second word in our command.
+        current_options_index = len(buffer)
+    valid_options = [option.split()[current_options_index] for option in menu_options.keys() if len(option.split()) >= len(buffer)]
+    complete_input = [option for option in valid_options if option.startswith(incomplete_input)]
+    return complete_input[state]
+
 def run(connect_server):
+    setup_readline()
     setup_normal_menu()
     setup_server_menu(connect_server)
     while True:
