@@ -10,4 +10,4 @@ connect~# pwn pwn pwn
 * Applicable user interface.
 
 ### Shoutouts
-Thanks to [@Kevin J Clark](https://twitter.com/GuhnooPlusLinux) for all the assitance and inspiration from his sub-par but equal as functional C2... [Badrats](https://gitlab.com/KevinJClark/badrats). 
+Thanks to [@Kevin J Clark](https://twitter.com/GuhnooPlusLinux) for all the assitance and inspiration from his sub-par but equally as functional C2... [Badrats](https://gitlab.com/KevinJClark/badrats). (:
