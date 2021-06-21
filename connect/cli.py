@@ -88,10 +88,11 @@ def process_user_input(user_input):
 
 def setup_menu():
     menu_options['?'] = (help_menu, 'Displays the help menu.')
-    menu_options['exit'] = (exit, 'Exits the current process.')
     menu_options['connections'] = (engine.display_connections, 'Displays current connections.')
+    menu_options['exit'] = (exit, 'Exits the current process.')
     menu_options['help'] = (help_menu, 'Displays the help menu.')
     menu_options['history'] = (display_command_history, 'Displays the command history. Execute a previous command by appending an index (e.g., history 0)')
+    menu_options['implants'] = (engine.display_implants, 'Displays hosted implants ready for delivery.')
     menu_options['version'] = (version, 'Display the current application version.')
 
 def setup_readline():
@@ -106,7 +107,6 @@ def version():
 def run():
     setup_menu()
     setup_readline()
-    #setup_server_menu()
     while True:
         try:
             user_input = color.display_prompt('connect~#').lower()
@@ -118,7 +118,7 @@ def run():
             if return_code > 0:
                 break
         except (EOFError, KeyboardInterrupt) as e:
-            color.warning('Are you sure you want to quit? [Yes/No]')
+            color.information('Are you sure you want to quit? [Yes/No]')
             user_input = color.display_prompt('connect~#')
             if user_input == 'Yes':
                 break

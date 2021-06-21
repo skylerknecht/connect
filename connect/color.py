@@ -33,7 +33,7 @@ def success(message):
     reset = LEVEL_COLORS['reset']
     print(f'{message_color}[+] {message}{reset}')
 
-def warning(message):
+def information(message):
     message_color = LEVEL_COLORS['yellow']
     reset = LEVEL_COLORS['reset']
     print(f'{message_color}[!] {message}{reset}')
