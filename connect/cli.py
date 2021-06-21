@@ -1,9 +1,11 @@
+import connect
+import connect.color as color
+import connect.engine as engine
 import re
 import readline
 import sys
 
-from connect import color, engine
-
+banner = '''\n╔═╗┌─┐┌┐┌┌┐┌┌─┐┌─┐┌┬┐\n║  │ │││││││├┤ │   │\n╚═╝└─┘┘└┘┘└┘└─┘└─┘ ┴\n'''
 command_history = []
 menu_options = {}
 
@@ -32,14 +34,14 @@ def complete_command(incomplete_option, state):
         2. Identify the string within menu_options at the index of
            (current line buffer - 1) and identify which one starts with incomplete_option.
 
-            Parameters:
-                    incomplete_option (str()): The current incomplete option.
-                    state (int()): An integer so that when the funciton is called
-                                   recursivley by readline it can gather all items
-                                   within the current finished_option list.
-            Returns:
-                    finished_option (str): Whatever option the callee has not
-                                           gathered yet.
+    Parameters:
+            incomplete_option (str()): The current incomplete option.
+            state (int()): An integer so that when the funciton is called
+                           recursivley by readline it can gather all items
+                           within the current finished_option list.
+    Returns:
+            finished_option (str): Whatever option the callee has not
+                                   gathered yet.
     '''
     current_line = readline.get_line_buffer()
     current_line_list = current_line.split()
@@ -52,19 +54,27 @@ def complete_command(incomplete_option, state):
         valid_options = [option for option in menu_options if len(option.split()) >= len(current_line_list)]
         finished_option = [option.split()[len(current_line_list) - 1] + ' ' for option in valid_options if option.split()[len(current_line_list) - 1].startswith(incomplete_option)]
         return finished_option[state]
-    return
+    return 0
 
 def display_command_history():
-    for number, command in command_history.items():
+    color.display_banner('Command History')
+    for number, command in enumerate(command_history):
         color.normal(f'{number} : {command}')
+    color.normal('')
+    return 0
+
+def display_banner():
+    color.normal(banner)
     return 0
 
 def exit():
     return 1
 
 def help_menu():
+    color.display_banner('Help Menu')
     for option, option_description in menu_options.items():
         color.normal(f'\'{option}\': {option_description[1]}')
+    color.normal('')
     return 0
 
 def process_user_input(user_input):
@@ -76,25 +86,27 @@ def process_user_input(user_input):
         color.error('Invalid command.')
         return 0
 
-def setup_normal_menu():
+def setup_menu():
     menu_options['?'] = (help_menu, 'Displays the help menu.')
-    menu_options['help'] = (help_menu, 'Displays the help menu.')
     menu_options['exit'] = (exit, 'Exits the current process.')
+    menu_options['connections'] = (engine.display_connections, 'Displays current connections.')
+    menu_options['help'] = (help_menu, 'Displays the help menu.')
     menu_options['history'] = (display_command_history, 'Displays the command history. Execute a previous command by appending an index (e.g., history 0)')
+    menu_options['version'] = (version, 'Display the current application version.')
 
 def setup_readline():
     readline.parse_and_bind('tab: complete')
     readline.set_completer(complete_command)
     readline.set_completer_delims(" \t\n\"\\'`@$><=;|&{(")
 
-def setup_server_menu(connect_server):
-    menu_options['receive'] = (connect_server.receive_data, 'Attempts to receive data.')
-    menu_options['check data'] = (connect_server.data_size, 'Retrieves the size of the data buffer.')
+def version():
+    color.normal(connect.__version__)
+    return 0
 
-def run(connect_server):
-    setup_normal_menu()
+def run():
+    setup_menu()
     setup_readline()
-    setup_server_menu(connect_server)
+    #setup_server_menu()
     while True:
         try:
             user_input = color.display_prompt('connect~#').lower()
@@ -106,8 +118,8 @@ def run(connect_server):
             if return_code > 0:
                 break
         except (EOFError, KeyboardInterrupt) as e:
-            color.normal('\nAre you sure you want to quit?')
-            user_input = color.display_prompt('[Yes/No]:')
+            color.warning('Are you sure you want to quit? [Yes/No]')
+            user_input = color.display_prompt('connect~#')
             if user_input == 'Yes':
                 break
             continue
