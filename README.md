@@ -8,3 +8,6 @@ connect~# pwn pwn pwn
 ### Features
 * Multiple receivers to avoid signatured implants.
 * Applicable user interface.
+
+### Shoutouts
+Thanks to [@Kevin J Clark](https://twitter.com/GuhnooPlusLinux) for all the assitance and inspiration from his sub-par but equal as functional C2... [Badrats](https://gitlab.com/KevinJClark/badrats). 
