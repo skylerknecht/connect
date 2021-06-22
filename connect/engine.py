@@ -1,5 +1,6 @@
 import os
 import random
+import sys
 import time
 
 from connect import util, color, cli
@@ -95,4 +96,9 @@ def checkin(connection_id):
 
 def run():
     os.environ['WERKZEUG_RUN_MAIN'] = 'true'
-    app.run(host=host, port=port)
+    try:
+        app.run(host=host, port=port)
+    except:
+        color.information(f'Error starting server, check your permissions.')
+        sys.exit()
+    return
