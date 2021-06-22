@@ -21,7 +21,7 @@ class Connection():
         self.connection_id = util.generate_id()
         self.implant_requested = Connection.get_current_time()
         self.menu_options = {}
-        self.original_checkin = Connection.get_current_time()
+        self.last_checkin = Connection.get_current_time()
         self.setup_menu()
         self.status = 'Pending'
         self.type = ''
@@ -61,13 +61,13 @@ class MshtaConnection(Connection):
 def display_connections():
     color.display_banner('Connections')
     if not connections:
-        color.normal('No connections to display.\n')
+        color.normal('\tNo connections to display.\n')
         return 0
     for connection in connections:
         if connection.status == 'Success':
-            color.success(f'\t> {connection}', symbol=False)
+            color.success(f'> {connection}', symbol=False)
             continue
-        color.normal(f'\t{connection}')
+        color.normal(f'{connection}')
     color.normal('')
     return 0
 

@@ -6,13 +6,16 @@ from connect import color, engine, util
 
 class CommandLine():
 
+    banner = util.banner
+    command_history = []
+    menu_options = {}
+
+    HISTORY_REGEX = re.compile(r'history\s\d')
+    CONNECTION_REGEX = re.compile(r'\d')
+
     def __init__(self, prompt, connection=None):
-        self.banner = util.banner
-        self.command_history = []
+
         self.connection = connection
-        self.HISTORY_REGEX = re.compile(r'history\s\d')
-        self.CONNECTION_REGEX = re.compile(r'\d')
-        self.menu_options = {}
         self.prompt = prompt
         self.setup()
 
@@ -77,7 +80,7 @@ class CommandLine():
         return 0
 
     def exit(self):
-        return 1
+        return -1
 
     def help_menu(self):
         color.display_banner('Help Menu')
@@ -90,11 +93,11 @@ class CommandLine():
     def process_user_input(self, user_input):
         try:
             if self.HISTORY_REGEX.match(user_input):
-                user_input = command_history[int(user_input.split(" ")[1])]
+                user_input = self.command_history[int(user_input.split(" ")[1])]
             return self.menu_options[user_input][0]()
         except KeyError:
             color.error('Invalid command.')
-            return 0
+            return 1
 
     def setup(self):
         self.setup_menu()
@@ -142,10 +145,10 @@ class CommandLine():
                 user_input = color.display_prompt(self.prompt, connection=self.connection).lower()
                 if not user_input:
                     continue
-                if user_input not in self.command_history:
-                    self.command_history.append(user_input)
                 return_code = self.process_user_input(user_input)
-                if return_code > 0:
+                if return_code != 1 and user_input not in self.command_history:
+                    self.command_history.append(user_input)
+                if return_code < 0:
                     break
             except (EOFError, KeyboardInterrupt) as e:
                 user_input = color.information('Are you sure you want to quit? [Yes/No]:', user_input=True)
