@@ -14,7 +14,6 @@ class CommandLine():
     CONNECTION_REGEX = re.compile(r'\d')
 
     def __init__(self, prompt, connection=None):
-
         self.connection = connection
         self.prompt = prompt
         self.setup()
@@ -122,8 +121,8 @@ class CommandLine():
 
     def setup_menu(self):
         self.setup_basics()
-        self.menu_options['connections'] = (engine.display_connections, 'Displays current connections.')
-        self.menu_options['implants'] = (engine.display_implants, 'Displays hosted implants ready for delivery.')
+        self.menu_options['connections'] = (util.engine.display_connections, 'Displays current connections.')
+        self.menu_options['implants'] = (util.engine.display_implants, 'Displays hosted implants ready for delivery.')
 
     def setup_readline(self):
         readline.parse_and_bind('tab: complete')
@@ -131,8 +130,9 @@ class CommandLine():
         readline.set_completer_delims(" \t\n\"\\'`@$><=;|&{(")
 
     def update_connection_options(self):
-        for connection in engine.connections:
-            self.menu_options[connection.connection_id] = (connection.interact, None)
+        for connection_id, connection in util.engine.connections.items():
+            if connection.status == 'Success':
+                self.menu_options[connection_id] = (connection.interact, None)
 
     def version(self):
         color.normal(util.__version__)

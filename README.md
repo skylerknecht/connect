@@ -28,7 +28,11 @@ connect~#
 ### Documentation
 ```
 Connection:
-  A succesfully executed implant.
+  A requested implant.
+  - status: current status of the connection with two possible values (sucessfully and pending).
+    - pending (implant requested waiting for first check in)
+    - successfull (a successfully executed implant)
+  - implant_format: file format of the implant delivered (e.g., jscript).
 
 Implant:
   Payloads hosted via an operator defined Flask webserver waiting to be requested and executed.
