@@ -6,7 +6,7 @@ class Connection():
 
     system_information = {}
     menu_options = {}
-    status = 'Pending'
+    status = 'pending'
 
     def __init__(self, implant_format, connection_id):
         self.connection_id = connection_id
@@ -16,17 +16,18 @@ class Connection():
         self.setup_menu()
 
     def __str__(self):
-        return f'Implant Requested {self.implant_requested} || Last Checkin: {self.last_checkin} || Status: {self.status} || Implant Format: {self.implant_format}'
+        internet_addr = self.system_information['ip']
+        return f'{self.connection_id} : ({internet_addr} is {self.status} and was last seen at {self.last_checkin}.)'
 
     def display_username(self):
         color.normal(self.system_information['username'])
         return 0
-        
+
     def setup_menu(self):
         self.menu_options['display username'] = (self.display_username, 'Displays the username.')
 
     def update_checkin(self):
-        self.status = 'Connected'
+        self.status = 'connected'
         self.last_checkin = self.get_current_time()
         return 0
 

@@ -25,10 +25,10 @@ class Engine():
             color.normal('No connections to display.\n')
             return 0
         for connection_id, connection in self.connections.items():
-            if connection.status == 'Connected':
-                color.success(f'> Connection ID: {connection_id} || {connection}', symbol=False)
+            if connection.status == 'connected':
+                color.success(f'> {connection}', symbol=False)
                 continue
-            color.normal(f'Connection ID: {connection_id} || {connection}')
+            color.normal(f'{connection}')
         color.normal('')
         return 0
 

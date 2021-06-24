@@ -5,7 +5,7 @@ from connect import cli, color, server, util
 
 util.__version__ = '0.3'
 
-def setup_cli(engine):
+def setup_cli():
     connect_cli = cli.CommandLine('connect~#')
     connect_cli.display_banner()
     color.information('Server Information:')
@@ -20,5 +20,6 @@ def setup_engine(ip, port):
     connect_server.start()
 
 def run(ip, port):
+    setup_engine(ip, port)
     setup_cli()
     return

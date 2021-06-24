@@ -131,7 +131,7 @@ class CommandLine():
 
     def update_connection_options(self):
         for connection_id, connection in util.engine.connections.items():
-            if connection.status == 'Success':
+            if connection.status == 'connected':
                 self.menu_options[connection_id] = (connection.interact, None)
 
     def version(self):
@@ -151,7 +151,7 @@ class CommandLine():
                 if return_code < 0:
                     break
             except (EOFError, KeyboardInterrupt) as e:
-                user_input = color.information('Are you sure you want to quit? [Yes/No]:', user_input=True)
-                if user_input == 'Yes':
+                user_input = color.information('Are you sure you want to quit? [yes/no]:', user_input=True)
+                if user_input == 'yes':
                     break
                 continue
