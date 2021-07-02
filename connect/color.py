@@ -1,4 +1,6 @@
-LEVEL_COLORS={
+from connect import util
+
+COLORS={
     'cyan':'\001\033[0;36m\002',
     'green':'\001\033[0;32m\002',
     'red':'\001\033[0;31m\002',
@@ -7,40 +9,62 @@ LEVEL_COLORS={
     'blue':'\001\033[0;35m\002'
 }
 
-def display_banner(message):
-    message_color = LEVEL_COLORS['reset']
-    reset = LEVEL_COLORS['reset']
-    dash = '='
-    print(f'\n{message_color}{message}\n{dash*len(message)}\n{reset}')
-
-def display_prompt(message, connection=None):
-    terminal_color = LEVEL_COLORS['cyan']
-    reset = LEVEL_COLORS['reset']
-    if connection:
-        return input(f'{terminal_color}connection{reset} ({connection.connection_id}) {reset}{terminal_color}: {reset}')
-    return input(f'{terminal_color}{message}{reset} ')
-
 def error(message):
-    message_color = LEVEL_COLORS['red']
-    reset = LEVEL_COLORS['reset']
+    message_color = COLORS['red']
+    reset = COLORS['reset']
     print(f'{message_color}[-] {message}{reset}')
 
+def header(header):
+    message_color = COLORS['reset']
+    reset = COLORS['reset']
+    dash = '='
+    print('')
+    print(f'{message_color}{header}{reset}')
+    print(f'{dash*len(header)}')
+    print('')
+
+def information(message, symbol=True, user_input=False, end='\n'):
+    message_color = COLORS['yellow']
+    reset = COLORS['reset']
+    output_str = f'{message_color}{message}{reset}'
+    if symbol:
+        output_str = f'{message_color}[!] {message}{reset}'
+    if user_input:
+        return input(f'\n{output_str}')
+    print(output_str, end=end)
+    return
+
 def normal(message):
-    message_color = LEVEL_COLORS['reset']
-    reset = LEVEL_COLORS['reset']
+    message_color = COLORS['reset']
+    reset = COLORS['reset']
     print(f'{message_color}{message}{reset}')
+
+def prompt(message):
+    terminal_color = COLORS['cyan']
+    reset = COLORS['reset']
+    return input(f'{terminal_color}{message}{reset} ')
+
+
 
 def success(message, symbol=True):
-    message_color = LEVEL_COLORS['green']
-    reset = LEVEL_COLORS['reset']
+    message_color = COLORS['green']
+    reset = COLORS['reset']
+    output_str = f'{message_color}{message}{reset}'
     if symbol:
-        print(f'{message_color}[+] {message}{reset}')
-        return
-    print(f'{message_color}{message}{reset}')
+        output_str = f'{message_color}[+] {message}{reset}'
+    print(output_str)
+    return
 
-def information(message, user_input=False):
-    message_color = LEVEL_COLORS['yellow']
-    reset = LEVEL_COLORS['reset']
-    if user_input:
-        return input(f'\n{message_color}[!] {message}{reset}')
-    print(f'{message_color}[!] {message}{reset}')
+def unloaded(message):
+    message_color = COLORS['blue']
+    reset = COLORS['reset']
+    output_str = f'{message_color}{message}{reset}'
+    print(output_str)
+
+def verbose(message):
+    if not util.verbose:
+        return
+    message_color = COLORS['yellow']
+    reset = COLORS['reset']
+    output_str = f'{message_color}[!] {message}{reset}'
+    print(output_str)

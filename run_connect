@@ -7,8 +7,9 @@ def main():
     parser = argparse.ArgumentParser(description='Connect.')
     parser.add_argument('--ip', type=str, required=True, help='The internet protocol address to use.')
     parser.add_argument('--port', type=int, required=True, help='The port to use.')
+    parser.add_argument('-v', '--verbose', default=False, action='store_true', help='Verbose mode.')
     args=parser.parse_args()
-    return connect.run(args.ip, args.port)
+    return connect.run(args.ip, args.port, args.verbose)
 
 if __name__ == '__main__':
     sys.exit(main())

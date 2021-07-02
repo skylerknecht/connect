@@ -1,0 +1,5 @@
+//start.hello.Displays hello world.
+function hello(){
+  WScript.echo('Hello World');
+}
+//end

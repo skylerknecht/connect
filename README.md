@@ -7,16 +7,20 @@ It is a command and control python project.
 connect~# pwn pwn pwn
 connect~# help
 
-Help Menu
-=========
+Options
+=======
 
 '?': Displays the help menu.
-'exit': Exits the current command-line.
+'exit': Exits the current command line.
 'help': Displays the help menu.
-'history': Displays the command history. Execute a previous command by appending an index (e.g., history 0)
+'verbosity': Toggle verbosity mode on and off.
 'version': Display the current application version.
+
+Engine Options
+==============
+
 'connections': Displays current connections.
-'implants': Displays hosted implants ready for delivery.
+'stagers': Displays staged files ready for delivery.
 
 connect~#
 ```
@@ -28,13 +32,13 @@ connect~#
 ### Documentation
 ```
 Connection:
-  A requested implant.
+  A requested staged file.
   - status: current status of the connection with two possible values (sucessfully and pending).
-    - pending (implant requested waiting for first check in)
+    - pending (staged file requested waiting for first check in)
     - successfull (a successfully executed implant)
-  - implant_format: file format of the implant delivered (e.g., jscript).
+  - stager_format: file format of the staged file delivered (e.g., jscript).
 
-Implant:
+Stager:
   Payloads hosted via an operator defined Flask webserver waiting to be requested and executed.
 
 Return Codes:

