@@ -1,6 +1,30 @@
 ## Connect
 It is a command and control python project.
 
+### Features
+* [x] Modular implants. (Implants are extensible through loading functions during run time from discoverable files)
+* [x] Randomized response data. (Invalid requests will prompt randomized response data)
+* [x] Variable and function indentifer randomization. (Staged files implent randomized identifiers to avoid being signatured)
+* [ ] Multiple staged files. (ToDo - Currently only JScript)
+
+### Documentation
+```
+Connection:
+  A requested staged file.
+  - status: current status of the connection with two possible values (sucessfully and pending).
+    - pending (staged file requested waiting for first check in)
+    - successfull (a successfully executed implant)
+  - stager_format: file format of the staged file delivered (e.g., jscript).
+
+Stager:
+  Payloads hosted via an operator defined Flask webserver waiting to be requested and executed.
+
+Return Codes:
+  Negative (-1, -2, -3 ect..): Exit.
+  0: Impeccable execution.
+  1: Invalid command.
+```
+
 ### Using Connect
 ```sh
 ./run_connect --ip 127.0.0.1 --port 1337
@@ -23,28 +47,6 @@ Engine Options
 'stagers': Displays staged files ready for delivery.
 
 connect~#
-```
-
-### Features
-* Multiple receivers to avoid signatured implants.
-* Applicable user interface.
-
-### Documentation
-```
-Connection:
-  A requested staged file.
-  - status: current status of the connection with two possible values (sucessfully and pending).
-    - pending (staged file requested waiting for first check in)
-    - successfull (a successfully executed implant)
-  - stager_format: file format of the staged file delivered (e.g., jscript).
-
-Stager:
-  Payloads hosted via an operator defined Flask webserver waiting to be requested and executed.
-
-Return Codes:
-  Negative (-1, -2, -3 ect..): Exit.
-  0: Impeccable execution.
-  1: Invalid command.
 ```
 
 ### Shoutouts

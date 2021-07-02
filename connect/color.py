@@ -6,7 +6,7 @@ COLORS={
     'red':'\001\033[0;31m\002',
     'reset':'\001\033[0;0m\002',
     'yellow':'\001\033[0;33m\002',
-    'blue':'\001\033[0;35m\002'
+    'purple':'\001\033[0;35m\002'
 }
 
 def error(message):
@@ -56,7 +56,7 @@ def success(message, symbol=True):
     return
 
 def unloaded(message):
-    message_color = COLORS['blue']
+    message_color = COLORS['purple']
     reset = COLORS['reset']
     output_str = f'{message_color}{message}{reset}'
     print(output_str)

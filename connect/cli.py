@@ -113,7 +113,7 @@ class CommandLine():
     def run(self):
         while True:
             try:
-                self.setup_readline()
+                self.setup_readline() # Hackey-ish way to setup readline :/
                 user_input = color.prompt(self.prompt).lower()
                 if not user_input:
                     continue

