@@ -2,7 +2,7 @@ import time
 
 from connect import cli, color, util
 
-util.__version__ = '0.3'
+util.__version__ = '0.8'
 
 def run(ip, port, verbose):
     util.verbose = verbose

@@ -21,7 +21,7 @@ MenuOption = namedtuple('MenuOption', ['function', 'description', 'category', 'c
 strs = []
 titles = ['The connections you build over time.', 'Everything is connected.', 'Unlock the mind to connect to the universe of thought.']
 verbose = False
-version = '0.0.0'
+version = '0.0'
 
 random_data=(titles[random.randint(0,len(titles)-1)], headers[random.randint(0,len(headers)-1)], data[random.randint(0,len(data)-1)])
 

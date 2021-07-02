@@ -1,10 +1,13 @@
 ## Connect
-It is a command and control python project.
+### Versions
+ * 0.8 : modular implants, randomized response data, variable function identifer randomization.
+ * 0.3 : jscript implant code, functional CLI
+ * 0.0 : initial code base and project structure 
 
 ### Features
 * [x] Modular implants. (Implants are extensible through loading functions during run time from discoverable files)
 * [x] Randomized response data. (Invalid requests will prompt randomized response data)
-* [x] Variable and function indentifer randomization. (Staged files implent randomized identifiers to avoid being signatured)
+* [x] Variable and function indentifer randomization. (Staged files implement randomized identifiers to avoid being signatured)
 
 ### ToDo
 * [ ] Fix the Base64 encoding from getting caught by Anti-Virus.
