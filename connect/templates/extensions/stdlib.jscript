@@ -1,4 +1,4 @@
-//start.helloworld.Displays hello world.
+//start.helloworld.Displays hello world.dependency.
 function helloworld(){
   WScript.echo('Hello World');
 }

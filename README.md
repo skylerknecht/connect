@@ -5,7 +5,14 @@ It is a command and control python project.
 * [x] Modular implants. (Implants are extensible through loading functions during run time from discoverable files)
 * [x] Randomized response data. (Invalid requests will prompt randomized response data)
 * [x] Variable and function indentifer randomization. (Staged files implent randomized identifiers to avoid being signatured)
-* [ ] Multiple staged files. (ToDo - Currently only JScript)
+
+### ToDo
+* [ ] Fix the Base64 encoding from getting caught by Anti-Virus.
+* [ ] Develop the JScript stager to respond with results of the eval'd jscript.
+* [ ] Display results from stagers.
+* [ ] Load dependency objects for functions into the implant if needed (e.g., list_dir would need a FS object)
+* [ ] Keep track of loaded dependency objects for JScript stagers.
+* [ ] Multiple staged files. (Currently only JScript)
 
 ### Documentation
 ```

