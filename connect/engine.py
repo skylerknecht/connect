@@ -1,5 +1,4 @@
 import threading
-import time
 import os
 import random
 import sys
@@ -51,7 +50,7 @@ class Engine():
     def run(self):
         ''' Setting up the server. '''
         server.engine = self
-        _connect_server = threading.Thread(target=server.run, args=((self.ip, self.port))) # hangon
+        _connect_server = threading.Thread(target=server.run, args=((self.ip, self.port)))
         _connect_server.daemon = True
         _connect_server.start()
 

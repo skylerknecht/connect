@@ -1,5 +1,3 @@
-import time
-
 from connect import cli, color, util
 
 util.__version__ = '0.8'

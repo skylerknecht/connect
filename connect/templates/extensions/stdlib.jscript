@@ -1,5 +1,5 @@
-//start.helloworld.Displays hello world.dependency.
-function helloworld(){
-  WScript.echo('Hello World');
+//start.cwd.Displays the contents of a directory.
+function cwd(){
+  return 'not yet implemented'
 }
 //end

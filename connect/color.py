@@ -44,8 +44,6 @@ def prompt(message):
     reset = COLORS['reset']
     return input(f'{terminal_color}{message}{reset} ')
 
-
-
 def success(message, symbol=True):
     message_color = COLORS['green']
     reset = COLORS['reset']

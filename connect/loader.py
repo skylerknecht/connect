@@ -4,7 +4,7 @@ import re
 from connect import color, util
 from collections import namedtuple
 
-Function = namedtuple('Function', ['name', 'description', 'definiton', 'format'])
+Function = namedtuple('Function', ['name', 'description', 'definition', 'format'])
 END = re.compile(r'\/\/end')
 START = re.compile(r'\/\/start\.[\w\s]+\.[\w\s]+')
 
