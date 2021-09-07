@@ -11,11 +11,10 @@
 * [x] Variable and function indentifer randomization. (Staged files implement randomized identifiers to avoid being signatured)
 
 ### ToDo
-* [ ] Jscript stagers exit cleanly if errors occur.
-* [ ] Connections exit after 50 check in attempts.
-* [ ] Connections are considered disconnected after (sleep_time*50).
-* [ ] Connections are stale after (sleep_time*10).
+* [ ] Connection system information properly updates.
 * [ ] Extend the amount of default functions avaliable for the JScript implant.
+ * [ ] Upload & Download
+ * [ ] CMD Shell execution.
 * [ ] Allow discoverable files to utilize variables or other dependencies already loaded in a connection.
 * [ ] Multiple staged files. (Currently only JScript)
 

