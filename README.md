@@ -1,6 +1,7 @@
 ## Connect
 ### Versions
- * 0.8 : modular implants, randomized response data, variable function identifer randomization.
+ * 0.9 : implant results are displayed, information is escaped for communication
+ * 0.8 : modular implants, randomized response data, variable function identifer randomization
  * 0.3 : jscript implant code, functional CLI
  * 0.0 : initial code base and project structure
 
@@ -10,6 +11,11 @@
 * [x] Variable and function indentifer randomization. (Staged files implement randomized identifiers to avoid being signatured)
 
 ### ToDo
+* [ ] Jscript implants exit cleanly if errors occur.
+* [ ] Connections exit after 50 check in attempts.
+* [ ] Connections are considered disconnected after (sleep_time*50).
+* [ ] Connections are stale after (sleep_time*10).
+* [ ] Extend the amount of default functions 
 * [ ] Allow discoverable files to utilize variables or other dependencies already loaded in a connection.
 * [ ] Multiple staged files. (Currently only JScript)
 

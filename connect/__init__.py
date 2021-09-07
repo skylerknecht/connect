@@ -1,6 +1,6 @@
 from connect import cli, color, util
 
-util.__version__ = '0.8'
+util.__version__ = '0.9'
 
 def run(ip, port, verbose):
     util.verbose = verbose
