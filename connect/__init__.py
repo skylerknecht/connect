@@ -1,4 +1,4 @@
-from connect import cli, color, util
+from connect import cli, color, engine, util
 
 util.__version__ = '0.9'
 

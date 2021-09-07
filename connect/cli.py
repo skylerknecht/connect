@@ -124,7 +124,6 @@ class CommandLine():
                     color.error(message)
                     continue
                 if return_code == -3:
-                    color.error(message)
                     break
             except (EOFError, KeyboardInterrupt) as e:
                 user_input = color.information('Are you sure you want to quit? [yes/no]:', user_input=True)

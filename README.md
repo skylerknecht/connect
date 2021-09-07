@@ -11,11 +11,11 @@
 * [x] Variable and function indentifer randomization. (Staged files implement randomized identifiers to avoid being signatured)
 
 ### ToDo
-* [ ] Jscript implants exit cleanly if errors occur.
+* [ ] Jscript stagers exit cleanly if errors occur.
 * [ ] Connections exit after 50 check in attempts.
 * [ ] Connections are considered disconnected after (sleep_time*50).
 * [ ] Connections are stale after (sleep_time*10).
-* [ ] Extend the amount of default functions 
+* [ ] Extend the amount of default functions avaliable for the JScript implant.
 * [ ] Allow discoverable files to utilize variables or other dependencies already loaded in a connection.
 * [ ] Multiple staged files. (Currently only JScript)
 
@@ -25,8 +25,9 @@ Connection:
   A requested staged file.
   - status: current status of the connection with two possible values (sucessfully and pending).
     - pending (staged file requested waiting for first check in)
-    - successfull (a successfully executed implant)
-  - stager_format: file format of the staged file delivered (e.g., jscript).
+    - stale (connection has not checked in within 10 seconds)
+    - successfull (a successfully executed stager)
+    - disconnected (connection has not checked in within a minute)
 
 Stager:
   Payloads hosted via an operator defined Flask webserver waiting to be requested and executed.

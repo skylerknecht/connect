@@ -26,7 +26,7 @@ class Connection():
         return 0, 'Success'
 
     def disconnected(self):
-        if time.time() - self.last_checkin >= 150:
+        if time.time() - self.last_checkin >= 60:
             self.status = 'disconnected'
             return True
         return False
@@ -71,6 +71,12 @@ class Connection():
         self.update_options()
         self.connection_cli.run()
         return 0, 'Success'
+
+    def stale(self):
+        if time.time() - self.last_checkin >= 10:
+            self.status = 'stale'
+            return True
+        return False
 
     def update_options(self):
         #todo: Hackish-way to handle when to update connection_cli options.
