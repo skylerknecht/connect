@@ -10,11 +10,7 @@
 * [x] Variable and function indentifer randomization. (Staged files implement randomized identifiers to avoid being signatured)
 
 ### ToDo
-* [ ] Fix the Base64 encoding from getting caught by Anti-Virus.
-* [ ] Develop the JScript stager to respond with results of the eval'd jscript.
-* [ ] Display results from stagers.
-* [ ] Load dependency objects for functions into the implant if needed (e.g., list_dir would need a FS object)
-* [ ] Keep track of loaded dependency objects for JScript stagers.
+* [ ] Allow discoverable files to utilize variables or other dependencies already loaded in a connection.
 * [ ] Multiple staged files. (Currently only JScript)
 
 ### Documentation
