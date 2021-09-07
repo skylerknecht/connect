@@ -1,8 +1,6 @@
-import re
 import readline
-import sys
 
-from connect import color, engine, util
+from connect import color, util
 
 class CommandLine():
 
@@ -55,10 +53,10 @@ class CommandLine():
             valid_options = [option for option in self.menu_options if len(option.split()) >= len(current_line_list)]
             finished_option = [option.split()[len(current_line_list) - 1] + ' ' for option in valid_options if option.split()[len(current_line_list) - 1].startswith(incomplete_option)]
             return finished_option[state]
-        return 0
+        return 0, 'Success'
 
     def exit(self):
-        return -1
+        return -3, 'User exit'
 
     def help_menu(self):
         categories = []
@@ -73,7 +71,7 @@ class CommandLine():
                 if option_values.category == category:
                     option_values.color(f'\'{str(option)}\': {option_values.description}')
         color.normal('')
-        return 0
+        return 0, 'Success'
 
     def process_user_input(self, user_input):
         try:
@@ -83,8 +81,7 @@ class CommandLine():
                 return option.function(user_input)
             return option.function()
         except KeyError:
-            color.error('Invalid option.')
-            return 1
+            return -1, 'Invalid option.'
 
     def setup_menu(self):
         self.menu_options['?'] = util.MenuOption(self.help_menu, 'Displays the help menu.', 'Options', color.normal, False)
@@ -104,11 +101,11 @@ class CommandLine():
     def verbosity(self):
         color.information(f'Setting verbosity to {not util.verbose}')
         util.verbose = not util.verbose
-        return 0
+        return 0, 'Success'
 
     def version(self):
         color.normal(util.__version__)
-        return 0
+        return 0, 'Success'
 
     def run(self):
         while True:
@@ -117,8 +114,17 @@ class CommandLine():
                 user_input = color.prompt(self.prompt).lower()
                 if not user_input:
                     continue
-                return_code = self.process_user_input(user_input)
-                if return_code < 0:
+                return_code, message = self.process_user_input(user_input)
+                if return_code == 0:
+                    continue
+                if return_code == -1:
+                    color.information(message)
+                    continue
+                if return_code == -2:
+                    color.error(message)
+                    continue
+                if return_code == -3:
+                    color.error(message)
                     break
             except (EOFError, KeyboardInterrupt) as e:
                 user_input = color.information('Are you sure you want to quit? [yes/no]:', user_input=True)

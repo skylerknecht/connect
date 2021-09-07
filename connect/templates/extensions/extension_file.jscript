@@ -1,0 +1,5 @@
+### //start.function name.Description.
+### function example(){
+###   return 'example';
+### }
+### //end

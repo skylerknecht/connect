@@ -1,3 +1,5 @@
+import sys
+
 from connect import util
 
 COLORS={
@@ -9,10 +11,15 @@ COLORS={
     'purple':'\001\033[0;35m\002'
 }
 
-def error(message):
+def error(message, symbol=True):
     message_color = COLORS['red']
     reset = COLORS['reset']
-    print(f'{message_color}[-] {message}{reset}')
+    output_str = f'{message_color}{message}{reset}'
+    if symbol:
+        output_str = f'{message_color}[-] {message}{reset}'
+    print(output_str)
+    return
+
 
 def header(header):
     message_color = COLORS['reset']

@@ -30,9 +30,10 @@ Stager:
   Payloads hosted via an operator defined Flask webserver waiting to be requested and executed.
 
 Return Codes:
-  Negative (-1, -2, -3 ect..): Exit.
+  -3: Mission critical error in exeuction aka Exit.
+  -2: Semi critical error in exeuction.
+  -1: Informational error in execution.
   0: Impeccable execution.
-  1: Invalid command.
 ```
 
 ### Using Connect

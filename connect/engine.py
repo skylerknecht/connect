@@ -1,10 +1,6 @@
 import threading
-import os
-import random
-import sys
 
 from connect import color, connection, server, stagers, util
-
 
 class Engine():
 
@@ -15,7 +11,7 @@ class Engine():
         self.cli = cli
         self.ip = ip
         self.port = port
-        self.STAGERS ={
+        self.STAGERS = {
             util.generate_id():(stagers.JScriptStager(ip, port))
         }
 
@@ -26,23 +22,27 @@ class Engine():
 
     def display_connections(self):
         if not self.connections:
-            color.information('No connections to display.')
-            return 0
+            return -1, 'No connections to display.'
         color.header('Connections')
         for connection_id, connection in self.connections.items():
+            if connection.status == 'pending':
+                color.normal(f'{connection_id}: {connection}')
+                continue
+            if connection.disconnected():
+                color.error(f'{connection_id}: {connection}', symbol=False)
+                continue
             if connection.status == 'connected':
                 color.success(f'{connection_id}: {connection}', symbol=False)
                 continue
-            color.normal(f'{connection_id}: {connection}')
         color.normal('')
-        return 0
+        return 0, 'Success'
 
     def display_stagers(self):
         color.header('Stagers')
         for stager_id, stager in self.STAGERS.items():
             color.normal(f'{stager.format}: http://{self.ip}:{self.port}/{stager_id}')
         color.normal('')
-        return 0
+        return 0, 'Success'
 
     def retrieve_connection(self, connection_id):
         return self.connections[connection_id]

