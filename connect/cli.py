@@ -1,3 +1,4 @@
+import re
 import readline
 
 from connect import color, util
@@ -75,7 +76,7 @@ class CommandLine():
 
     def process_user_input(self, user_input):
         try:
-            user_input = user_input.split(' ')
+            user_input = re.split(r'(?<!\\)\s', user_input)
             option = self.menu_options[user_input[0]]
             if option.arguments:
                 return option.function(user_input)

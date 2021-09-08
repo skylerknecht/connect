@@ -12,9 +12,7 @@
 
 ### ToDo
 * [ ] Connection system information properly updates.
-* [ ] Extend the amount of default functions avaliable for the JScript implant.
- * [ ] Upload & Download
- * [ ] CMD Shell execution.
+* [ ] JScript raw command execution and download files.
 * [ ] Allow discoverable files to utilize variables or other dependencies already loaded in a connection.
 * [ ] Multiple staged files. (Currently only JScript)
 

