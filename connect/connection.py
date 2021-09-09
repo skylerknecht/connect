@@ -1,13 +1,17 @@
 import time
 import urllib.parse as parse
 
+from collections import namedtuple
 from connect import cli, color, loader, util
 
 class Connection():
 
+    Job = namedtuple('Job', ['type', 'data'])
+
     def __init__(self, stager):
-        self.command_queue = []
+        self.job_queue = []
         self.connection_cli = None
+        self.file_queue = []
         self.stager = stager
         self.stager_requested = time.time()
         self.last_checkin = time.time()
@@ -48,17 +52,10 @@ class Connection():
                 if function.name == option[0]:
                     function_definition = parse.quote(function.definition)
                     self.menu_options[option[0]] = util.MenuOption(self.execute, f'{function.description}.', 'Connection Options', color.normal, True)
-                    self.command_queue.append('{' + '"eval":' + f'"{function_definition}"' + '}')
-                    color.verbose('{' + '"eval":' + f'"{function_definition}"' + '}')
+                    self.job_queue.append(self.Job('function', f'{function_definition}'))
                     self.loaded_functions.append(option[0])
                     self.connection_cli.update_options(self.menu_options)
-        function = f'{option[0]}()'
-        if len(option) > 1:
-            arguments = ','.join(option[1:])
-            function = f'{option[0]}({arguments})'
-        function = parse.quote(function)
-        self.command_queue.append('{' + '"eval":' + f'"{function}"' + '}')
-        color.verbose('{' + '"eval":' + f'"{function}"' + '}')
+        self.job_queue.append(self.Job('command', option))
         return 0, 'Success'
 
     def information(self):

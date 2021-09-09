@@ -77,7 +77,7 @@ class CommandLine():
     def process_user_input(self, user_input):
         try:
             user_input = re.split(r'(?<!\\)\s', user_input)
-            option = self.menu_options[user_input[0]]
+            option = self.menu_options[user_input[0].lower()]
             if option.arguments:
                 return option.function(user_input)
             return option.function()
@@ -112,7 +112,7 @@ class CommandLine():
         while True:
             try:
                 self.setup_readline() # Hackey-ish way to setup readline :/
-                user_input = color.prompt(self.prompt).lower()
+                user_input = color.prompt(self.prompt)
                 if not user_input:
                     continue
                 return_code, message = self.process_user_input(user_input)
