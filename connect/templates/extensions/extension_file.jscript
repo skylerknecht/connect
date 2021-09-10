@@ -1,4 +1,4 @@
-### //start.function name.Description.
+### //start.function name.Description.Option Type.
 ### function example(){
 ###   return 'example';
 ### }

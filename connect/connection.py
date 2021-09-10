@@ -51,7 +51,7 @@ class Connection():
             for function in self.stager.functions.values():
                 if function.name == option[0]:
                     function_definition = parse.quote(function.definition)
-                    self.menu_options[option[0]] = util.MenuOption(self.execute, f'{function.description}.', 'Connection Options', color.normal, True)
+                    self.menu_options[option[0]] = util.MenuOption(self.execute, f'{function.description}.', f'{function.option_type}', color.normal, True)
                     self.job_queue.append(self.Job('function', f'{function_definition}'))
                     self.loaded_functions.append(option[0])
                     self.connection_cli.update_options(self.menu_options)
@@ -85,7 +85,7 @@ class Connection():
         #todo: Hackish-way to handle when to update connection_cli options.
         for function in self.stager.functions.values():
             if function.name not in self.menu_options.keys():
-                self.menu_options[function.name] = util.MenuOption(self.execute, f'{function.description} (unloaded).', 'Connection Options', color.unloaded, True)
+                self.menu_options[function.name] = util.MenuOption(self.execute, f'{function.description} (unloaded).', f'{function.option_type}', color.unloaded, True)
         if self.connection_cli:
             self.connection_cli.update_options(self.menu_options)
         return 0, 'Success'

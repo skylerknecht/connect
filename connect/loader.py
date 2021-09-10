@@ -23,12 +23,14 @@ def discover_functions(file_regex):
                     properties = line.split('.')
                     function_name = properties[1]
                     function_description = properties[2]
+                    option_type = properties[3]
                     continue
                 if END.match(line):
-                    functions[function_name] = util.Function(function_name, function_description, function_definiton)
+                    functions[function_name] = util.Function(function_name, function_description, function_definiton, option_type)
                     function_name = ''
                     function_description = ''
                     function_definiton = ''
+                    option_type = ''
                     continue
                 if function_name:
                     function_definiton = function_definiton + line.rstrip()
