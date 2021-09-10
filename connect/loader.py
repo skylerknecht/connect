@@ -33,3 +33,7 @@ def discover_functions(file_regex):
                 if function_name:
                     function_definiton = function_definiton + line.rstrip()
     return functions
+
+def download(data, filename):
+    with open(f'{os.getcwd()}/connect/downloads/{filename}', 'wb') as fd:
+        fd.write(data)

