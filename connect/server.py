@@ -28,6 +28,7 @@ def serve_stagers(format_id):
 @app.route(f'{checkin_uri}', methods=['POST'])
 def checkin():
     data = request.get_data()
+    color.verbose(data)
     response = make_response(render_template('connection_template.html', random_data=util.random_data))
     try:
         connection = engine.retrieve_connection(request.headers['Connection-ID'])
@@ -63,7 +64,7 @@ def checkin():
                     response = make_response(send_file(f'uploads/{filename}'))
                 except:
                     color.information('File does not exist.')
-                    return response 
+                    return response
             arguments = ','.join(arguments)
             response.headers['eval'] = parse.quote(f'{command}({arguments})')
             return response

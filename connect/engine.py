@@ -24,7 +24,7 @@ class Engine():
         if not self.connections:
             return -1, 'No connections to display.'
         color.header('Connections')
-        color.normal('{:<10} {:<10} {:<15} {:<10} {:<10}'.format('ID', 'Format', 'IP', 'Status', 'Checkin'))
+        color.normal('{:<10} {:<10} {:<15} {:<13} {:<10}'.format('ID', 'Format', 'IP', 'Status', 'Checkin'))
         for connection_id, connection in self.connections.items():
             if connection.status == 'pending':
                 color.normal(f'{connection_id} {connection}')

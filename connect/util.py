@@ -9,7 +9,7 @@ data = [
 '''“My mother always wanted to live near the water," she said. "She said it's the one thing that brings us all together. That I can have my toe in the ocean off the coast of Maine, and a girl my age can have her toe in the ocean off the coast of Africa, and we would be touching. On opposite sides of the world.”''',
 '''“Reconnect to what makes you happy and brings you Joy. If there is something that used to make you happy which you have stopped doing, do it again. Seek to find deeper meaning and significance rather than living on the surface.”'''
 ]
-Function = namedtuple('Function', ['name', 'description', 'definition', 'option_type'])
+Function = namedtuple('Function', ['name', 'description', 'option_type', 'dependencies', 'definition'])
 headers = [
 '''The connection flows through us all.''',
 '''Connection of us flows through you.''',

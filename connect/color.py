@@ -20,7 +20,6 @@ def error(message, symbol=True):
     print(output_str)
     return
 
-
 def header(header):
     message_color = COLORS['reset']
     reset = COLORS['reset']

