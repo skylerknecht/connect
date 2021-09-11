@@ -11,9 +11,7 @@
 * [x] Variable and function indentifer randomization. (Staged files implement randomized identifiers to avoid being signatured)
 
 ### ToDo
-* [ ] Connection system information properly updates.
-* [ ] JScript raw command execution and download files.
-* [ ] Allow discoverable files to utilize variables or other dependencies already loaded in a connection.
+* [ ] JScript connection system information properly updates.
 * [ ] Multiple staged files. (Currently only JScript)
 
 ### Documentation
@@ -26,8 +24,8 @@ Connection:
     - successfull (a successfully executed stager)
     - disconnected (connection has not checked in within a minute)
 
-Stager:
-  Payloads hosted via an operator defined Flask webserver waiting to be requested and executed.
+Stagers:
+  Files hosted via an operator defined Flask webserver waiting to be requested and executed.
 
 Return Codes:
   -3: Mission critical error in exeuction aka Exit.
