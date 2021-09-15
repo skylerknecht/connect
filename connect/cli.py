@@ -127,7 +127,5 @@ class CommandLine():
                 if return_code == -3:
                     break
             except (EOFError, KeyboardInterrupt) as e:
-                user_input = color.information('Are you sure you want to quit? [yes/no]:', user_input=True)
-                if user_input == 'yes':
-                    break
+                user_input = color.information('CTRL+C caught, please type exit.')
                 continue

