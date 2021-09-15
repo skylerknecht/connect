@@ -56,7 +56,7 @@ class JScriptStager(Stager):
         self.functions['sleep'] = util.Function('sleep', 'Change the delay between checkins (e.g., sleep 5000) is a delay of 5 seconds', 'Enumeration Options', None,  'function sleep(tmp){{{0} = tmp;}}'.format(self.variables['sleep'][0]))
         self.functions['tmp'] = util.Function('tmp', 'Enumerates the temporary directory from environment variables', 'Enumeration Options', None, 'function tmp(){{return {0}}}'.format(self.variables['tmp'][1]))
         self.functions['whoami'] = util.Function('whoami', 'Enumerates the current user from environment variables', 'Enumeration Options', None, 'function whoami(){{return {0}}}'.format(self.variables['username'][1]))
-        self.functions['sysinfo'] = util.Function('sysinfo', 'Enumerates the username, hostname, operating system and domain.', 'Enumeration Options', [self.functions['whoami'], self.functions['os'], self.functions['hostname'], self.functions['domain']],
+        self.functions['sysinfo'] = util.Function('sysinfo', 'Enumerates the username, hostname, operating system and domain', 'Enumeration Options', [self.functions['whoami'], self.functions['os'], self.functions['hostname'], self.functions['domain']],
         (''' function sysinfo(){{ '''
            ''' results = 'USERNAME: \\t' + whoami() + '\\n'; '''
            ''' results = results + 'HOSTNAME: \\t' + hostname() + '\\n'; '''
