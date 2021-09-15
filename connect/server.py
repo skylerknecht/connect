@@ -1,6 +1,7 @@
 import logging
 import os
 import urllib.parse as parse
+import sys
 
 from connect import color, connection, loader, util
 from flask import Flask, make_response, render_template, request, send_file
@@ -48,9 +49,9 @@ def checkin():
             color.information(f'Results recieved from ({internet_addr}):')
             color.normal(str(data,'utf-8'))
         else:
-            filename = util.generate_str()
+            filename = f'{util.generate_str()}.connect'
             color.normal('\n')
-            color.information(f'File recieved from ({internet_addr}) saving to downloads/{filename}.')
+            color.information(f'{sys.getsizeof(data)} Bytes recieved from ({internet_addr}) saving to downloads/{filename}.')
             loader.download(data, filename)
     if connection.job_queue:
         job = connection.job_queue.pop(0)

