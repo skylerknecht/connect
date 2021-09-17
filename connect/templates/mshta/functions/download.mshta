@@ -11,12 +11,12 @@ function download(path, format) {
     stream.Position = 0;
     data = stream.ReadText();
     stream.Close();
-    return data
+    return data;
   }
   stream.Type = 1;
   stream.LoadFromFile(path);
   stream.Position = 0;
   data = stream.Read();
   stream.Close();
-  return data
+  return data;
 }

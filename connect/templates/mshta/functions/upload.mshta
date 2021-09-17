@@ -1,5 +1,5 @@
 function upload(data, path) {
-    if (variables['file-system-object'][0].FileExists(path) == true){
+    if ({{ variables['file-system-object'][0] }}.FileExists(path) == true){
       return 'File already exists.';
     }
     var stream = new ActiveXObject("ADODB.Stream");

@@ -52,7 +52,6 @@ class Engine():
                 _delivery = delivery.replace('-endpoint-', endpoint)
                 color.normal(f' - {_delivery}')
             color.normal('')
-        color.normal('')
         return 0, 'Success'
 
     def run(self):

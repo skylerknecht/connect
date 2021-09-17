@@ -6,5 +6,5 @@ function cpdir(source, destination) {
     return 'Destination folder already exists.';
   }
   {{ variables['file-system-object'][0] }}.CopyFolder(source, destination);
-  return 'Succesfully copied directory.'
+  return 'Successfully copied directory.';
 }

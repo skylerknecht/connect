@@ -64,12 +64,12 @@ class JScriptStager(Stager):
         self.functions['upload'] = util.Function('upload','Upload a file to the remote system (e.g., upload file:local_filename, "remote_path")', 'File System Options', None)
         self.functions['download'] = util.Function('download','Download a file to the remote system (e.g., download "remote_path" "return_format")', 'File System Options', None)
         self.functions['mkdir'] = util.Function('mkdir','Creates a new directory on the remote system (e.g., mkdir "remote_path")', 'File System Options', None)
-        self.functions['deldir'] = util.Function('deldir','Delete a directory on the remote system (e.g., deldir "remote_path")', 'File System Options', None)
         self.functions['cpdir'] = util.Function('cpdir','Copy a directory on the remote system (e.g., cpdir "remote_source" "remote_destination")', 'File System Options', None)
         self.functions['mvdir'] = util.Function('mvdir','Move a directory on the remote system (e.g., mvdir "remote_source" "remote_destination")', 'File System Options', None)
-        self.functions['delfile'] = util.Function('delfile','Delete a file on the remote system (e.g., delfile "remote_path")', 'File System Options', None)
+        self.functions['deldir'] = util.Function('deldir','Delete a directory on the remote system (e.g., deldir "remote_path")', 'File System Options', None)
         self.functions['cpfile'] = util.Function('cpfile','Copy a file on the remote system (e.g., cpfile "remote_source" "remote_destination")', 'File System Options', None)
         self.functions['mvfile'] = util.Function('mvfile','Move a file on the remote system (e.g., mvfile "remote_source" "remote_destination")', 'File System Options', None)
+        self.functions['delfile'] = util.Function('delfile','Delete a file on the remote system (e.g., delfile "remote_path")', 'File System Options', None)
 
         # Command Execution Options
         self.functions['comspec'] = util.Function('comspec', 'Executes commands with the command sepecifier (e.g., comspec "command")', 'Command Execution Options', [self.functions['delfile'], self.functions['download']])

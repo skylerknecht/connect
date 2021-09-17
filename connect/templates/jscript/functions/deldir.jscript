@@ -3,5 +3,5 @@ function deldir(path) {
     return 'Directory does not exist.';
   }
   {{ variables['file-system-object'][0] }}.DeleteFolder(path);
-  return 'Succesfully deleted directory.'
+  return 'Successfully deleted directory.';
 }

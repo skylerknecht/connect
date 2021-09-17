@@ -127,5 +127,4 @@ class CommandLine():
                 if return_code == -3:
                     break
             except (EOFError, KeyboardInterrupt) as e:
-                user_input = color.information('CTRL+C caught, please type exit.')
                 continue

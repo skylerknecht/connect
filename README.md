@@ -7,23 +7,23 @@
  * 0.0 : initial code base and project structure
 
 ### Features
-* [x] Modular implants. (Implants are extensible through loading functions during run time from discoverable files)
+* [x] Extensible implants. (Functions can be loaded and unloaded during run time.)
 * [x] Randomized response data. (Invalid requests will prompt randomized response data)
 * [x] Variable and function indentifer randomization. (Staged files implement randomized identifiers to avoid being signatured)
 
 ### ToDo
-* [ ] JScript connection system information properly updates.
-* [ ] Multiple staged files. (Currently only JScript)
+* [ ] Reflectively load C# binaries and execute them with MSBuild.
+* [ ] JScript and MSHTA system information update functionality.
 
 ### Documentation
 ```
 Connection:
   A requested staged file.
   - status: current status of the connection with two possible values (sucessfully and pending).
-    - pending (staged file requested waiting for first check in)
-    - stale (connection has not checked in within 10 seconds)
-    - successfull (a successfully executed stager)
-    - disconnected (connection has not checked in within a minute)
+    - pending (staged file requested waiting for the first check in)
+    - connected (a successfully executed stager)
+    - stale (connection has not checked in within one minute)
+    - disconnected (connection has not checked in within a thirty minutes.)
 
 Stagers:
   Files hosted via an operator defined Flask webserver waiting to be requested and executed.

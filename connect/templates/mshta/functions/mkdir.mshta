@@ -3,5 +3,5 @@ function mkdir(path) {
     return 'Folder already exists.';
   }
   {{ variables['file-system-object'][0] }}.CreateFolder(path);
-  return 'Succesfully created directory.'
+  return 'Successfully created directory.';
 }

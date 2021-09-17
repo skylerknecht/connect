@@ -73,9 +73,10 @@ class Connection():
     def loaded(self):
         if not self.loaded_functions:
             return -1, 'There are no loaded functions.'
-        color.normal('Loaded functions:')
+        color.header('Loaded Functions')
         for function in self.loaded_functions:
             color.normal(f' - {function}')
+        color.normal('')
         return 0, 'Success'
 
     def load_function(self, function):
@@ -95,6 +96,8 @@ class Connection():
         return False
 
     def unload_function(self, input):
+        if len(input) == 1:
+            return -1, 'Please provide a function.'
         function_name = input[1].lower()
         if function_name == 'kill':
             return -2, 'No.'
@@ -106,7 +109,7 @@ class Connection():
         self.loaded_functions.remove(function.name)
         self.menu_options[function.name] = util.MenuOption(self.execute, f'{function.description} (unloaded).', f'{function.option_type}', color.unloaded, True)
         self.connection_cli.update_options(self.menu_options)
-        color.information(f'Succesfully unloaded: {function.name}.')
+        color.information(f'Successfully unloaded: {function.name}.')
         return 0, 'Success'
 
     @staticmethod

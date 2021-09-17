@@ -6,5 +6,5 @@ function cpfile(source, destination) {
     return 'Destination file already exists.';
   }
   {{ variables['file-system-object'][0] }}.CopyFile(source, destination);
-  return 'Succesfully copied file.'
+  return 'Successfully copied file.';
 }

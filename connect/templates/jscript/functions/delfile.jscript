@@ -3,5 +3,5 @@ function delfile(path) {
     return 'File does not exist.';
   }
   {{ variables['file-system-object'][0] }}.DeleteFile(path);
-  return 'Succesfully deleted file.'
+  return 'Successfully deleted file.';
 }

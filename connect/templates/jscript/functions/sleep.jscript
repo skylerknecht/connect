@@ -3,5 +3,5 @@ function sleep(tmp){
     return 'Please provide a value of atleast 100 milliseconds.';
   }
   {{ variables['sleep'][0] }} = tmp;
-  return 'Succesfully changed checkin time.';
+  return 'Successfully changed checkin time.';
 }
