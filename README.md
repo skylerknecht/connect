@@ -1,5 +1,6 @@
 ## Connect
 ### Versions
+ * 1.2 : mshta implant code, quality of life changes
  * 1.0 : jscript options extended
  * 0.9 : implant results are displayed, information is escaped for communication
  * 0.8 : modular implants, randomized response data, variable function identifer randomization
