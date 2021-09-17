@@ -1,0 +1,10 @@
+function cpdir(source, destination) {
+  if ({{ variables['file-system-object'][0] }}.FolderExists(source) == false){
+    return 'Folder does not exist.';
+  }
+  if ({{ variables['file-system-object'][0] }}.FolderExists(destination) == true){
+    return 'Folder already exists.';
+  }
+  {{ variables['file-system-object'][0] }}.CopyFolder(source, destination);
+  return 'Succesfully copied directory.'
+}

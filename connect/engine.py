@@ -16,10 +16,11 @@ class Engine():
             util.generate_id():(stagers.MSHTAStager(ip, port))
         }
 
-    def create_connection(self, connection_id, stager):
-        self.connections[connection_id] = connection.Connection(connection_id, stager)
-        self.cli.update_options({connection_id: util.MenuOption(self.connections[connection_id].interact, 'Interactive Connection', 'NOP-tions', color.normal, False)})
-        return self.connections[connection_id]
+    def create_connection(self, stager):
+        _connection = connection.Connection(stager)
+        self.connections[_connection.connection_id] = _connection
+        self.cli.update_options({_connection.connection_id: util.MenuOption(_connection.interact, 'Interactive Connection', 'NOP-tions', color.normal, False)})
+        return _connection
 
     def display_connections(self):
         if not self.connections:
@@ -45,12 +46,14 @@ class Engine():
     def display_stagers(self):
         color.header('Stagers')
         for stager_id, stager in self.STAGERS.items():
-            color.normal(f'{stager.format}: http://{self.ip}:{self.port}/{stager_id}')
+            endpoint = f'http://{self.ip}:{self.port}/{stager_id}'
+            color.normal(f'{stager.format}:')
+            for delivery in stager.deliveries:
+                _delivery = delivery.replace('-endpoint-', endpoint)
+                color.normal(f' - {_delivery}')
+            color.normal('')
         color.normal('')
         return 0, 'Success'
-
-    def retrieve_connection(self, connection_id):
-        return self.connections[connection_id]
 
     def run(self):
         ''' Setting up the server. '''

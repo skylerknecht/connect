@@ -1,0 +1,10 @@
+function mvdir(source, destination) {
+  if ({{ variables['file-system-object'][0] }}.FolderExists(source) == false){
+    return 'Folder does not exist.';
+  }
+  if ({{ variables['file-system-object'][0] }}.FolderExists(destination) == true){
+    return 'Folder already exists.';
+  }
+  {{ variables['file-system-object'][0] }}.MoveFolder(source, destination);
+  return 'Succesfully moved directory.'
+}
