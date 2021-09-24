@@ -17,6 +17,7 @@ headers = [
 ]
 ids = []
 MenuOption = namedtuple('MenuOption', ['function', 'description', 'category', 'color', 'arguments'])
+ssl = False
 strs = []
 titles = ['The connections you build over time.', 'Everything is connected.', 'Unlock the mind to connect to the universe of thought.']
 verbose = False
@@ -39,3 +40,8 @@ def generate_str():
         new_str = generate_str()
     strs.append(new_str)
     return new_str
+
+def server_context():
+    if ssl:
+        return 'https'
+    return 'http'

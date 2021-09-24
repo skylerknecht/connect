@@ -70,9 +70,12 @@ def run(ip, port):
     log = logging.getLogger('werkzeug')
     log.disabled = True
     app.config['TEMPLATES_AUTO_RELOAD'] = True
+    ssl_context = None
+    if util.ssl:
+        ssl_context = (util.ssl[0], util.ssl[1])
     try:
-        app.run(host=ip, port=port)
+        app.run(host=ip, port=port, ssl_context=ssl_context)
     except:
-        color.information(f'Error starting server')
+        color.information(f'Error starting server.')
         return
     return

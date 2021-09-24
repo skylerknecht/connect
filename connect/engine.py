@@ -46,7 +46,7 @@ class Engine():
     def display_stagers(self):
         color.header('Stagers')
         for stager_id, stager in self.STAGERS.items():
-            endpoint = f'http://{self.ip}:{self.port}/{stager_id}'
+            endpoint = f'{util.server_context()}://{self.ip}:{self.port}/{stager_id}'
             color.normal(f'{stager.format}:')
             for delivery in stager.deliveries:
                 _delivery = delivery.replace('-endpoint-', endpoint)
