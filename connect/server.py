@@ -29,18 +29,18 @@ def checkin():
         connection = engine.connections[request.headers['Connection-ID']]
     except:
         return response
+    connection.system_information['ip'] = request.remote_addr
     connection.check_in()
-    internet_addr = connection.system_information['ip']
     if request.get_data():
         data = request.get_data()
         if request.headers['mimetype'] == 'text/plain':
             color.normal('\n')
-            color.information(f'Results recieved from ({internet_addr}):')
+            color.information(f'Results recieved from ({request.remote_addr}):')
             color.normal(str(data,'utf-8'))
         else:
             filename = f'{util.generate_str()}.connect'
             color.normal('\n')
-            color.information(f'{sys.getsizeof(data)} Bytes recieved from ({internet_addr}) saving to downloads/{filename}.')
+            color.information(f'{sys.getsizeof(data)} Bytes recieved from ({request.remote_addr}) saving to downloads/{filename}.')
             loader.download(data, f'{filename}')
     if connection.job_queue:
         job = connection.job_queue.pop(0)

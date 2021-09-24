@@ -127,4 +127,5 @@ class CommandLine():
                 if return_code == -3:
                     break
             except (EOFError, KeyboardInterrupt) as e:
+                color.normal('')
                 continue
