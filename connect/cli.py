@@ -1,3 +1,4 @@
+import os
 import re
 import readline
 
@@ -11,6 +12,15 @@ class CommandLine():
         self.prompt = prompt
         self.setup_menu()
 
+    def _complete_path(self, incomplete_option):
+        path = incomplete_option.split('/')
+        incomplete_filename = path[-1]
+        if len(path) == 1:
+            return [filename for filename in os.listdir(f'/') if filename.startswith(incomplete_filename)]
+        valid_path = '/'.join(path[:-1])
+        return [f'{valid_path}/{filename}' if os.path.isfile(f'/{valid_path}/{filename}') else f'{valid_path}/{filename}/' for filename in os.listdir(f'/{valid_path}') if filename.startswith(incomplete_filename)]
+
+
     def complete_option(self, incomplete_option, state):
         '''
         Analyzes the length of current line buffer / incomplete_option and
@@ -22,17 +32,8 @@ class CommandLine():
         when delimeted by a space, must be incremented by one to correctly search
         for the next option.
 
-        If the current line buffer is less than or equal to one then the user is
-        attempting to complete a single-worded option and should search the
-        menu_options list for options that starts with the current incomplete_option.
-
-        If the current line buffer is greater than or equal to two and there is an
-        option within the menu_options list that starts with the current line buffer
-        then do the following:
-            1. Retrieve all menu_options with the length greater than the length of
-               the current line buffer.
-            2. Identify the string within menu_options at the index of
-               (current line buffer - 1) and identify which one starts with incomplete_option.
+        Otherwise, generate a list of all current menu options and file names that
+        start with the current incomplete_option aka the last line in the buffer.
 
         Parameters:
                 incomplete_option (str()): The current incomplete option.
@@ -47,14 +48,10 @@ class CommandLine():
         current_line_list = current_line.split()
         if len(current_line_list) >= 1 and current_line.endswith(' '):
             current_line_list.append('')
-        if len(current_line_list) <= 1:
-            finished_option = [option for option in self.menu_options if option.startswith(incomplete_option)]
-            return finished_option[state]
-        if len(current_line_list) >= 2 and [option for option in self.menu_options if option.startswith(current_line)]:
-            valid_options = [option for option in self.menu_options if len(option.split()) >= len(current_line_list)]
-            finished_option = [option.split()[len(current_line_list) - 1] + ' ' for option in valid_options if option.split()[len(current_line_list) - 1].startswith(incomplete_option)]
-            return finished_option[state]
-        return 0, 'Success'
+        finished_options = [option for option in self.menu_options if option.startswith(incomplete_option)]
+        if '/' in incomplete_option:
+            finished_options.extend(self._complete_path(incomplete_option))
+        return finished_options[state]
 
     def exit(self):
         return -3, 'User exit'

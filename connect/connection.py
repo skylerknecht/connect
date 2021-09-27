@@ -87,7 +87,8 @@ class Connection():
         if not function.dependencies:
             return
         for function in function.dependencies:
-            self.load_function(function)
+            if not function.name in self.loaded_functions:
+                self.load_function(function)
 
     def stale(self):
         if time.time() - self.last_checkin >= 60:

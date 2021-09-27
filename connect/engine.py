@@ -12,8 +12,8 @@ class Engine():
         self.ip = ip
         self.port = port
         self.STAGERS = {
-            util.generate_id():(stagers.JScriptStager(ip, port)),
-            util.generate_id():(stagers.MSHTAStager(ip, port))
+            util.generate_id():stagers.JScriptStager(ip, port),
+            util.generate_id():stagers.MSHTAStager(ip, port)
         }
 
     def create_connection(self, stager):
@@ -53,6 +53,15 @@ class Engine():
                 color.normal(f' - {_delivery}')
             color.normal('')
         return 0, 'Success'
+
+    def retrieve_stager(self, stager_format):
+        formats = []
+        for stager_id, stager in self.STAGERS.items():
+            formats.append(stager.format)
+            if stager_format == stager.format:
+                return stager
+        color.information(f'Could not find a {stager_format} stager, valid stagers: {formats}')
+        return None
 
     def run(self):
         ''' Setting up the server. '''
