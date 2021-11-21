@@ -10,11 +10,11 @@
 ### Features
 * [x] Extensible implants. (Functions can be loaded and unloaded during run time.)
 * [x] Randomized response data. (Invalid requests will prompt randomized response data)
-* [x] Variable and function indentifer randomization. (Staged files implement randomized identifiers to avoid being signatured)
+* [x] Reflectively load C# binaries and execute them with MSBuild.
 * [x] SSL for encrypted communications.
+* [x] Variable and function indentifer randomization. (Staged files implement randomized identifiers to avoid being signatured)
 
 ### ToDo
-* [ ] Reflectively load C# binaries and execute them with MSBuild.
 * [ ] JScript and MSHTA system information update functionality.
 
 ### Documentation
