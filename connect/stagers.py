@@ -61,7 +61,7 @@ class JScriptStager(Stager):
 
         # File System Options
         self.functions['dir'] = util.Function('dir','Query directory information (e.g., dir "remote_path")',  'File System Options', None)
-        self.functions['upload'] = util.Function('upload','Upload a file to the remote system (e.g., upload raw: local_poath "remote_path")', 'File System Options', None)
+        self.functions['upload'] = util.Function('upload','Upload a file to the remote system (e.g., upload raw: local_path "remote_path")', 'File System Options', None)
         self.functions['download'] = util.Function('download','Download a file to the remote system (e.g., download "remote_path" "return_format")', 'File System Options', None)
         self.functions['mkdir'] = util.Function('mkdir','Creates a new directory on the remote system (e.g., mkdir "remote_path")', 'File System Options', None)
         self.functions['cpdir'] = util.Function('cpdir','Copy a directory on the remote system (e.g., cpdir "remote_source" "remote_destination")', 'File System Options', None)
@@ -73,6 +73,7 @@ class JScriptStager(Stager):
 
         # Command Execution Options
         self.functions['comspec'] = util.Function('comspec', 'Executes commands with the command sepecifier (e.g., comspec "command")', 'Command Execution Options', [self.functions['delfile'], self.functions['download']])
+        self.functions['msbuild'] = util.Function('msbuild', 'Executes csharp binaries with msbuild (e.g., comspec "path to csharp binary")', 'Command Execution Options', [self.functions['delfile'], self.functions['download']])
 
         # Persistence Options
         self.functions['spawn'] = util.Function('spawn', 'Spawns a new connection based on the format provided (e.g., spawn stager: stager_format)', 'Persistence Options', [self.functions['upload'], self.functions['delfile']])

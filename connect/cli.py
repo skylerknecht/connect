@@ -3,6 +3,7 @@ import re
 import readline
 
 from connect import color, util
+from shlex import split
 
 class CommandLine():
 
@@ -19,7 +20,6 @@ class CommandLine():
             return [filename for filename in os.listdir(f'/') if filename.startswith(incomplete_filename)]
         valid_path = '/'.join(path[:-1])
         return [f'{valid_path}/{filename}' if os.path.isfile(f'/{valid_path}/{filename}') else f'{valid_path}/{filename}/' for filename in os.listdir(f'/{valid_path}') if filename.startswith(incomplete_filename)]
-
 
     def complete_option(self, incomplete_option, state):
         '''
@@ -73,13 +73,17 @@ class CommandLine():
 
     def process_user_input(self, user_input):
         try:
-            user_input = re.split(r'(?<!\\)\s', user_input)
+            user_input = split(user_input)
             option = self.menu_options[user_input[0].lower()]
             if option.arguments:
                 return option.function(user_input)
             return option.function()
-        except KeyError:
-            return -1, 'Invalid option.'
+        except KeyError as ke:
+            return -1, f'Invalid option: {ke}.'
+        except ValueError as ve:
+            return -1, f'Unescaped character.'
+        except:
+            return 0, 'Continue'
 
     def setup_menu(self):
         self.menu_options['?'] = util.MenuOption(self.help_menu, 'Displays the help menu.', 'Options', color.normal, False)

@@ -8,10 +8,9 @@ def download(data, filename):
         fd.write(data)
 
 def retrieve_file(path):
-    path = f'{os.getcwd()}{path}'
     if not os.path.exists(path):
         color.information(f'{path} does not exist.')
         return None
     with open(path, 'rb') as fd:
-        file_data = fd.read(path)
+        file_data = fd.read()
     return file_data
