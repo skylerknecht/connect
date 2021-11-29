@@ -1,6 +1,6 @@
-function download(path, format) {
+function retrieve(path, format) {
   if ({{ variables['file-system-object'][0] }}.FileExists(path) == false){
-    return 'File does not exist.';
+    return path + ' does not exist.';
   }
   var stream = new ActiveXObject("ADODB.Stream");
   stream.Open();

