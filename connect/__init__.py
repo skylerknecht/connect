@@ -1,12 +1,14 @@
-from connect import cli, color, engine, util
+from connect import cli, engine, util
 
-util.__version__ = '1.2'
+cli.CommandLine.__version__ = '1.5'
 
 def run(args):
-    util.verbose = args.verbose
     util.ssl = args.ssl
-    connect_cli = cli.CommandLine('connect~#')
+    connect_cli = cli.CommandLine('connect~#', messages={'disconnected': cli.CommandLine.Message(cli.CommandLine.COLORS['red'], ''),
+                                                         'connected': cli.CommandLine.Message(cli.CommandLine.COLORS['green'], ''),
+                                                         'stale': cli.CommandLine.Message(cli.CommandLine.COLORS['yellow'], '')
+                                                        })
     connect_engine = engine.Engine(args.IP, args.PORT, connect_cli)
-    color.normal(util.banner)
+    connect_cli.print('default', util.banner)
     connect_engine.run()
     return
