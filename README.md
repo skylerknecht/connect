@@ -11,10 +11,12 @@
 
 ### Using Connect
 ```sh
-~# python -m connect.server <IP> <PORT>
-~# python -m connect.client <SERVER_URI> <API_KEY>
+~# pipenv install
+~# pipenv shell
+(connect)~# python -m connect.server <IP> <PORT>
+(connect)~# python -m connect.client <SERVER_URI> <API_KEY>
 
-connect ~# stagers
+(connect) connect ~# stagers
 ```
 
 ### Shoutouts

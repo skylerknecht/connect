@@ -54,7 +54,7 @@ def check_in():
 
 
 @app.route(f"/{load_route('jscript')}", methods=['POST', 'GET'])
-def check_in():
+def jscript():
     """
     JScript Route
 

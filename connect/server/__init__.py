@@ -32,6 +32,6 @@ if not database.Routes.query.first():
 
 
 def run(args):
-    from connect import server
+    from connect.server import routes
     print(f'Client Arguments: http://{args.ip}:{args.port} {api_key} ')
     app.run(host=args.ip, port=args.port)

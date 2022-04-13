@@ -22,19 +22,35 @@ class Client(cmd2.Cmd):
     ruler = '-'
     console = Console()
     shortcuts = {'*': 'interact', '!': 'shell', '?': 'help -v'}
+    CLIENT_CATEGORY = 'Client Commands'
+    CONNECTION_CATEGORY = 'Connection Commands'
 
     def __init__(self, server_uri, api_key):
         super().__init__(allow_cli_args=False, shortcuts=self.shortcuts)
         self.api_key = api_key
         self.server_uri = server_uri
+        del cmd2.Cmd.do_edit
+        del cmd2.Cmd.do_alias
+        del cmd2.Cmd.do_py
+        del cmd2.Cmd.do_ipy
+        del cmd2.Cmd.do_macro
+        del cmd2.Cmd.do_run_pyscript
+        del cmd2.Cmd.do_run_script
+        del cmd2.Cmd.do_set
+        cmd2.categorize((cmd2.Cmd.do_help, cmd2.Cmd.do_history, cmd2.Cmd.do_quit, cmd2.Cmd.do_shell,
+                             cmd2.Cmd.do_shortcuts), self.CLIENT_CATEGORY)
 
-    @cmd2.with_category('Connections')
+    """ Connection Commands """
+
+    @cmd2.with_category(CONNECTION_CATEGORY)
     def do_back(self, _):
+        """ Return to the main menu. """
         self.prompt = ansi.style('connect~# ', fg=Fg.LIGHT_BLUE)
         self.current_connection = ''
 
-    @cmd2.with_category('Connections')
+    @cmd2.with_category(CONNECTION_CATEGORY)
     def do_whoami(self, _):
+        """ Retrieve the username of the current user. """
         if not self.current_connection:
             print('Please select a connection with \'*<connection_id>\'')
             return
@@ -42,16 +58,18 @@ class Client(cmd2.Cmd):
              f'{{"api_key":"{self.api_key}", "connection_id": "{self.current_connection}", "name":"whoami", '
              f'"arguments":""}}')
 
-    @cmd2.with_category('Client')
+    """ Client Commands """
+
+    @cmd2.with_category(CLIENT_CATEGORY)
     def do_interact(self, connection):
-        """ Interact with a connection (shortcut *)"""
+        """ Interact with a connection. ( shortcut: * )"""
         if connection in self.connections:
             self.current_connection = connection
             self.prompt = ansi.style(f'({connection})~# ', fg=Fg.CYAN)
 
-    @cmd2.with_category('Client')
+    @cmd2.with_category(CLIENT_CATEGORY)
     def do_connections(self, _):
-        """ Retrieve all connections """
+        """ Display all connections. """
         response = post(f'{self.server_uri}/connections', f'{{"api_key":"{self.api_key}"}}')
         try:
             _connections = json.loads(response.text).items()
@@ -81,9 +99,9 @@ class Client(cmd2.Cmd):
         self.console.print(table)
         self.console.print('')
 
-    @cmd2.with_category('Client')
+    @cmd2.with_category(CLIENT_CATEGORY)
     def do_stagers(self, _):
-        """ Retrieve all routes """
+        """ Display all stagers. """
         response = post(f'{self.server_uri}/routes', f'{{"api_key":"{self.api_key}"}}')
         try:
             _routes = json.loads(response.text).items()
@@ -101,9 +119,9 @@ class Client(cmd2.Cmd):
         self.console.print(table)
         self.console.print('')
 
-    @cmd2.with_category('Client')
+    @cmd2.with_category(CLIENT_CATEGORY)
     def do_jobs(self, _):
-        """ Retrieve all jobs """
+        """ Display all jobs. """
         response = post(f'{self.server_uri}/jobs', f'{{"api_key":"{self.api_key}"}}')
         try:
             _jobs = json.loads(response.text).items()
