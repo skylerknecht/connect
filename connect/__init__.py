@@ -1,14 +1,36 @@
-from connect import cli, engine, util
+import logging
+import random
+import os
 
-cli.CommandLine.__version__ = '1.5'
+from connect.config import Config
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_json import FlaskJSON
+
+app = Flask(__name__, template_folder='implants')
+os.environ['WERKZEUG_RUN_MAIN'] = 'true'
+log = logging.getLogger('werkzeug')
+log.disabled = True
+app.config.from_object(Config)
+json = FlaskJSON(app)
+db = SQLAlchemy(app)
+from connect import database
+db.create_all()
+api_key = [str(random.randint(1, 9)) for _ in range(0, 10)]
+api_key = ''.join(api_key)
+
+"""
+If there are no routes then configure them in the database.
+"""
+if not database.Routes.query.first():
+    check_in = database.Routes(name='check_in')
+    jscript = database.Routes(name='jscript')
+    db.session.add(check_in)
+    db.session.add(jscript)
+    db.session.commit()
+
 
 def run(args):
-    util.ssl = args.ssl
-    connect_cli = cli.CommandLine('connect~#', messages={'disconnected': cli.CommandLine.Message(cli.CommandLine.COLORS['red'], ''),
-                                                         'connected': cli.CommandLine.Message(cli.CommandLine.COLORS['green'], ''),
-                                                         'stale': cli.CommandLine.Message(cli.CommandLine.COLORS['yellow'], '')
-                                                        })
-    connect_engine = engine.Engine(args.IP, args.PORT, connect_cli)
-    connect_cli.print('default', util.banner)
-    connect_engine.run()
-    return
+    from connect import server
+    print(f'Client Arguments: http://{args.ip}:{args.port} {api_key} ')
+    app.run(host=args.ip, port=args.port)
