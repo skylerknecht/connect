@@ -9,5 +9,13 @@
  * [0.3](https://github.com/skylerknecht/connect/tree/c11d1c9934e02e8cd4b5c4a0c5d01136090383e8) : 06/02/2021 : jscript implant code, functional CLI.
  * [0.0](https://github.com/skylerknecht/connect/tree/5816f06aaa96a2a082c9b4afe2454a5ce6b726dd) : 05/11/2021 : initial code base and project structure.
 
+### Using Connect
+```sh
+~# python -m connect.server <IP> <PORT>
+~# python -m connect.client <SERVER_URI> <API_KEY>
+
+connect ~# stagers
+```
+
 ### Shoutouts
-Thanks to [@Kevin J Clark](https://twitter.com/GuhnooPlusLinux) for all the assistance and inspiration.
+Thanks to [@Kevin Clark](https://twitter.com/GuhnooPlusLinux) for all the assistance and inspiration.

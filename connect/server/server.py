@@ -1,6 +1,6 @@
 import datetime
 
-from connect import app, api_key, db
+from connect.server import app, api_key, db
 from connect.server.database import Routes, Connections, Jobs
 from flask import request, render_template, jsonify
 from datetime import datetime
@@ -21,6 +21,7 @@ def unidentified(route):
     print(f'Unidentified route hit: {route}')
     print(f'Data: {request.get_data()}')
     return ""
+
 
 @app.route(f"/{load_route('check_in')}", methods=['POST', 'GET'])
 def check_in():
@@ -84,11 +85,13 @@ def authenticated(data):
         return data['api_key'] == api_key
     return False
 
+
 def serialize(model):
     dictionary = {}
     for item in model:
         dictionary[item.identifier] = item.get_list()
     return dictionary
+
 
 @app.route("/connections", methods=['POST'])
 def connections():

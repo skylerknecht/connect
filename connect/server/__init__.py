@@ -7,7 +7,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_json import FlaskJSON
 
-app = Flask(__name__, template_folder='implants')
+app = Flask(__name__, template_folder='stagers')
 os.environ['WERKZEUG_RUN_MAIN'] = 'true'
 log = logging.getLogger('werkzeug')
 log.disabled = True
