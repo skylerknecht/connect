@@ -1,7 +1,6 @@
 import random
 
-from connect import db
-from datetime import datetime
+from connect.server import db
 
 
 def generate_id():
@@ -16,7 +15,7 @@ class Connections(db.Model):
     parent_id = db.Column(db.Integer, db.ForeignKey('connections.identifier'))
     jobs = db.relationship('Jobs', backref='connection', lazy=True)
     children = db.relationship('Connections', backref=db.backref('parent', remote_side=[identifier]), lazy=True)
-#self.check_in.strftime('%m/%d/%Y %H:%M:%S %Z')
+
     def get_list(self):
         return [self.check_in, len(self.jobs)]
 

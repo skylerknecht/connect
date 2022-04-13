@@ -4,3 +4,5 @@ requests~=2.27.1
 cmd2~=2.4.0
 rich==12.2.0
 gnureadline==8.0.0
+flask_sqlalchemy==2.5.1
+flask_json==0.3.4

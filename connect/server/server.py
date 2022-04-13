@@ -1,7 +1,7 @@
 import datetime
 
 from connect import app, api_key, db
-from connect.database import Routes, Connections, Jobs
+from connect.server.database import Routes, Connections, Jobs
 from flask import request, render_template, jsonify
 from datetime import datetime
 

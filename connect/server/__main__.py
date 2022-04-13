@@ -13,7 +13,7 @@ def main():
                         help='What certificates should the server.py use for '
                              'encryption?')
     args = parser.parse_args()
-    connect.run(args)
+    connect.server.run(args)
 
 
 if __name__ == '__main__':
