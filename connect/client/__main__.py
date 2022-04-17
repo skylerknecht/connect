@@ -36,7 +36,6 @@ class Client(cmd2.Cmd):
         del cmd2.Cmd.do_macro
         del cmd2.Cmd.do_run_pyscript
         del cmd2.Cmd.do_run_script
-        del cmd2.Cmd.do_set
         cmd2.categorize((cmd2.Cmd.do_help, cmd2.Cmd.do_history, cmd2.Cmd.do_quit, cmd2.Cmd.do_shell,
                              cmd2.Cmd.do_shortcuts), self.CLIENT_CATEGORY)
 
@@ -85,6 +84,8 @@ class Client(cmd2.Cmd):
             self.connections.append(identifier)
             if self.current_connection == identifier:
                 identifier = f'* {identifier}'
+
+            # If there is a check_in then should we display disconnected or connected?
             if connection[0]:
                 check_in = datetime.datetime.fromisoformat(connection[0])
                 time_delta = (datetime.datetime.now() - check_in)
@@ -94,7 +95,8 @@ class Client(cmd2.Cmd):
                 if time_delta.total_seconds() > 6:
                     table.add_row(identifier, check_in.strftime('%m/%d/%Y %H:%M:%S %Z'), 'disconnected', str(connection[1]), style='deep_pink2')
                     continue
-            table.add_row(identifier, check_in.strftime('%m/%d/%Y %H:%M:%S %Z'), 'pending', str(connection[1]), style='deep_sky_blue3')
+            # If there is no check_in then display pending and not connected.
+            table.add_row(identifier, 'Not connected', 'pending', str(connection[1]), style='deep_sky_blue3')
         self.console.print('')
         self.console.print(table)
         self.console.print('')
@@ -111,10 +113,11 @@ class Client(cmd2.Cmd):
         table = Table(title='Stagers')
         table.add_column('Type')
         table.add_column('Staged URI')
+        table.add_column('Description')
         for identifier, route in _routes:
             if route[0] == 'check_in':
                 continue
-            table.add_row(route[0], f'{self.server_uri}/{identifier}', style='deep_sky_blue3')
+            table.add_row(route[0], f'{self.server_uri}/{identifier}', route[1], style='deep_sky_blue3')
         self.console.print('')
         self.console.print(table)
         self.console.print('')
@@ -134,7 +137,7 @@ class Client(cmd2.Cmd):
         table.add_column('Status')
         table.add_column('Results')
         for identifier, job in _jobs:
-            if job[0] == 'check_in':
+            if job[0] == 'check_in' or job[0] == 'downstream':
                 continue
             if job[2] == 'completed':
                 table.add_row(job[0], str(job[1]), job[2], job[3], style='green_yellow')

@@ -30,6 +30,9 @@ while (true) {
               username = wscriptshell.ExpandEnvironmentStrings("%USERNAME%");
               response = response + ',["' + key + '","' +  username + '"]';
           }
+          if (jobs[key][0] == 'downstream') {
+              WScript.Echo(jobs[key][1])
+          }
       }
   } catch (e) {
       response = '[["{{ check_in_job_id }}"]]';

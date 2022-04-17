@@ -28,13 +28,13 @@ def check_in():
     """
     Check_In Route
 
-    The check-in route expects a check_in_packet containing the following items.
+    The check-in route.py expects a check_in_packet containing the following items.
      - job_results_packet: [job_id, results]
      - check_in_packet : [ [job_results_packet], [job_results_packet], [job_results_packet] ]
 
-    The check-in route returns a response_packet containing the following items.
+    The check-in route.py returns a response_packet containing the following items.
      - job_packet: [job_name, job_arguments]
-     - response_packet : {job_id: job_packet, job_id: job_packet,}
+     - response_packet : {job_id: job_packet, job_id: job_packet}
     """
 
     for job_packet in request.get_json(force=True):
@@ -53,24 +53,7 @@ def check_in():
     return jsonify(uncompleted_jobs)
 
 
-@app.route(f"/{load_route('jscript')}", methods=['POST', 'GET'])
-def jscript():
-    """
-    JScript Route
 
-    The JScript route expects a get request and will return a implant to be executed on the target(s) machine. The 
-    implant will attempt to launch a CSharp MSBuild payload to establish a command and control connection to the 
-    framework.
-    """
-    connection = Connections()
-    db.session.add(connection)
-    db.session.commit()
-    job = Jobs(name='check_in', connection=connection)
-    db.session.add(job)
-    db.session.commit()
-    return render_template('connect.js', connection_id=connection.identifier,
-                           check_in_uri=f"{request.host_url}{load_route('check_in')}",
-                           check_in_job_id=job.identifier)
 
 
 """
@@ -112,9 +95,9 @@ def routes():
 def schedule_job(name, connection, arguments):
     if connection.parent_id:
         job = Jobs(name=name, connection=connection, arguments=arguments)
-        connection_packet = f'{{ "connection_id":{connection.connection_id}, "jobs":[{{ "job_id": {job.id}, "name": {job.name}, "arguments": {job.arguments} }}]}}'
         db.session.add(job)
         db.session.commit()
+        connection_packet = f'{{{job.identifier}:[{job.name},{job.arguments}]}}'
         schedule_job('downstream', connection.parent, connection_packet)
     else:
         job = Jobs(name=name, connection=connection, arguments=arguments)

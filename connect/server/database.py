@@ -35,6 +35,7 @@ class Jobs(db.Model):
 class Routes(db.Model):
     identifier = db.Column(db.Integer, primary_key=True, default=generate_id)
     name = db.Column(db.String, unique=True, nullable=False)
+    description = db.Column(db.String, nullable=False, default='No description.')
 
     def get_list(self):
-        return [self.name]
+        return [self.name, self.description]
