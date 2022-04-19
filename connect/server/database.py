@@ -13,11 +13,12 @@ class Connections(db.Model):
     identifier = db.Column(db.Integer, primary_key=True, default=generate_id)
     check_in = db.Column(db.DateTime)
     parent_id = db.Column(db.Integer, db.ForeignKey('connections.identifier'))
+    type = db.Column(db.String, nullable=False)
     jobs = db.relationship('Jobs', backref='connection', lazy=True)
     children = db.relationship('Connections', backref=db.backref('parent', remote_side=[identifier]), lazy=True)
 
     def get_list(self):
-        return [self.check_in, len(self.jobs)]
+        return [self.check_in, len(self.jobs), self.type]
 
 
 class Jobs(db.Model):

@@ -2,7 +2,6 @@ import logging
 import random
 import os
 import configparser
-import importlib.util
 
 from connect.server.config import Config
 from flask import Flask
@@ -10,7 +9,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_json import FlaskJSON
 
 
-app = Flask(__name__, template_folder='stagers')
+app = Flask(__name__, template_folder='../stagers')
 os.environ['WERKZEUG_RUN_MAIN'] = 'true'
 log = logging.getLogger('werkzeug')
 log.disabled = True
@@ -33,7 +32,7 @@ if not database.Routes.query.filter_by(name='check_in').first():
     db.session.commit()
 
 config = configparser.ConfigParser()
-stagers_path = f'{os.getcwd()}/connect/server/stagers'
+stagers_path = f'{os.getcwd()}/connect/stagers'
 for stager in os.listdir(stagers_path):
     config.read(f'{stagers_path}/{stager}/config.ini')
     route_name = config['REQUIRED']['route_name']
@@ -46,6 +45,6 @@ for stager in os.listdir(stagers_path):
 
 def run(args):
     from connect.server import routes
-    from connect.server.stagers import routes
+    from connect.stagers import routes
     print(f'Client Arguments: http://{args.ip}:{args.port} {api_key} ')
     app.run(host=args.ip, port=args.port)

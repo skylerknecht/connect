@@ -1,6 +1,6 @@
 #!/usr/bin/env -S python3 -B
 import argparse
-import connect
+import connect.server as server
 import sys
 
 
@@ -13,7 +13,7 @@ def main():
                         help='What certificates should the routes.py use for '
                              'encryption?')
     args = parser.parse_args()
-    connect.server.run(args)
+    server.run(args)
 
 
 if __name__ == '__main__':
