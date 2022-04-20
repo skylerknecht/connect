@@ -1,9 +1,8 @@
 import argparse
 import json
 import datetime
-
 import rich.box
-
+import os
 import connect.client
 import connect.stagers.commands
 import cmd2
@@ -12,7 +11,10 @@ from cmd2 import with_argparser, Fg, ansi
 from requests import post
 from rich.table import Table
 from rich.console import Console
-
+from typing import (
+    Dict,
+    List,
+)
 
 class Client(cmd2.Cmd):
     prompt = ansi.style('connect~# ', fg=Fg.DARK_GRAY)
@@ -42,6 +44,24 @@ class Client(cmd2.Cmd):
             self.disable_category(cmdset.cmd2_default_help_category,
                                   f'Not interacting with a {cmdset.cmd2_default_help_category} connection.')
 
+    def complete_connections(self):
+        return connect.client.connections
+
+    def complete_result_files(self):
+        return os.listdir(connect.client.downloads_directory)
+
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument('file', choices_provider=complete_result_files, help='results to display')
+
+    @with_argparser(argparser)
+    @cmd2.with_category(CLIENT_CATEGORY)
+    def do_results(self, args):
+        """Display results from a file."""
+        try:
+            with open(f'{connect.client.downloads_directory}/{args.file}', 'r') as fd:
+                print(fd.read())
+        except FileNotFoundError:
+            print('Result file does not exist.')
     argparser = argparse.ArgumentParser()
 
     @with_argparser(argparser)
@@ -55,7 +75,7 @@ class Client(cmd2.Cmd):
         connect.client.current_connection = ''
 
     argparser = argparse.ArgumentParser()
-    argparser.add_argument('connection', help='connection to interact with')
+    argparser.add_argument('connection', choices_provider=complete_connections, help='connection to interact with')
 
     @with_argparser(argparser)
     @cmd2.with_category(CLIENT_CATEGORY)
@@ -154,15 +174,21 @@ class Client(cmd2.Cmd):
         table.add_column('Name', justify='center')
         table.add_column('Connection ID', justify='center')
         table.add_column('Status', justify='center')
+        table.add_column('Time', justify='center')
         table.add_column('Results', justify='center')
         table.box = rich.box.MINIMAL
+        print(_jobs)
         for identifier, job in _jobs:
+            if connect.client.current_connection:
+                if not str(job[1]) == connect.client.current_connection:
+                    continue
+            time = datetime.datetime.fromisoformat(job[3])
             if job[0] == 'check_in' or job[0] == 'downstream':
                 continue
             if job[2] == 'completed':
-                table.add_row(job[0], str(job[1]), job[2], job[3], style='green4')
+                table.add_row(job[0], str(job[1]), job[2], time.strftime('%m/%d/%Y %H:%M:%S %Z'), job[4], style='green4')
                 continue
-            table.add_row(job[0], str(job[1]), job[2], job[3], style='deep_sky_blue3')
+            table.add_row(job[0], str(job[1]), job[2], time.strftime('%m/%d/%Y %H:%M:%S %Z'), job[4], style='deep_sky_blue3')
         self.console.print('')
         self.console.print(table)
         self.console.print('')

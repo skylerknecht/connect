@@ -9,6 +9,18 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_json import FlaskJSON
 
 
+def generate_id():
+    new_id = [str(random.randint(1, 9)) for _ in range(0, 10)]
+    new_id = ''.join(new_id)
+    return new_id
+
+
+config = configparser.ConfigParser()
+config.read(f'{os.getcwd()}/.config')
+downloads_directory = config['OPTIONAL']['downloads_directory']
+if not downloads_directory:
+    downloads_directory = f'{os.getcwd()}/connect/downloads/'
+
 app = Flask(__name__, template_folder='../stagers')
 os.environ['WERKZEUG_RUN_MAIN'] = 'true'
 log = logging.getLogger('werkzeug')
@@ -19,8 +31,7 @@ db = SQLAlchemy(app)
 from connect.server import database
 
 db.create_all()
-api_key = [str(random.randint(1, 9)) for _ in range(0, 10)]
-api_key = ''.join(api_key)
+api_key = generate_id()
 
 
 """

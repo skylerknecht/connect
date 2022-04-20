@@ -1,5 +1,12 @@
+import configparser
+import os
 from connect.client import cli
-#import connect.stagers.commands
+
+config = configparser.ConfigParser()
+config.read(f'{os.getcwd()}/.config')
+downloads_directory = config['OPTIONAL']['downloads_directory']
+if not downloads_directory:
+    downloads_directory = f'{os.getcwd()}/connect/downloads/'
 
 server_uri = None
 api_key = None

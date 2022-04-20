@@ -1,17 +1,12 @@
-import random
+import datetime
 
-from connect.server import db
-
-
-def generate_id():
-    new_id = [str(random.randint(1, 9)) for _ in range(0, 10)]
-    new_id = ''.join(new_id)
-    return new_id
+from connect.server import db, generate_id
 
 
 class Connections(db.Model):
     identifier = db.Column(db.Integer, primary_key=True, default=generate_id)
     check_in = db.Column(db.DateTime)
+    requested = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now)
     parent_id = db.Column(db.Integer, db.ForeignKey('connections.identifier'))
     type = db.Column(db.String, nullable=False)
     jobs = db.relationship('Jobs', backref='connection', lazy=True)
@@ -26,11 +21,15 @@ class Jobs(db.Model):
     name = db.Column(db.String, nullable=False)
     arguments = db.Column(db.String, nullable=False, default='')
     connection_id = db.Column(db.Integer, db.ForeignKey('connections.identifier'), nullable=False)
-    status = db.Column(db.String, nullable=False, default='created')
+    created = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now)
+    completed = db.Column(db.DateTime)
+    type = db.Column(db.Integer, nullable=False)
     results = db.Column(db.Text, default='No results.')
 
     def get_list(self):
-        return [self.name, self.connection_id, self.status, self.results]
+        if self.completed:
+            return [self.name, self.connection_id, 'completed', self.completed, self.results]
+        return [self.name, self.connection_id, 'created', self.created, self.results]
 
 
 class Routes(db.Model):

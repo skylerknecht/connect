@@ -1,5 +1,6 @@
 import configparser
 import os
+import datetime
 
 from connect.server import app, db
 from connect.server.database import Routes, Connections, Jobs
@@ -24,7 +25,7 @@ def jscript():
     connection = Connections(type='JScript')
     db.session.add(connection)
     db.session.commit()
-    job = Jobs(name='check_in', connection=connection)
+    job = Jobs(name='check_in', connection=connection, type=2)
     db.session.add(job)
     db.session.commit()
     return render_template('/jscript/connect.js', connection_id=connection.identifier,

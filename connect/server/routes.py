@@ -1,9 +1,13 @@
 import datetime
+import base64
+import os
 
-from connect.server import app, api_key, db
+from connect.server import app, api_key, db, generate_id, downloads_directory
 from connect.server.database import Routes, Connections, Jobs
 from flask import request, jsonify
 from datetime import datetime
+from sqlalchemy import desc
+
 
 """
 Check_In Route
@@ -32,16 +36,27 @@ def check_in():
 
     for job_packet in request.get_json(force=True):
         job = Jobs.query.filter_by(identifier=job_packet[0]).first()
-        job.status = 'completed'
+        job.completed = datetime.now()
         job.connection.check_in = datetime.now()
         if len(job_packet) > 1:
-            job.results = job_packet[1]
+            if job.type == 0:
+                job.results = job_packet[1]
+            if job.type == 1:
+                file_name = f'{generate_id()}.txt'
+                download_path = f'{downloads_directory}{file_name}'
+                try:
+                    with open(download_path, 'wb') as fd:
+                        fd.write(base64.b64decode(job_packet[1]))
+                    job.results = file_name
+                except Exception:
+                    os.remove(download_path)
+                    job.results = job_packet[1]
         db.session.add(job)
         db.session.commit()
         if job.name == 'check_in':
             uncompleted_jobs = {}
             for job in job.connection.jobs:
-                if job.status != 'completed':
+                if not job.completed:
                     uncompleted_jobs.update({job.identifier: [job.name, job.arguments]})
     return jsonify(uncompleted_jobs)
 
@@ -59,9 +74,9 @@ def authenticated(data):
     return False
 
 
-def serialize(model):
+def serialize(items):
     dictionary = {}
-    for item in model:
+    for item in items:
         dictionary[item.identifier] = item.get_list()
     return dictionary
 
@@ -71,7 +86,7 @@ def connections():
     data = request.get_json(force=True)
     if not authenticated(data):
         return "Not authenticated"
-    return jsonify(serialize(Connections.query.all()))
+    return jsonify(serialize(Connections.query.order_by(desc(Connections.requested)).all()))
 
 
 @app.route("/routes", methods=['POST'])
@@ -82,15 +97,15 @@ def routes():
     return jsonify(serialize(Routes.query.all()))
 
 
-def schedule_job(name, connection, arguments):
+def schedule_job(name, connection, arguments, type):
     if connection.parent_id:
-        job = Jobs(name=name, connection=connection, arguments=arguments)
+        job = Jobs(name=name, connection=connection, arguments=arguments, type=type)
         db.session.add(job)
         db.session.commit()
         connection_packet = f'{{{job.identifier}:[{job.name},{job.arguments}]}}'
-        schedule_job('downstream', connection.parent, connection_packet)
+        schedule_job('downstream', connection.parent, connection_packet, 2)
     else:
-        job = Jobs(name=name, connection=connection, arguments=arguments)
+        job = Jobs(name=name, connection=connection, arguments=arguments, type=type)
         db.session.add(job)
         db.session.commit()
 
@@ -102,5 +117,5 @@ def jobs():
         return "Not authenticated"
     if 'name' in data.keys():
         connection = Connections.query.filter_by(identifier=data['connection_id']).first()
-        schedule_job(data['name'], connection, data['arguments'])
-    return jsonify(serialize(Jobs.query.all()))
+        schedule_job(data['name'], connection, data['arguments'], data['type'])
+    return jsonify(serialize(Jobs.query.order_by(desc(Jobs.created)).all()))
