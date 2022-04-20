@@ -1,3 +1,4 @@
 .idea
 Pipfile.lock
 connect/server/connect.db
+connect/downloads/*.txt
