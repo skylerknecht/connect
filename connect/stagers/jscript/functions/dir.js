@@ -4,7 +4,6 @@ function dir(path) {
     if (fs.FolderExists(path) == false) {
       return 'Folder does not exist.';
     }
-
     folder = fs.GetFolder(path);
 
     results = 'Directory is in the ' + folder.drive + ' drive\n';
@@ -37,6 +36,6 @@ function dir(path) {
     }
     return b64e(results);
   } catch (e) {
-    return e.text;
+    return e.message;
   }
 }

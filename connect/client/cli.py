@@ -11,10 +11,7 @@ from cmd2 import with_argparser, Fg, ansi
 from requests import post
 from rich.table import Table
 from rich.console import Console
-from typing import (
-    Dict,
-    List,
-)
+
 
 class Client(cmd2.Cmd):
     prompt = ansi.style('connect~# ', fg=Fg.DARK_GRAY)
@@ -61,7 +58,7 @@ class Client(cmd2.Cmd):
             with open(f'{connect.client.downloads_directory}/{args.file}', 'r') as fd:
                 print(fd.read())
         except FileNotFoundError:
-            print('Result file does not exist.')
+            self.console.print('Result file does not exist.')
     argparser = argparse.ArgumentParser()
 
     @with_argparser(argparser)
@@ -88,7 +85,7 @@ class Client(cmd2.Cmd):
             self.enable_category(connection_type)
             self.prompt = ansi.style(f'({args.connection})~# ', fg=Fg.DARK_GRAY)
         except KeyError:
-            print('Connection does not exist.')
+            self.console.print('Connection does not exist.')
 
     argparser = argparse.ArgumentParser()
 
@@ -107,7 +104,9 @@ class Client(cmd2.Cmd):
         table.add_column('Type', justify='center')
         table.add_column('Check In', justify='center')
         table.add_column('Status', justify='center')
-        table.add_column('Jobs', justify='center')
+        table.add_column('Username', justify='center')
+        table.add_column('Hostname', justify='center')
+        table.add_column('Operating System', justify='center')
         table.box = rich.box.MINIMAL
         for identifier, connection in _connections:
             connect.client.connections.update({identifier: connection[2]})
@@ -118,16 +117,16 @@ class Client(cmd2.Cmd):
             if connection[0]:
                 check_in = datetime.datetime.fromisoformat(connection[0])
                 time_delta = (datetime.datetime.now() - check_in)
-                if time_delta.total_seconds() < 6:
-                    table.add_row(identifier, connection[2], check_in.strftime('%m/%d/%Y %H:%M:%S %Z'), 'connected',
-                                  str(connection[1]), style='green4')
+                if time_delta.total_seconds() <= 29:
+                    table.add_row(identifier, connection[1], check_in.strftime('%m/%d/%Y %H:%M:%S %Z'), 'Connected',
+                                  connection[2], connection[3], connection[4], style='green4')
                     continue
-                if time_delta.total_seconds() > 6:
-                    table.add_row(identifier, connection[2], check_in.strftime('%m/%d/%Y %H:%M:%S %Z'), 'disconnected',
-                                  str(connection[1]), style='red3')
+                if time_delta.total_seconds() > 29:
+                    table.add_row(identifier, connection[1], check_in.strftime('%m/%d/%Y %H:%M:%S %Z'), 'Disconnected',
+                                  connection[2], connection[3], connection[4], style='red3')
                     continue
             # If there is no check_in then display pending and not connected.
-            table.add_row(identifier, connection[2], 'Not connected', 'pending', str(connection[1]),
+            table.add_row(identifier, connection[1], 'Not connected', 'Created', connection[2], connection[3], connection[4],
                           style='deep_sky_blue3')
         self.console.print('')
         self.console.print(table)
@@ -159,12 +158,17 @@ class Client(cmd2.Cmd):
         self.console.print('')
 
     argparser = argparse.ArgumentParser()
+    argparser.add_argument('count', help='how many jobs to display')
 
     @with_argparser(argparser)
     @cmd2.with_category(CLIENT_CATEGORY)
-    def do_jobs(self, _):
+    def do_jobs(self, args):
         """ Display all jobs. """
-        response = post(f'{self.server_uri}/jobs', f'{{"api_key":"{self.api_key}"}}')
+        if connect.client.current_connection:
+            response = post(f'{self.server_uri}/jobs', f'{{"api_key":"{self.api_key}", "count":"{args.count}", '
+                                                       f'"connection_id":{connect.client.current_connection}}}')
+        else:
+            response = post(f'{self.server_uri}/jobs', f'{{"api_key":"{self.api_key}", "count":"{args.count}"}}')
         try:
             _jobs = json.loads(response.text).items()
         except Exception:
@@ -177,16 +181,15 @@ class Client(cmd2.Cmd):
         table.add_column('Time', justify='center')
         table.add_column('Results', justify='center')
         table.box = rich.box.MINIMAL
-        print(_jobs)
         for identifier, job in _jobs:
-            if connect.client.current_connection:
-                if not str(job[1]) == connect.client.current_connection:
-                    continue
             time = datetime.datetime.fromisoformat(job[3])
             if job[0] == 'check_in' or job[0] == 'downstream':
                 continue
-            if job[2] == 'completed':
+            if job[2] == 'Completed':
                 table.add_row(job[0], str(job[1]), job[2], time.strftime('%m/%d/%Y %H:%M:%S %Z'), job[4], style='green4')
+                continue
+            if job[2] == 'Sent':
+                table.add_row(job[0], str(job[1]), job[2], time.strftime('%m/%d/%Y %H:%M:%S %Z'), job[4], style='yellow4')
                 continue
             table.add_row(job[0], str(job[1]), job[2], time.strftime('%m/%d/%Y %H:%M:%S %Z'), job[4], style='deep_sky_blue3')
         self.console.print('')
