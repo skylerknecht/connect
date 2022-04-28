@@ -41,16 +41,19 @@ class STDAPICommands(CommandSet):
 
     dir_sleep = cmd2.Cmd2ArgumentParser()
     dir_sleep.add_argument('sleep', help='amount of time in milliseconds to sleep for')
+    dir_sleep.add_argument('jitter', help='percentage of sleep to add or subtract per check_in')
 
     @with_argparser(dir_sleep)
     def do_sleep(self, ns: argparse.Namespace):
-        """ Change the check_in interval in milliseconds (e.g., 5000 is 5 seconds). """
+        """ Change the sleep and jitter to alter the check_in interval. """
         if not connect.client.current_connection:
             print('Please select a connection with \'*<connection_id>\'')
             return
         sleep_bytes = base64.b64encode(ns.sleep.encode())
         sleep_str = str(sleep_bytes, "utf-8")
-        post_job(f'"name":"sleep","arguments":"{sleep_str}","type":1')
+        jitter_bytes = base64.b64encode(ns.jitter.encode())
+        jitter_str = str(jitter_bytes, "utf-8")
+        post_job(f'"name":"sleep","arguments":"{sleep_str},{jitter_str}","type":1')
 
     """ 
     Download Command 
