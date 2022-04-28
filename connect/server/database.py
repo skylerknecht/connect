@@ -39,7 +39,7 @@ class Jobs(db.Model):
 
     @property
     def arguments(self):
-        return str([str(x) for x in self._arguments.split(',')])
+        return [str(x) for x in self._arguments.split(',')]
 
     @arguments.setter
     def arguments(self, value):
@@ -49,6 +49,7 @@ class Jobs(db.Model):
 class Routes(db.Model):
     identifier = db.Column(db.Integer, primary_key=True, default=generate_id)
     name = db.Column(db.String, unique=True, nullable=False)
+    type = db.Column(db.String, nullable=False)
     description = db.Column(db.String, nullable=False, default='No description.')
 
     def get_list(self):

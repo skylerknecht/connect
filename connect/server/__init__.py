@@ -6,6 +6,7 @@ import configparser
 from connect.server.config import Config
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_socketio import SocketIO
 from flask_json import FlaskJSON
 
 
@@ -21,7 +22,8 @@ downloads_directory = config['OPTIONAL']['downloads_directory']
 if not downloads_directory:
     downloads_directory = f'{os.getcwd()}/connect/downloads/'
 
-app = Flask(__name__, template_folder='../stagers')
+app = Flask(__name__, template_folder='../routes')
+socket = SocketIO(app)
 os.environ['WERKZEUG_RUN_MAIN'] = 'true'
 log = logging.getLogger('werkzeug')
 log.disabled = True
@@ -33,29 +35,26 @@ from connect.server import database
 db.create_all()
 api_key = generate_id()
 
-
 """
-If there are no routes then configure them in the database.
+Setup routes
 """
-if not database.Routes.query.filter_by(name='check_in').first():
-    check_in = database.Routes(name='check_in')
-    db.session.add(check_in)
-    db.session.commit()
 
 config = configparser.ConfigParser()
-stagers_path = f'{os.getcwd()}/connect/stagers'
-for stager in os.listdir(stagers_path):
-    config.read(f'{stagers_path}/{stager}/config.ini')
+routes_path = f'{os.getcwd()}/connect/routes'
+for route in os.listdir(routes_path):
+    if not os.path.isdir(f'{routes_path}/{route}'):
+        continue
+    config.read(f'{routes_path}/{route}/config.ini')
     route_name = config['REQUIRED']['route_name']
     if database.Routes.query.filter_by(name=route_name).first():
         continue
-    route = database.Routes(name=route_name, description=config['REQUIRED']['description'])
+    route = database.Routes(name=route_name, type=config['REQUIRED']['type'], description=config['REQUIRED']['description'])
     db.session.add(route)
     db.session.commit()
 
 
 def run(args):
     from connect.server import routes
-    from connect.stagers import routes
+    from connect.routes import routes
     print(f'Client Arguments: http://{args.ip}:{args.port} {api_key} ')
-    app.run(host=args.ip, port=args.port)
+    socket.run(app, host=args.ip, port=args.port)

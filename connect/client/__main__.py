@@ -3,6 +3,7 @@ import connect.client as client
 import sys
 
 
+
 def main():
     parser = argparse.ArgumentParser(add_help=False, description='Connect. Like your dots?')
     parser.add_argument('-h', '--help', action='help', help='Display this help message and exits.')
