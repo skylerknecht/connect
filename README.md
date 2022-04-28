@@ -1,6 +1,7 @@
 ## Connect
 ### Versions
- * [2.0](https://github.com/skylerknecht/connect) : 04/13/2022 : refactored the entire code base. sqlite database, tools directory, standalone server, implant comms changed, all features before this don't exist anymore.
+ * [2.1](https://github.com/skylerknecht/connect) : 04/28/2022 : csharp implant and usability features for client.
+ * [2.0](https://github.com/skylerknecht/connect/commit/c238382658363c7ca81a3e3348c9d1fca74b8d99) : 04/13/2022 : refactored the entire code base. sqlite database, tools directory, standalone server, implant comms changed, all features before this don't exist anymore.
  * [1.5](https://github.com/skylerknecht/connect/commit/0b1f038365027d56a54257695a06ef9708b1b684) : 11/28/2021 : python stager, reorganized code base, msbuild, quality of life changes.
  * [1.2](https://github.com/skylerknecht/connect/tree/087006611c8d65f3f3d5fd86bc5ff577a51d1950) : 09/17/2021 : mshta implant code, quality of life changes.
  * [1.0](https://github.com/skylerknecht/connect/tree/33d65a90655c01c92aedd496b9a468512ce83cc9) : 09/11/2021 : jscript options extended.
