@@ -74,7 +74,7 @@ while (true) {
               }
               response = response + '["' + id + '","' +  results + '"],';
           } catch (e) {
-             response = response + '["' + id + '","' + b64d("Job failed.") + '"],';
+             response = response + '["' + id + '","' + b64e("Job failed: " + e) + '"],';
           }
       }
   } catch (e) {
