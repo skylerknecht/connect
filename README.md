@@ -53,6 +53,7 @@ connect~# *8511453877
 help                  List available commands or provide detailed help for a specific command                                                                
 
 [Standard API]
+······································································································
 - abbreviated -                                          
 whoami                Retrieve the username of the user.   
 
@@ -63,7 +64,7 @@ DESKTOP-P1VHEUK\Skyler Knecht
 ```
 
 ### FAQ
-* No tab complete on mac? Install gnureadline with pip.
+* No tab complete on Mac? Install gnureadline with pip.
 
 ### Shoutouts
 Thanks to [@Kevin Clark](https://twitter.com/GuhnooPlusLinux) for all the assistance and inspiration.
