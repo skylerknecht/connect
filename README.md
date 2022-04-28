@@ -12,6 +12,7 @@
 
 ### Using Connect
 ```sh
+// Build the venv environment.
 ~# python3 -m venv env 
 ~# source /env/bin/activate
 
@@ -31,7 +32,7 @@ connect~# stagers
   JScript │ http://127.0.0.1:8080/6179451772 │ A JScript file with a small standard API included.  
   MSBuild │ http://127.0.0.1:8080/9241729871 │  A MSBuild XML file that launches a CSharp agent.
   
-// Execute the stager to recieve a succesfull csharp or jscript connection.
+// Execute the stager to recieve a successful csharp or jscript connection.
 connect~# connections
       ID     │  Type   │       Check In       │    Status    │           Username            │    Hostname     │         Operating System           
 ╶────────────┼─────────┼──────────────────────┼──────────────┼───────────────────────────────┼─────────────────┼───────────────────────────────────╴
