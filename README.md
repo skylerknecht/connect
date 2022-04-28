@@ -14,15 +14,51 @@
 ```sh
 ~# python3 -m venv env 
 ~# source /env/bin/activate
-~# python3 -m pip install -r requirements.txt
+
+//Install dependencies
+(env)~# python3 -m pip install -r requirements.txt
+
 // Run the server
-(env)~# python -m connect.server <IP> <PORT>
-Client Arguments: http://<ip>:<port> <api>key
-// Run the client with the client arguments
-(env)~# python -m connect.client http://<ip>:<port> <api>key
-(env)~# pwn
-(env)~# pwn pwn
-(env)~# pwn pwn pwn
+(env)~# python -m connect.server 127.0.0.1 8080
+Client Arguments: http://127.0.0.1:8080 123456789
+
+// Run the client the above arguments
+(env)~# python -m connect.client http://127.0.0.1:8080 123456789
+connect~# stagers
+
+   Type   │             Staged URI           │                    Description                      
+╶─────────┼──────────────────────────────────┼────────────────────────────────────────────────────╴
+  JScript │ http://127.0.0.1:8080/6179451772 │ A JScript file with a small standard API included.  
+  MSBuild │ http://127.0.0.1:8080/9241729871 │  A MSBuild XML file that launches a CSharp agent.
+  
+// Execute the stager to recieve a succesfull csharp or jscript connection.
+connect~# connections
+      ID     │  Type   │       Check In       │    Status    │           Username            │    Hostname     │         Operating System           
+╶────────────┼─────────┼──────────────────────┼──────────────┼───────────────────────────────┼─────────────────┼───────────────────────────────────╴
+  8511453877 │ CSharp  │ 04/28/2022 10:30:53  │  Connected   │ DESKTOP-P1VHEUK\Skyler Knecht │ DESKTOP-P1VHEUK │ Microsoft Windows NT 10.0.19044.0  
+ 
+// Interact with the connection using one of the following commands.
+connect~# interact 8511453877
+connect~# *8511453877
+(8511453877)~# 
+
+// List help menu and schedule jobs with one of the following commands.
+(8511453877)~# ?
+(8511453877)~# help
+(8511453877)~# help -v
+[Main Menu]
+······································································································
+- abbreviated -                                                    
+help                  List available commands or provide detailed help for a specific command                                                                
+
+[Standard API]
+- abbreviated -                                          
+whoami                Retrieve the username of the user.   
+
+(8511453877)~# whoami
+[?] Sent whoami job to 8511453877.
+[+] whoami job from 8511453877 returned results!
+DESKTOP-P1VHEUK\Skyler Knecht
 ```
 
 ### FAQ
