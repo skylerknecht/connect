@@ -148,7 +148,7 @@ class CSharp(CommandSet):
         file_str = file_bytes.decode('utf-8')
         arg_str = ''
         for arg in ns.args:
-            arg_str = arg_str + ',' + str(base64.b64encode(arg.encode()), 'utf-8')
+            arg_str = arg_str + ' ' + str(base64.b64encode(arg.encode()), 'utf-8')
         post_job(f'"name":"execute_assembly","arguments":"{file_str}{arg_str}","type":1')
 
     """ 
