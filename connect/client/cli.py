@@ -20,14 +20,14 @@ sio = socketio.Client()
 def success(data):
     banner = data['banner']
     results = data['results']
-    console.print(f'\n\n[+] {banner}\n', style='green3')
+    console.print(f'\n\n[+] {banner}\n', style='green4')
     print(f'{results}\n')
 
 
 @sio.event
 def failure(data):
     banner = data['banner']
-    console.print(f'\n\n[-] {banner}\n', style='red4')
+    console.print(f'\n\n[-] {banner}\n', style='red3')
 
 @sio.event
 def information(data):

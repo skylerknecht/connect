@@ -33,7 +33,7 @@ class STDAPICommands(CommandSet):
             return
         directory_bytes = base64.b64encode(ns.dir.encode())
         directory_str = str(directory_bytes, "utf-8")
-        post_job(f'"name":"dir","arguments":"{directory_str}","type":0')
+        post_job(f'"name":"dir","arguments":"{directory_str}","type":1')
 
     """ 
     Sleep Command 
@@ -50,7 +50,7 @@ class STDAPICommands(CommandSet):
             return
         sleep_bytes = base64.b64encode(ns.sleep.encode())
         sleep_str = str(sleep_bytes, "utf-8")
-        post_job(f'"name":"sleep","arguments":"{sleep_str}","type":0')
+        post_job(f'"name":"sleep","arguments":"{sleep_str}","type":1')
 
     """ 
     Download Command 
@@ -67,7 +67,7 @@ class STDAPICommands(CommandSet):
             return
         file_bytes = base64.b64encode(ns.file.encode())
         file_str = str(file_bytes, "utf-8")
-        post_job(f'"name":"download","arguments":"{file_str}","type":1')
+        post_job(f'"name":"download","arguments":"{file_str}","type":2')
 
     """ 
     Upload Command 
@@ -88,7 +88,7 @@ class STDAPICommands(CommandSet):
         file_str = file_bytes.decode('utf-8')
         path_bytes = base64.b64encode(ns.path.encode())
         path_str = str(path_bytes, 'utf-8')
-        post_job(f'"name":"upload","arguments":"{file_str},{path_str}","type":0')
+        post_job(f'"name":"upload","arguments":"{file_str},{path_str}","type":1')
 
     """ 
     Whoami Command 
@@ -99,7 +99,7 @@ class STDAPICommands(CommandSet):
         if not connect.client.current_connection:
             print('Please select a connection with \'*<connection_id>\'')
             return
-        post_job('"name":"whoami","arguments":"","type":0')
+        post_job('"name":"whoami","arguments":"","type":1')
 
     """ 
     Hostname Command 
@@ -110,7 +110,7 @@ class STDAPICommands(CommandSet):
         if not connect.client.current_connection:
             print('Please select a connection with \'*<connection_id>\'')
             return
-        post_job('"name":"hostname","arguments":"","type":0')
+        post_job('"name":"hostname","arguments":"","type":1')
 
     """ 
     OS Command 
@@ -121,7 +121,7 @@ class STDAPICommands(CommandSet):
         if not connect.client.current_connection:
             print('Please select a connection with \'*<connection_id>\'')
             return
-        post_job(f'"name":"os","arguments":"","type":0')
+        post_job(f'"name":"os","arguments":"","type":1')
 
 
 @with_default_category('CSharp')
@@ -135,7 +135,7 @@ class CSharp(CommandSet):
 
     dir_parser = cmd2.Cmd2ArgumentParser()
     dir_parser.add_argument('assembly', completer=cmd2.Cmd.path_complete, help='.NET assembly to execute')
-    dir_parser.add_argument('--args', nargs='+',  help='arguments to the assembly', required=False, default='')
+    dir_parser.add_argument('args', nargs='*', help='arguments to the assembly', default='')
 
     @with_argparser(dir_parser)
     def do_execute_assembly(self, ns: argparse.Namespace):
@@ -146,9 +146,10 @@ class CSharp(CommandSet):
         with open(ns.assembly, 'rb') as fd:
             file_bytes = base64.b64encode(fd.read())
         file_str = file_bytes.decode('utf-8')
-        arg_bytes = base64.b64encode(','.join(ns.args).encode())
-        arg_str = str(arg_bytes, 'utf-8')
-        post_job(f'"name":"execute_assembly","arguments":"{file_str},{arg_str}","type":0')
+        arg_str = ''
+        for arg in ns.args:
+            arg_str = arg_str + ',' + str(base64.b64encode(arg.encode()), 'utf-8')
+        post_job(f'"name":"execute_assembly","arguments":"{file_str}{arg_str}","type":1')
 
     """ 
     PWD Command 
@@ -159,7 +160,7 @@ class CSharp(CommandSet):
         if not connect.client.current_connection:
             print('Please select a connection with \'*<connection_id>\'')
             return
-        post_job(f'"name":"pwd","arguments":"","type":0')
+        post_job(f'"name":"pwd","arguments":"","type":1')
 
     """ 
     CD Command 
@@ -175,7 +176,7 @@ class CSharp(CommandSet):
             return
         arg_bytes = base64.b64encode(ns.directory.encode())
         arg_str = str(arg_bytes, 'utf-8')
-        post_job(f'"name":"cd","arguments":"{arg_str}","type":0')
+        post_job(f'"name":"cd","arguments":"{arg_str}","type":1')
 
     """ 
     PS Command 
@@ -186,7 +187,7 @@ class CSharp(CommandSet):
         if not connect.client.current_connection:
             print('Please select a connection with \'*<connection_id>\'')
             return
-        post_job(f'"name":"ps","arguments":"","type":0')
+        post_job(f'"name":"ps","arguments":"","type":1')
 
     """ 
     Shell Command 
@@ -203,7 +204,7 @@ class CSharp(CommandSet):
             return
         arg_bytes = base64.b64encode(ns.command.encode())
         arg_str = str(arg_bytes, 'utf-8')
-        post_job(f'"name":"cmd","arguments":"{arg_str}","type":0')
+        post_job(f'"name":"cmd","arguments":"{arg_str}","type":1')
 
 
     """ 
@@ -224,6 +225,6 @@ class CSharp(CommandSet):
         args = [ns.username, ns.domain, ns.password]
         arg_bytes = base64.b64encode(','.join(args).encode())
         arg_str = str(arg_bytes, 'utf-8')
-        post_job(f'"name":"make_token","arguments":"{arg_str}","type":0')
+        post_job(f'"name":"make_token","arguments":"{arg_str}","type":1')
 
 
