@@ -1,4 +1,6 @@
 .idea
+connect/pyvenv.cfg
+env/*
 Pipfile.lock
 connect/server/connect.db
 connect/downloads/*.txt
