@@ -35,6 +35,22 @@ class STDAPICommands(CommandSet):
         directory_str = str(directory_bytes, "utf-8")
         post_job(f'"name":"dir","arguments":"{directory_str}","type":1')
 
+    """ 
+    DelFile Command 
+    """
+
+    del_file_parser = cmd2.Cmd2ArgumentParser()
+    del_file_parser.add_argument('file', help='the file to delete')
+
+    @with_argparser(del_file_parser)
+    def do_delfile(self, ns: argparse.Namespace):
+        """ List the contents and properties of a directory. """
+        if not connect.client.current_connection:
+            print('Please select a connection with \'*<connection_id>\'')
+            return
+        file_bytes = base64.b64encode(ns.file.encode())
+        file_str = str(file_bytes, "utf-8")
+        post_job(f'"name":"delfile","arguments":"{file_str}","type":1')
 
     """ 
     Shell Command 

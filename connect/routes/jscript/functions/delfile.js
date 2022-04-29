@@ -1,8 +1,8 @@
 function delfile(path) {
     fs = new ActiveXObject("Scripting.FileSystemObject")
     if (fs.FileExists(path) == false){
-        return 'File does not exist.';
+        return b64e('File does not exist.');
     }
     fs.DeleteFile(path);
-    return 'Successfully deleted file.';
+    return b64e('Successfully deleted file.');
 }
