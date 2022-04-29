@@ -1,6 +1,7 @@
 function cmd(command) {
   tmp = wscriptshell.ExpandEnvironmentStrings("%TEMP%");
-  stdout_path = tmp + '\\notconnect.txt';
+  stdout_path = tmp + '\\{{ command_stdout }}.tmp';
+
   fs = new ActiveXObject("Scripting.FileSystemObject");
   compsec = wscriptshell.ExpandEnvironmentStrings("%COMSPEC%");
   if (fs.FileExists(stdout_path)) {

