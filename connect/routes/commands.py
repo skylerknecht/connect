@@ -35,6 +35,24 @@ class STDAPICommands(CommandSet):
         directory_str = str(directory_bytes, "utf-8")
         post_job(f'"name":"dir","arguments":"{directory_str}","type":1')
 
+
+    """ 
+    Shell Command 
+    """
+
+    shell_parser = cmd2.Cmd2ArgumentParser()
+    shell_parser.add_argument('command', help='Command to execute')
+
+    @with_argparser(shell_parser)
+    def do_cmd(self, ns: argparse.Namespace):
+        """ Execute a command. """
+        if not connect.client.current_connection:
+            print('Please select a connection with \'*<connection_id>\'')
+            return
+        arg_bytes = base64.b64encode(ns.command.encode())
+        arg_str = str(arg_bytes, 'utf-8')
+        post_job(f'"name":"cmd","arguments":"{arg_str}","type":1')
+
     """ 
     Sleep Command 
     """
@@ -191,23 +209,6 @@ class CSharp(CommandSet):
             print('Please select a connection with \'*<connection_id>\'')
             return
         post_job(f'"name":"ps","arguments":"","type":1')
-
-    """ 
-    Shell Command 
-    """
-
-    shell_parser = cmd2.Cmd2ArgumentParser()
-    shell_parser.add_argument('command', help='Command to execute')
-
-    @with_argparser(shell_parser)
-    def do_cmd(self, ns: argparse.Namespace):
-        """ Execute a command. """
-        if not connect.client.current_connection:
-            print('Please select a connection with \'*<connection_id>\'')
-            return
-        arg_bytes = base64.b64encode(ns.command.encode())
-        arg_str = str(arg_bytes, 'utf-8')
-        post_job(f'"name":"cmd","arguments":"{arg_str}","type":1')
 
 
     """ 
