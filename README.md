@@ -21,8 +21,8 @@ organization has been obtained.
 ## Credits
 Thanks for the Inspiration:
 
-    - [@Kevin Clark](https://twitter.com/GuhnooPlusLinux)
+- [@Kevin Clark](https://twitter.com/GuhnooPlusLinux)
 
 Connect Development Team:
 
-    - [@Skyler Knecht](https://twitter.com/skylerknecht)
+- [@Skyler Knecht](https://twitter.com/skylerknecht)
