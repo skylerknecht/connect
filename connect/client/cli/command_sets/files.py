@@ -23,7 +23,7 @@ class FilesCommands(CommandSet):
 
     @with_argparser(del_file_parser)
     def do_delfile(self, args: argparse.Namespace):
-        """ List the contents and properties of a directory. """
+        """ Delete a file. """
         file = string_to_base64(args.file)
         self.post_job(f'"name":"delfile","arguments":"{file}","type":1')
 

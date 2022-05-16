@@ -19,7 +19,7 @@ class TokenCommands(CommandSet):
         self.post_job(f'"name":"rev2self","arguments":"","type":1')
 
     def do_get_token(self, _: Statement):
-        """ Drops all impersonated tokens. """
+        """ Retrieve the identity of the impersonated token. """
         self.post_job(f'"name":"get_token","arguments":"","type":1')
 
     make_token_parser = Cmd2ArgumentParser()
