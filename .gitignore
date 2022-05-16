@@ -1,6 +1,7 @@
 .idea
+.history
 connect/pyvenv.cfg
 env/*
 Pipfile.lock
 connect/server/connect.db
-connect/downloads/*.txt
+connect/server/downloads/*
