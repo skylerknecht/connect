@@ -42,5 +42,5 @@ class ExecutionCommands(CommandSet):
             key, file = xor_base64(fd.read())
         arg_str = ''
         for arg in args.args:
-            arg_str = arg_str + ',' + string_to_base64(arg) + 'utf-8'
+            arg_str = arg_str + ',' + string_to_base64(arg)
         self.post_job(f'"name":"execute_assembly","arguments":"{key},{file}{arg_str}","type":1')
