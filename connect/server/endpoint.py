@@ -53,7 +53,7 @@ def _retrieve_results(job_list):
         websocket.emit('job_results', f'{{"banner":"Wrote {job.name.title()} job results from {agent.name} to:",'
                                       f'"results":"{string_to_base64(file)}"}}')
         return
-    if 'Job failed:' in results:
+    if 'Job Failed:' in results:
         job.completed = datetime.datetime.now()
         job.results = results
         _commit([agent, job])

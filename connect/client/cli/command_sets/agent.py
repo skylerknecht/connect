@@ -36,5 +36,5 @@ class AgentCommands(CommandSet):
             jitter = string_to_base64(str(float(args.jitter)))
             self.post_job(f'"name":"set jitter","arguments":"{jitter}","type":1')
         if not args.jitter and not args.sleep:
-            self.post_job(f'"name":"get delay","arguments":"","type":1')
+            self.post_job(f'"name":"delay","arguments":"","type":1')
 
