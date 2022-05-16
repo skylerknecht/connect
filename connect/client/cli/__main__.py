@@ -6,7 +6,7 @@ from . import client
 from . import command_sets
 from connect.convert import base64_to_string
 from connect.output import print_agents_table, print_stagers_table
-from connect.output import success, status, print
+from connect.output import success, status
 from connect.output import Agent, Stager
 from os import getcwd
 from sys import exit
