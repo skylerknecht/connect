@@ -1,19 +1,41 @@
-#!/usr/bin/env -S python3 -B
 import argparse
-import connect.server as server
 import sys
+
+from . import endpoint
+from . import server
+from . import models
+from . import stagers
+
+from connect.configs.server import TeamListenerConfig
+from connect.output import success
+
+
+team_server = server.TeamServer('Team Listener', TeamListenerConfig, models.db, endpoint.websocket)
+team_server.create_database()
+team_server.drop_stagers()
+team_server.add_blueprint(endpoint.check_in)
+team_server.add_event('connect', endpoint.connect)
+team_server.add_event('agents', endpoint.agents)
+team_server.add_event('stagers', endpoint.stagers)
+team_server.add_event('new_job', endpoint.new_job)
+
+for blueprint, stager in stagers.STAGERS.items():
+    _stager = models.StagerModel(name=stager.name, endpoint=stager.endpoint, delivery=stager.delivery)
+    team_server.add_stager(_stager)
+    team_server.add_blueprint(blueprint)
 
 
 def main():
-    parser = argparse.ArgumentParser(add_help=False, description='Connect. Like your dots?')
-    parser.add_argument('-h', '--help', action='help', help='Display this help message and exits.')
-    parser.add_argument('ip', type=str, help='What ip should the routes.py bind to?')
-    parser.add_argument('port', type=int, help='What port should the routes.py bind to?')
-    parser.add_argument('--ssl', nargs=2, metavar=('CERT', 'KEY'),
-                        help='What certificates should the routes.py use for '
-                             'encryption?')
+    """
+    The connect server controller.
+    """
+    parser = argparse.ArgumentParser('ConnectServer', 'Connect Server', conflict_handler='resolve')
+    parser.add_argument('ip', metavar='ip', help='Server ip.')
+    parser.add_argument('port', metavar='port', help='Server port.')
     args = parser.parse_args()
-    server.run(args)
+
+    success(f'Generated client args: http://{args.ip}:{args.port}/ {endpoint.key}')
+    team_server.run(args.ip, args.port)
 
 
 if __name__ == '__main__':

