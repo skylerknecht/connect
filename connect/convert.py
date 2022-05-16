@@ -59,9 +59,9 @@ def xor_base64(data) -> (int, str):
     :return: The base64 encoded string of the XOR encryption.
     :rtype: tuple
     """
-    key = int(''.join([str(random.randint(1, 9)) for _ in range(0, 9)]))
+    key = random.randint(0, 255)
     encoded_data = collections.deque()
     for byte in data:
         e_byte = (byte ^ key)
         encoded_data.append(e_byte)
-    return key, base64.b64encode(bytes(encoded_data))
+    return string_to_base64(str(key)), bytes_to_base64(bytes(encoded_data))
