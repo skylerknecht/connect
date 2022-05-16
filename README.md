@@ -13,7 +13,7 @@ Connect is a tool for testing the security posture of internal environments by s
 real world tactics performed by threat actors. It features an extensible command set and
 server architecture to deploy and maintain agents for multiple languages and platforms.
 This extensibility provides small or large scenarios to be rapidly conducted and repeated
-based on current organizational security maturity.
+based on current organizational security.
 
 
 Connect is only to be used for legal applications when the explicit permission of the targeted
