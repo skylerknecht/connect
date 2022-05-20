@@ -120,7 +120,7 @@ def print_traceback():
     _new_line()
 
 
-def error(message: str):
+def print_error(message: str):
     """
     Print an error message to the console.
 
@@ -130,7 +130,7 @@ def error(message: str):
     print(f'[bold {ERROR}]{prefix}{message}[/bold {ERROR}]')
 
 
-def status(message: str):
+def print_status(message: str):
     """
     Print a status message to the console.
 
@@ -140,7 +140,7 @@ def status(message: str):
     print(f'[bold {STATUS}]{prefix}{message}[/bold {STATUS}]')
 
 
-def success(message: str):
+def print_success(message: str):
     """
     Print a success message to the console.
 
