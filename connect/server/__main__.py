@@ -7,7 +7,7 @@ from . import models
 from . import stagers
 
 from connect.configs.server import TeamListenerConfig
-from connect.output import success
+from connect.output import print_success
 
 
 team_server = server.TeamServer('Team Listener', TeamListenerConfig, models.db, endpoint.websocket)
@@ -34,7 +34,7 @@ def main():
     parser.add_argument('port', metavar='port', help='Server port.')
     args = parser.parse_args()
 
-    success(f'Generated client args: http://{args.ip}:{args.port}/ {endpoint.key}')
+    print_success(f'Generated client args: http://{args.ip}:{args.port}/ {endpoint.key}')
     team_server.run(args.ip, args.port)
 
 
