@@ -6,7 +6,7 @@ from . import client
 from . import command_sets
 from connect.convert import base64_to_string
 from connect.output import print_agents_table, print_stagers_table
-from connect.output import success, status
+from connect.output import print_success, print_status
 from connect.output import Agent, Stager
 from os import getcwd
 from sys import exit
@@ -31,20 +31,20 @@ connect_client.disable_command_sets()
 @client_websocket.event
 def connected(data):
     print('\n')
-    success(data)
+    print_success(data)
 
 
 @client_websocket.event
 def job_sent(data):
     print('\n')
-    status(data)
+    print_status(data)
 
 
 @client_websocket.event
 def job_results(data):
     data = json.loads(data)
     print('\n')
-    status(data['banner'])
+    print_status(data['banner'])
     print(base64_to_string(data['results']))
 
 

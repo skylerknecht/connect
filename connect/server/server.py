@@ -1,9 +1,8 @@
 from . import models
 
-from connect.output import error, print_traceback
+from connect.output import print_error, print_traceback
 
 from flask import Flask
-from flask_socketio import SocketIO
 
 
 class TeamServer(object):
@@ -43,6 +42,6 @@ class TeamServer(object):
             self.websocket.init_app(self.app)
             self.websocket.run(self.app, host=ip, port=port)
         except PermissionError:
-            error(f'Failed to start team server on port {port}: Permission Denied.')
+            print_error(f'Failed to start team server on port {port}: Permission Denied.')
         except Exception:
             print_traceback()

@@ -2,7 +2,7 @@ import argparse
 
 from cmd2 import ansi, Cmd, Cmd2ArgumentParser, Fg, Statement, with_argparser
 from connect import __version__ as version
-from connect.output import error
+from connect.output import print_error
 
 
 class ConnectClient(Cmd):
@@ -55,7 +55,7 @@ class ConnectClient(Cmd):
         Print agents from the team server.
         """
         if not self.team_listener:
-            error('Not connected to the team listener.')
+            print_error('Not connected to the team listener.')
             return
         self.team_listener.emit('agents')
 
@@ -81,7 +81,7 @@ class ConnectClient(Cmd):
             if _agent.name == args.agent:
                 _commands = _agent.commands
         if not _commands:
-            error('Agent does not exist.')
+            print_error('Agent does not exist.')
             return
         self.current_agent = args.agent
         self.prompt = self._stylize_prompt(f'({args.agent})~# ')
@@ -92,7 +92,7 @@ class ConnectClient(Cmd):
         Print stagers from the team listener.
         """
         if not self.team_listener:
-            error('Not connected to the team listener.')
+            print_error('Not connected to the team listener.')
             return
         self.team_listener.emit('stagers')
 

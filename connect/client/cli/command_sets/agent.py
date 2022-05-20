@@ -1,7 +1,7 @@
 import argparse
 
 from connect.convert import string_to_base64
-from connect.output import error
+from connect.output import print_error
 from cmd2 import Cmd2ArgumentParser, CommandSet, with_argparser, with_default_category
 
 
@@ -31,7 +31,7 @@ class AgentCommands(CommandSet):
             self.post_job(f'"name":"set sleep","arguments":"{sleep}","type":1')
         if args.jitter:
             if 0 > float(args.jitter) or float(args.jitter) > 100:
-                error('Please set jitter to a number between 0 and 100 inclusive.')
+                print_error('Please set jitter to a number between 0 and 100 inclusive.')
                 return
             jitter = string_to_base64(str(float(args.jitter)))
             self.post_job(f'"name":"set jitter","arguments":"{jitter}","type":1')
