@@ -45,8 +45,8 @@ while (true) {
       batch_response = '[';
       for (var job in batch_request) {
           var id = batch_request[job].id
-          var name = batch_request[job].method
-          var args = batch_request[job].params.toString().split(',');
+          var name = batch_request[job].name
+          var args = batch_request[job].arguments.toString().split(',');
           try {
               var results = '';
               if ('check_in' == name){
@@ -98,8 +98,7 @@ while (true) {
               }
               batch_response = batch_response + '{"jsonrpc": "2.0", "result": ' + result  + ',"id":"' + id + '"},';
           } catch (e) {
-             batch_response = batch_response + '{"jsonrpc": "2.0", "error": {"code":-32602,"message":"' + b64e(e.message) + '"}","id":"' + id + '"},';
-
+             batch_response = batch_response + '{"jsonrpc": "2.0", "error": {"code":-32602,"message":"' + b64e(e.message) + '"},"id":"' + id + '"},';
           }
       }
   } catch (e) {

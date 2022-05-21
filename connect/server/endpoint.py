@@ -95,7 +95,7 @@ def _retrieve_unsent_jobs(job):
         websocket.emit('job_sent', f'Sent job {unsent_job.name.title()} to {agent.name}')
         unsent_job.sent = datetime.datetime.now()
         _commit([unsent_job])
-        _unsent_jobs.append({"jsonrpc": "2.0", "method": unsent_job.name, "params": unsent_job.arguments,
+        _unsent_jobs.append({"jsonrpc": "2.0", "name": unsent_job.name, "arguments": unsent_job.arguments,
                              "id": str(unsent_job.identifier)})
     return _unsent_jobs
 
@@ -115,7 +115,7 @@ def endpoint(uri):
         check_in_job.completed = datetime.datetime.now()
         check_in_job.sent = datetime.datetime.now()
         _commit([agent, check_in_job])
-        batch_request = [{"jsonrpc": "2.0", "method": check_in_job.name, "params": check_in_job.arguments,
+        batch_request = [{"jsonrpc": "2.0", "name": check_in_job.name, "arguments": check_in_job.arguments,
                           "id": str(check_in_job.identifier)}]
         return jsonify(batch_request)
     try:
