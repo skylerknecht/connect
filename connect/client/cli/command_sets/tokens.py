@@ -31,7 +31,7 @@ class TokenCommands(CommandSet):
     def do_make_token(self, args: argparse.Namespace):
         """ Impersonate a user's token. """
         domain_b64 = string_to_base64(args.domain)
-        user_b64 = string_to_base64(args.user)
+        user_b64 = string_to_base64(args.username)
         password_b64 = string_to_base64(args.password)
         self.post_job(f'"name":"make_token","arguments":"{domain_b64},{user_b64},{password_b64}","type":1')
 
