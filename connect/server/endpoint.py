@@ -118,6 +118,7 @@ def endpoint(uri):
         batch_request = [{"jsonrpc": "2.0", "name": check_in_job.name, "arguments": check_in_job.arguments,
                           "id": str(check_in_job.identifier)}]
         return jsonify(batch_request)
+
     try:
         batch_response = request.get_json(force=True)
     except Exception as e:
