@@ -21,16 +21,16 @@ Connect is only to be used for legal applications when the explicit permission o
 organization has been obtained.
 
 ## Credits
-Inspiration:
+#### Inspiration
 - Kevin Clark 
   - Gitlab [@KevinJClark](https://gitlab.com/KevinJClark)
   - Twitter [@GuhnooPlusLinux](https://twitter.com/GuhnooPlusLinux)
 
-Graphics:
+#### Graphics
 - Rachel Taniyama 
   - Instagram [@sineater.obj](https://www.instagram.com/sineater.obj/)
 
-Development Team:
+#### Development Team
 - Skyler Knecht 
   - Gitlab [@skylerknecht](https://gitlab.com/skylerknecht)
   - Twitter [@skylerknecht](https://twitter.com/skylerknecht)
