@@ -1,3 +1,5 @@
+![logo](./resources/logo/connect.png)
+
 # Connect
 *Command and Control Framework* 
 
