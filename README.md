@@ -30,7 +30,7 @@ organization has been obtained.
 - Rachel Taniyama 
   - Instagram [@sineater.obj](https://www.instagram.com/sineater.obj/)
 
-#### Development Team
+#### Development
 - Skyler Knecht 
   - Gitlab [@skylerknecht](https://gitlab.com/skylerknecht)
   - Twitter [@skylerknecht](https://twitter.com/skylerknecht)
