@@ -10,6 +10,15 @@
 (env)~# python3 -m pip install -r requirements.txt
 ```
 
+## Docker Notes
+```
+dockerBin/server.sh and dockerBin/start.sh are only for the docker instance. When running via docker:
+1. Must be run with the environment variables CALLBACK_IP and CALLBACK_PORT.
+2. Must be run with flag --network=host
+3. Host/image directory in /data
+```
+
+
 ## Overview
 Connect is a tool for testing the security posture of internal environments by simulating
 real world tactics performed by threat actors. It features an extensible command set and
