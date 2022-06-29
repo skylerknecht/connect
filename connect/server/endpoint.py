@@ -59,7 +59,7 @@ def _retrieve_results(job, result):
                                       f'"results":"{_result}"}}')
     if job.type == 2 or job.type == -2:
         file = base64_to_bytes(_result)
-        filename = f'{os.getcwd()}/connect/server/downloads/{string_identifier()}'
+        filename = f'{os.getcwd()}/.backup/downloads/{string_identifier()}'
         job.results = filename
         with open(filename, 'wb') as fd:
             fd.write(file)
@@ -180,8 +180,8 @@ def new_job(data):
 
     :param data:
     """
+    # todo Server-Side checks for job availability
     data = json.loads(data)
     agent = AgentModel.query.filter_by(name=data['agent_name']).first()
     job = JobModel(name=data['name'], agent=agent, arguments=data['arguments'], type=data['type'])
-    db.session.add(job)
-    db.session.commit()
+    _commit(job)

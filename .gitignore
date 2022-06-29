@@ -3,6 +3,5 @@
 connect/pyvenv.cfg
 env/*
 Pipfile.lock
-connect.db
-connect/server/downloads/*
+.backup/*
 connect/resources/*
