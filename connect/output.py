@@ -81,9 +81,9 @@ def print_agents_table(_agents: list, current_agent: str, current_connection_pre
         if _check_in.timestamp() == 823879740.0:
             _check_in_str = '....'
             _style = STATUS
-        elif _check_in_delta <= _agent_max_delay + 10.0:
+        elif _check_in_delta <= _agent_max_delay + 60.0:
             _style = SUCCESS
-        elif _agent_max_delay + 10.0 < _check_in_delta < _agent_max_delay + 60.0:
+        elif _agent_max_delay + 60.0 < _check_in_delta < _agent_max_delay + 300.0:
             _style = STALE
         else:
             _style = ERROR

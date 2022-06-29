@@ -72,9 +72,10 @@ def _retrieve_results(job, result):
 def _connected_notification(agent):
     time_delta = (datetime.datetime.now() - agent.check_in)
     max_delay = (float(agent.sleep) * (float(agent.jitter) / 100)) + float(agent.sleep)
-    if datetime.datetime.fromtimestamp(823879740.0) == agent.check_in or \
-            time_delta.total_seconds() > (max_delay + 10.0):
-        websocket.emit('connected', f'{agent.name} is connected', broadcast=False)
+    if datetime.datetime.fromtimestamp(823879740.0) == agent.check_in:
+        websocket.emit('connected', f'Agent {agent.name} has arrived', broadcast=False)
+    if time_delta.total_seconds() > (max_delay + 60):
+        websocket.emit('connected', f'Agent {agent.name} has returned', broadcast=False)
     agent.check_in = datetime.datetime.now()
     _commit([agent])
 
@@ -184,4 +185,4 @@ def new_job(data):
     data = json.loads(data)
     agent = AgentModel.query.filter_by(name=data['agent_name']).first()
     job = JobModel(name=data['name'], agent=agent, arguments=data['arguments'], type=data['type'])
-    _commit(job)
+    _commit([job])
