@@ -158,6 +158,26 @@ def connect(auth):
         disconnect()
 
 
+def implants(data):
+    """
+    This event emits all current implants within the database to the client.
+    """
+    print('implants')
+    if not data:
+        _implants = [_implant.get_implant() for _implant in ImplantModel.query.all()]
+        emit('implants', {'implants': _implants}, broadcast=False)
+    data = json.loads(data)
+    create = data['create'] if 'create' in data.keys() else None
+    delete = data['delete'] if 'delete' in data.keys() else None
+    if create:
+        _implant = ImplantModel(commands=base64_to_string(data['create']))
+        _commit([_implant])
+        emit('implants', {'implants': [_implant.get_implant()]}, broadcast=False)
+    # todo Write delete implant functionality
+    if delete:
+        pass
+
+
 def agents():
     """
     This event emits all current agents within the database to the client.

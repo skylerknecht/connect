@@ -14,6 +14,7 @@ TIMESTAMP_FORMAT = '%m/%d/%Y %H:%M:%S %Z'
 Agent = namedtuple('Agent', ['name', 'check_in', 'username', 'hostname', 'pid', 'integrity',
                              'commands', 'sleep', 'jitter'])
 Stager = namedtuple('Stager', ['name', 'endpoint', 'delivery'])
+Implant = namedtuple('Implant', ['key'])
 
 
 def agents_table():

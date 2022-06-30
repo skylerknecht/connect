@@ -2,7 +2,7 @@ import datetime
 
 from connect.generate import digit_identifier, name_identifier
 from connect.generate import generate_sleep, generate_jitter, generate_endpoints
-from connect.output import Agent, Stager
+from connect.output import Agent, Stager, Implant
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
@@ -35,6 +35,9 @@ class ImplantModel(db.Model):
     @commands.setter
     def commands(self, value):
         self._commands = value
+
+    def get_implant(self):
+        return Implant(self.key)
 
 
 class AgentModel(db.Model):

@@ -3,6 +3,7 @@ import argparse
 from cmd2 import ansi, Cmd, Cmd2ArgumentParser, Fg, Statement, with_argparser
 from connect import __version__ as version
 from connect.output import print_error
+from connect.convert import string_to_base64
 
 
 class ConnectClient(Cmd):
@@ -58,6 +59,30 @@ class ConnectClient(Cmd):
             print_error('Not connected to the team listener.')
             return
         self.team_listener.emit('agents')
+
+    implants_argparser = Cmd2ArgumentParser()
+    implants_argparser.add_argument('-c', '--create', metavar='COMMANDS',
+                                    help='Create an implant by providing a command seperated list of commands.', nargs='+')
+    # implants_argparser.add_argument('-d', '--delete', help='Delete an implant.')
+
+    @with_argparser(implants_argparser)
+    def do_implants(self, args: argparse.Namespace):
+        """
+        Print implants from the team server.
+        """
+        if not self.team_listener:
+            print_error('Not connected to the team listener.')
+            return
+        if args.create:
+            commands = string_to_base64(','.join(args.create))
+            commands = f'{{"create":"{commands}"}}'
+            self.team_listener.emit('implants', commands)
+            return
+        # todo Write delete implant functionality
+        # if args.delete:
+        #     print_error('Not implemented.')
+        #     return
+        self.team_listener.emit('implants', data="")
 
     def complete_agents(self):
         """

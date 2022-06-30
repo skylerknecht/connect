@@ -14,7 +14,7 @@ from time import sleep
 
 client_websocket = socketio.Client()
 connect_client = client.ConnectClient(allow_cli_args=False, shortcuts={'*': 'interact', '!': 'shell', '?': 'help -v'},
-                                      persistent_history_file=f'{getcwd()}/.history')
+                                      persistent_history_file=f'{getcwd()}/.backup/command.history')
 
 
 def post_job(job):
@@ -66,6 +66,12 @@ def stagers(data):
     for index, _stager in enumerate(_stagers):
         _stagers[index] = Stager(*_stager)
     print_stagers_table(_stagers, _server_uri)
+
+
+@client_websocket.event
+def implants(data):
+    print('\n')
+    print_success(data)
 
 
 def main():

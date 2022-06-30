@@ -18,6 +18,7 @@ team_server.add_event('connect', endpoint.connect)
 team_server.add_event('agents', endpoint.agents)
 team_server.add_event('stagers', endpoint.stagers)
 team_server.add_event('new_job', endpoint.new_job)
+team_server.add_event('implants', endpoint.implants)
 
 for blueprint, stager in stagers.STAGERS.items():
     _stager = models.StagerModel(name=stager.name, endpoint=stager.endpoint, delivery=stager.delivery)
