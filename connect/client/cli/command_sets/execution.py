@@ -7,7 +7,7 @@ from cmd2 import Cmd, Cmd2ArgumentParser, CommandSet, with_argparser, with_defau
 @with_default_category('Execution')
 class ExecutionCommands(CommandSet):
     """
-    The STDApi command set.
+    The execution command set.
     """
 
     def __init__(self, post_job):

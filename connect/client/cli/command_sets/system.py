@@ -1,13 +1,10 @@
-import argparse
-
-from connect.convert import string_to_base64
-from cmd2 import Cmd2ArgumentParser, CommandSet, Statement, with_argparser, with_default_category, Cmd
+from cmd2 import CommandSet, Statement, with_default_category
 
 
-@with_default_category('Enumeration')
-class EnumerationCommands(CommandSet):
+@with_default_category('System')
+class SystemCommands(CommandSet):
     """
-    The STDApi command set.
+    The system command set.
     """
 
     def __init__(self, post_job):
@@ -21,19 +18,6 @@ class EnumerationCommands(CommandSet):
     def do_ps(self, _: Statement):
         """ Retrieves current process information. """
         self.post_job(f'"name":"ps","arguments":"","type":1')
-
-    """ 
-    Dir Command 
-    """
-
-    dir_parser = Cmd2ArgumentParser()
-    dir_parser.add_argument('dir', help='the directory to inspect')
-
-    @with_argparser(dir_parser)
-    def do_dir(self, args: argparse.Namespace):
-        """ List the contents and properties of a directory. """
-        directory = string_to_base64(args.dir)
-        self.post_job(f'"name":"dir","arguments":"{directory}","type":1')
 
     """
     Whoami Command
@@ -58,3 +42,11 @@ class EnumerationCommands(CommandSet):
     def do_os(self, _: Statement):
         """ Retrieve the operating system's product and build information. """
         self.post_job(f'"name":"os","arguments":"","type":1')
+
+    """
+    PWD Command
+    """
+
+    def do_pwd(self, _: Statement):
+        """ Retrieve the current working directory. """
+        self.post_job(f'"name":"pwd","arguments":"","type":1')

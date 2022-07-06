@@ -7,7 +7,7 @@ from cmd2 import Cmd2ArgumentParser, CommandSet, Statement, with_argparser, with
 @with_default_category('Tokens')
 class TokenCommands(CommandSet):
     """
-    The token command set.
+    The tokens command set.
     """
 
     def __init__(self, post_job):

@@ -7,12 +7,38 @@ from cmd2 import Cmd2ArgumentParser, CommandSet, with_argparser, with_default_ca
 @with_default_category('Files')
 class FilesCommands(CommandSet):
     """
-    The STDApi command set.
+    The files command set.
     """
 
     def __init__(self, post_job):
         super().__init__()
         self.post_job = post_job
+
+    """ 
+    CD Command 
+    """
+
+    cd_parser = Cmd2ArgumentParser()
+    cd_parser.add_argument('dir', help='the directory to change to')
+
+    @with_argparser(cd_parser)
+    def do_cd(self, args: argparse.Namespace):
+        """ Change the current working directory. """
+        directory = string_to_base64(args.dir)
+        self.post_job(f'"name":"cd","arguments":"{directory}","type":1')
+
+    """ 
+    Dir Command 
+    """
+
+    dir_parser = Cmd2ArgumentParser()
+    dir_parser.add_argument('dir', help='the directory to inspect')
+
+    @with_argparser(dir_parser)
+    def do_dir(self, args: argparse.Namespace):
+        """ List the contents and properties of a directory. """
+        directory = string_to_base64(args.dir)
+        self.post_job(f'"name":"dir","arguments":"{directory}","type":1')
 
     """ 
     DelFile Command 

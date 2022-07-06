@@ -1,13 +1,13 @@
 from . import agent
 from . import tokens
-from . import enumeration
+from . import system
 from . import execution
 from . import files
 
 COMMAND_SETS = [
     tokens.TokenCommands,
     agent.AgentCommands,
-    enumeration.EnumerationCommands,
+    system.SystemCommands,
     execution.ExecutionCommands,
     files.FilesCommands
 ]

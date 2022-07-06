@@ -8,7 +8,7 @@ from cmd2 import Cmd2ArgumentParser, CommandSet, with_argparser, with_default_ca
 @with_default_category('Agent')
 class AgentCommands(CommandSet):
     """
-    The STDApi command set.
+    The agent command set.
     """
 
     def __init__(self, post_job):
