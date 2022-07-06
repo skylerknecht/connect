@@ -50,3 +50,11 @@ class SystemCommands(CommandSet):
     def do_pwd(self, _: Statement):
         """ Retrieve the current working directory. """
         self.post_job(f'"name":"pwd","arguments":"","type":1')
+
+    """
+    PID Command
+    """
+
+    def do_pid(self, _: Statement):
+        """ Retrieve the current process ID. """
+        self.post_job(f'"name":"pid","arguments":"","type":1')
