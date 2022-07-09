@@ -101,6 +101,7 @@ class ConnectClient(Cmd):
         """
         Interact with an agent.
         """
+        self.disable_command_sets()
         _commands = None
         for _agent in self.agents:
             if _agent.name == args.agent:
