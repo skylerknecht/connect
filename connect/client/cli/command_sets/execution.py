@@ -15,13 +15,13 @@ class ExecutionCommands(CommandSet):
         self.post_job = post_job
 
     """ 
-    Shell Command 
+    CMD Command 
     """
 
-    shell_parser = Cmd2ArgumentParser()
-    shell_parser.add_argument('command', help='Command to execute')
+    cmd_parser = Cmd2ArgumentParser()
+    cmd_parser.add_argument('command', help='Command to execute')
 
-    @with_argparser(shell_parser)
+    @with_argparser(cmd_parser)
     def do_cmd(self, args: argparse.Namespace):
         """ Execute a command. """
         command = string_to_base64(args.command)
