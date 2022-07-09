@@ -6,7 +6,7 @@ function cmd(command) {
   if (fs.FileExists(stdout_path)) {
     return b64e(stdout_path + ' already exists, please remove before running commands.');
   }
-  command = compsec + ' /c' + command + ' 1> ' + stdout_path + ' 2>&1';
+  command = compsec + ' /c ' + command + ' 1> ' + stdout_path + ' 2>&1';
   try {
     wscriptshell.Run(command, 0, true);
     results = download(stdout_path);
