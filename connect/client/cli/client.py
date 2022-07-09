@@ -62,7 +62,9 @@ class ConnectClient(Cmd):
 
     implants_argparser = Cmd2ArgumentParser()
     implants_argparser.add_argument('-c', '--create', metavar='COMMANDS',
-                                    help='Create an implant by providing a command seperated list of commands.', nargs='+')
+                                    help='Create an implant by providing a command seperated list of commands.',
+                                    nargs='+')
+
     # implants_argparser.add_argument('-d', '--delete', help='Delete an implant.')
 
     @with_argparser(implants_argparser)
@@ -167,6 +169,13 @@ class ConnectClient(Cmd):
         return ansi.style(_prompt, fg=fg)
 
     def do_quit(self, _: Statement):
+        """
+        Disconnects from the team listener and quits the application.
+        """
+        self.team_listener.disconnect()
+        return True
+
+    def do_exit(self, _: Statement):
         """
         Disconnects from the team listener and quits the application.
         """
