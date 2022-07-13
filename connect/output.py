@@ -26,7 +26,7 @@ def agents_table():
     _connections_table = Table(style=TABLE_STYLE)
     _connections_table.box = box.MINIMAL
     _connections_table.add_column('Name', justify='center')
-    _connections_table.add_column('Check In Delta', justify='center')
+    _connections_table.add_column('Delay', justify='center')
     _connections_table.add_column('Username', justify='center')
     _connections_table.add_column('Hostname', justify='center')
     _connections_table.add_column('PID', justify='center')
