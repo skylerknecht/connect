@@ -26,6 +26,10 @@ organization has been obtained.
   - Gitlab [@KevinJClark](https://gitlab.com/KevinJClark)
   - Twitter [@GuhnooPlusLinux](https://twitter.com/GuhnooPlusLinux)
 
+#### Testing
+- Nate Curry 
+  - Twitter [@clutchisback1](https://twitter.com/clutchisback1)
+
 #### Graphics
 - Rachel Taniyama 
   - Instagram [@sineater.obj](https://www.instagram.com/sineater.obj/)
