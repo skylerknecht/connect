@@ -73,9 +73,9 @@ def _connected_notification(agent):
     time_delta = (datetime.datetime.now() - agent.check_in)
     max_delay = (float(agent.sleep) * (float(agent.jitter) / 100)) + float(agent.sleep)
     if datetime.datetime.fromtimestamp(823879740.0) == agent.check_in:
-        websocket.emit('connected', f'Agent {agent.name} has arrived', broadcast=False)
-    if time_delta.total_seconds() > (max_delay + 60):
-        websocket.emit('connected', f'Agent {agent.name} has returned', broadcast=False)
+        websocket.emit('connected', {'agent': agent.get_agent()}, broadcast=False)
+    elif time_delta.total_seconds() > (max_delay + 60):
+        websocket.emit('connected', {'agent': agent.get_agent()}, broadcast=False)
     agent.check_in = datetime.datetime.now()
     _commit([agent])
 

@@ -13,7 +13,7 @@ class ConnectClient(Cmd):
 
     current_agent = ''
     agents = []
-    team_listener = None
+    team_server = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -55,10 +55,10 @@ class ConnectClient(Cmd):
         """
         Print agents from the team server.
         """
-        if not self.team_listener:
+        if not self.team_server:
             print_error('Not connected to the team listener.')
             return
-        self.team_listener.emit('agents')
+        self.team_server.emit('agents')
 
     implants_argparser = Cmd2ArgumentParser()
     implants_argparser.add_argument('-c', '--create', metavar='COMMANDS',
@@ -72,19 +72,19 @@ class ConnectClient(Cmd):
         """
         Print implants from the team server.
         """
-        if not self.team_listener:
+        if not self.team_server:
             print_error('Not connected to the team listener.')
             return
         if args.create:
             commands = string_to_base64(','.join(args.create))
             commands = f'{{"create":"{commands}"}}'
-            self.team_listener.emit('implants', commands)
+            self.team_server.emit('implants', commands)
             return
         # todo Write delete implant functionality
         # if args.delete:
         #     print_error('Not implemented.')
         #     return
-        self.team_listener.emit('implants', data="")
+        self.team_server.emit('implants', data="")
 
     def complete_agents(self):
         """
@@ -119,10 +119,10 @@ class ConnectClient(Cmd):
         """
         Print stagers from the team listener.
         """
-        if not self.team_listener:
+        if not self.team_server:
             print_error('Not connected to the team listener.')
             return
-        self.team_listener.emit('stagers')
+        self.team_server.emit('stagers')
 
     # noinspection PyMethodMayBeStatic
     def do_version(self, _: Statement):
@@ -170,14 +170,14 @@ class ConnectClient(Cmd):
 
     def do_quit(self, _: Statement):
         """
-        Disconnects from the team listener and quits the application.
+        Disconnects from the team server and quits the application.
         """
-        self.team_listener.disconnect()
+        self.team_server.disconnect()
         return True
 
     def do_exit(self, _: Statement):
         """
-        Disconnects from the team listener and quits the application.
+        Disconnects from the team server and quits the application.
         """
-        self.team_listener.disconnect()
+        self.team_server.disconnect()
         return True

@@ -10,7 +10,7 @@ from connect.configs.server import TeamServerConfig
 from connect.output import print_success
 
 
-team_server = server.TeamServer('Team Listener', TeamServerConfig, models.db, endpoint.websocket)
+team_server = server.TeamServer('Team Server', TeamServerConfig, models.db, endpoint.websocket)
 team_server.create_database()
 team_server.drop_stagers()
 team_server.add_blueprint(endpoint.check_in)

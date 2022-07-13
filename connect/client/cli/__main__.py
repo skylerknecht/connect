@@ -30,8 +30,10 @@ connect_client.disable_command_sets()
 
 @client_websocket.event
 def connected(data):
+    _agent = Agent(*data['agent'])
+    connect_client.agents.extend([_agent])
     print('\n')
-    print_success(data)
+    print_success(f'{_agent.name} is available.')
 
 
 @client_websocket.event
@@ -85,7 +87,7 @@ def main():
     args = parser.parse_args()
 
     client_websocket.connect(args.team_server_uri, auth=args.key)
-    connect_client.team_listener = client_websocket
+    connect_client.team_server = client_websocket
     connect_client.cmdloop()
 
 
