@@ -9,12 +9,11 @@ db = SQLAlchemy()
 
 
 class StagerModel(db.Model):
-    name = db.Column(db.String, primary_key=True)
-    endpoint = db.Column(db.Integer, nullable=True)
-    delivery = db.Column(db.String, nullable=False)
+    type = db.Column(db.String, primary_key=True)
+    endpoints = db.Column(db.Integer, nullable=True)
 
     def get_stager(self):
-        return Stager(self.name, self.endpoint, self.delivery)
+        return Stager(self.type, self.endpoints)
 
 
 class ImplantModel(db.Model):

@@ -13,7 +13,7 @@ TIMESTAMP_FORMAT = '%m/%d/%Y %H:%M:%S %Z'
 
 Agent = namedtuple('Agent', ['name', 'check_in', 'username', 'hostname', 'pid', 'integrity',
                              'commands', 'sleep', 'jitter'])
-Stager = namedtuple('Stager', ['name', 'endpoint', 'delivery'])
+Stager = namedtuple('Stager', ['type', 'endpoints'])
 Implant = namedtuple('Implant', ['key'])
 
 
@@ -42,8 +42,8 @@ def stagers_table():
     """
     _stagers_table = Table(style=TABLE_STYLE)
     _stagers_table.box = box.MINIMAL
-    _stagers_table.add_column('Name', justify='center')
-    _stagers_table.add_column('Delivery', justify='center')
+    _stagers_table.add_column('Type', justify='center')
+    _stagers_table.add_column('Endpoints', justify='center')
     return _stagers_table
 
 
@@ -106,8 +106,8 @@ def print_stagers_table(stagers: list, server_uri):
     _new_line()
     _stagers_table = stagers_table()
     for _stager in stagers:
-        _delivery = _stager.delivery.replace('~endpoint~', f'{server_uri}{_stager.endpoint}')
-        _stagers_table.add_row(_stager.name, _delivery, style=STATUS)
+        _endpoints = _stager.endpoints.replace('~server_uri~', server_uri)
+        _stagers_table.add_row(_stager.type, _endpoints, style=STATUS)
     print(_stagers_table)
 
 

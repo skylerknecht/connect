@@ -21,7 +21,7 @@ team_server.add_event('new_job', endpoint.new_job)
 team_server.add_event('implants', endpoint.implants)
 
 for blueprint, stager in stagers.STAGERS.items():
-    _stager = models.StagerModel(name=stager.name, endpoint=stager.endpoint, delivery=stager.delivery)
+    _stager = models.StagerModel(type=stager.type, endpoints=stager.endpoints)
     team_server.add_stager(_stager)
     team_server.add_blueprint(blueprint)
 

