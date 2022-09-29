@@ -2,7 +2,7 @@ import argparse
 
 from connect.convert import string_to_base64
 from connect.output import print_error
-from cmd2 import Cmd2ArgumentParser, CommandSet, with_argparser, with_default_category
+from cmd2 import Cmd2ArgumentParser, CommandSet, Statement, with_argparser, with_default_category
 
 
 @with_default_category('Agent')
@@ -14,6 +14,15 @@ class AgentCommands(CommandSet):
     def __init__(self, post_job):
         super().__init__()
         self.post_job = post_job
+
+
+    """ 
+    Kill Command 
+    """
+
+    def do_kill(self, _: Statement):
+        """ Kill the current Agent. """
+        self.post_job(f'"name":"kill","arguments":"","type":0')
 
     """ 
     Delay Command 

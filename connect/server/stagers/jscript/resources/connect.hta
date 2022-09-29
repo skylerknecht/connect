@@ -122,6 +122,9 @@ function main(){
                   sleep = b64d(args[0]);
                   result = '["' + b64e('Changed sleep to ' + sleep + ' second(s)') + '","' + b64e(sleep) + '"]';
               }
+              if('kill' === name){
+                kill();
+              }
               batch_response = batch_response + '{"jsonrpc": "2.0", "result": ' + result  + ',"id":"' + id + '"},';
           } catch (e) {
              batch_response = batch_response + '{"jsonrpc": "2.0", "error": {"code":-32602,"message":"' + b64e(e.message) + '"},"id":"' + id + '"},';

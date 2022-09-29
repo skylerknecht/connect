@@ -8,7 +8,7 @@ endpoint = digit_identifier()
 artifact = string_identifier()
 endpoints = f'~server_uri~{endpoint}.js\n' \
             f'~server_uri~{endpoint}.hta'
-commands = 'delay,dir,hostname,whoami,os,cmd,delfile,download,upload'
+commands = 'delay,dir,hostname,kill,whoami,os,cmd,delfile,download,upload'
 
 
 @jscript.route(f'/{endpoint}.js', methods=['GET'])
