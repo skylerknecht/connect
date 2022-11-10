@@ -22,7 +22,7 @@ class AgentCommands(CommandSet):
 
     def do_kill(self, _: Statement):
         """ Kill the current Agent. """
-        self.post_job(f'"name":"kill","arguments":"","type":0')
+        self.post_job(f'"name":"kill","description":"die","arguments":"","type":0')
 
     """ 
     Delay Command 
@@ -37,13 +37,13 @@ class AgentCommands(CommandSet):
         """ Change the sleep and jitter to alter the check_in interval. """
         if args.sleep:
             sleep = string_to_base64(str(float(args.sleep)))
-            self.post_job(f'"name":"set sleep","arguments":"{sleep}","type":1')
+            self.post_job(f'"name":"set sleep","description":"change the current sleep interval","arguments":"{sleep}","type":1')
         if args.jitter:
             if 0 > float(args.jitter) or float(args.jitter) > 100:
                 print_error('Please set jitter to a number between 0 and 100 inclusive.')
                 return
             jitter = string_to_base64(str(float(args.jitter)))
-            self.post_job(f'"name":"set jitter","arguments":"{jitter}","type":1')
+            self.post_job(f'"name":"set jitter","description":"changed the current jitter","arguments":"{jitter}","type":1')
         if not args.jitter and not args.sleep:
-            self.post_job(f'"name":"delay","arguments":"","type":1')
+            self.post_job(f'"name":"delay","description":"retrieve the current sleep and jitter","arguments":"","type":1')
 

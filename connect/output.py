@@ -127,17 +127,28 @@ def print_error(message: str):
 
     :param str message: The message to print.
     """
-    prefix = '[-] '
+    prefix = '[ERROR] '
     print(f'[bold {ERROR}]{prefix}{message}[/bold {ERROR}]')
 
 
-def print_status(message: str):
+def print_debug(message: str, debug_mode: bool):
+    """
+    Print an error message to the console.
+
+    :param str message: The message to print.
+    """
+    prefix = '[DEBUG] '
+    if debug_mode:
+        print(f'[bold {STALE}]{prefix}{message}[/bold {STALE}]')
+
+
+def print_info(message: str):
     """
     Print a status message to the console.
 
     :param str message: The message to print.
     """
-    prefix = '[*] '
+    prefix = '[INFO] '
     print(f'[bold {STATUS}]{prefix}{message}[/bold {STATUS}]')
 
 
@@ -147,5 +158,5 @@ def print_success(message: str):
 
     :param str message: The message to print.
     """
-    prefix = '[+] '
+    prefix = '[SUCCESS] '
     print(f'[bold {SUCCESS}]{prefix}{message}[/bold {SUCCESS}]')

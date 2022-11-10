@@ -17,7 +17,7 @@ class SystemCommands(CommandSet):
 
     def do_ps(self, _: Statement):
         """ Retrieves current process information. """
-        self.post_job(f'"name":"ps","arguments":"","type":1')
+        self.post_job(f'"name":"ps","description":"retrieve current running processes","arguments":"","type":1')
 
     """
     Whoami Command
@@ -25,7 +25,7 @@ class SystemCommands(CommandSet):
 
     def do_whoami(self, _: Statement):
         """ Retrieve the username of the user. """
-        self.post_job('"name":"whoami","arguments":"","type":1')
+        self.post_job('"name":"whoami","description":"retrieve the current user","arguments":"","type":1')
 
     """ 
     Hostname Command 
@@ -33,7 +33,7 @@ class SystemCommands(CommandSet):
 
     def do_hostname(self, _: Statement):
         """ Retrieve the hostname of the machine. """
-        self.post_job('"name":"hostname","arguments":"","type":1')
+        self.post_job('"name":"hostname","description":"retrieve the hostname","arguments":"","type":1')
 
     """
     OS Command
@@ -41,7 +41,7 @@ class SystemCommands(CommandSet):
 
     def do_os(self, _: Statement):
         """ Retrieve the operating system's product and build information. """
-        self.post_job(f'"name":"os","arguments":"","type":1')
+        self.post_job(f'"name":"os","description":"retrieve the operating system","arguments":"","type":1')
 
     """
     PWD Command
@@ -49,7 +49,7 @@ class SystemCommands(CommandSet):
 
     def do_pwd(self, _: Statement):
         """ Retrieve the current working directory. """
-        self.post_job(f'"name":"pwd","arguments":"","type":1')
+        self.post_job(f'"name":"pwd","description":"retrieve the current working directory","arguments":"","type":1')
 
     """
     PID Command
@@ -57,4 +57,4 @@ class SystemCommands(CommandSet):
 
     def do_pid(self, _: Statement):
         """ Retrieve the current process ID. """
-        self.post_job(f'"name":"pid","arguments":"","type":1')
+        self.post_job(f'"name":"pid","description":"retrieve the current process identifier","arguments":"","type":1')

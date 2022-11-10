@@ -6,7 +6,7 @@ from . import client
 from . import command_sets
 from connect.convert import base64_to_string
 from connect.output import print_agents_table, print_stagers_table
-from connect.output import print_success, print_status
+from connect.output import print_success, print_info, print_error
 from connect.output import Agent, Stager
 from os import getcwd
 from sys import exit
@@ -17,13 +17,13 @@ connect_client = client.ConnectClient(allow_cli_args=False, shortcuts={'*': 'int
                                       persistent_history_file=f'{getcwd()}/.backup/command.history')
 
 
-def post_job(job):
-    job_json = f'{{"agent_name":"{connect_client.current_agent}",{job}}}'
-    client_websocket.emit('new_job', job_json)
+def post_task(task):
+    task_json = f'{{"agent_name":"{connect_client.current_agent}",{task}}}'
+    client_websocket.emit('new_task', task_json)
 
 
 for command_set in command_sets.COMMAND_SETS:
-    connect_client.register_command_set(command_set(post_job))
+    connect_client.register_command_set(command_set(post_task))
 
 connect_client.disable_command_sets()
 
@@ -37,18 +37,24 @@ def connected(data):
 
 
 @client_websocket.event
-def job_sent(data):
+def task_sent(data):
     print('\n')
-    print_status(data)
+    print_info(data)
 
 
 @client_websocket.event
-def job_results(data):
+def task_results(data):
     data = json.loads(data)
     print('\n')
-    print_status(data['banner'])
+    print_success(data['banner'])
     print(base64_to_string(data['results']))
 
+@client_websocket.event
+def task_error(data):
+    data = json.loads(data)
+    print('\n')
+    print_error(data['banner'])
+    print(base64_to_string(data['results']))
 
 @client_websocket.event
 def agents(data):

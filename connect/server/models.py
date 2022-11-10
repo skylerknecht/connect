@@ -1,4 +1,5 @@
 import datetime
+import json
 
 from connect.generate import digit_identifier, name_identifier
 from connect.generate import generate_sleep, generate_jitter, generate_endpoints
@@ -23,17 +24,26 @@ class ImplantModel(db.Model):
     jitter = db.Column(db.String, default=generate_jitter)
     endpoints = db.Column(db.String, default=generate_endpoints)
     _commands = db.Column(db.String, default='')
+    _available_modules = db.Column(db.String, default='{}')
 
     # relationships
     agents = db.relationship('AgentModel', backref='implant', lazy=True)
 
     @property
     def commands(self):
-        return [str(x) for x in self._commands.split(',')]
+        return [str(command) for command in self._commands.split(',')]
 
     @commands.setter
     def commands(self, value):
         self._commands = value
+    
+    @property
+    def available_modules(self):
+        return json.loads(self._available_modules)
+
+    @available_modules.setter
+    def available_modules(self, value):
+        self._available_modules = json.dumps(value)
 
     def get_implant(self):
         return Implant(self.key)
@@ -57,16 +67,17 @@ class AgentModel(db.Model):
     implant_key = db.Column(db.String, db.ForeignKey(ImplantModel.key))
     parent_name = db.Column(db.String, db.ForeignKey(name))
     children = db.relationship('AgentModel', backref=db.backref('parent', remote_side=[name]), lazy=True)
-    jobs = db.relationship('JobModel', backref='agent', lazy=True)
+    tasks = db.relationship('TaskModel', backref='agent', lazy=True, order_by='TaskModel.created')
 
     def get_agent(self):
         return Agent(self.name, str(self.check_in), self.username, self.hostname, self.pid, self.integrity,
                      self.implant.commands, self.sleep, self.jitter)
 
 
-class JobModel(db.Model):
+class TaskModel(db.Model):
     identifier = db.Column(db.Integer, primary_key=True, default=digit_identifier)
     name = db.Column(db.String, nullable=False)
+    description = db.Column(db.String, nullable=False)
     _arguments = db.Column(db.String, nullable=False, default='')
     agent_name = db.Column(db.Integer, db.ForeignKey(AgentModel.name), nullable=False)
     created = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now)

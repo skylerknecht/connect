@@ -25,7 +25,7 @@ class FilesCommands(CommandSet):
     def do_cd(self, args: argparse.Namespace):
         """ Change the current working directory. """
         directory = string_to_base64(args.dir)
-        self.post_job(f'"name":"cd","arguments":"{directory}","type":1')
+        self.post_job(f'"name":"cd","description":"change the current working directory","arguments":"{directory}","type":1')
 
     """ 
     Dir Command 
@@ -38,20 +38,7 @@ class FilesCommands(CommandSet):
     def do_dir(self, args: argparse.Namespace):
         """ List the contents and properties of a directory. """
         directory = string_to_base64(args.dir)
-        self.post_job(f'"name":"dir","arguments":"{directory}","type":1')
-
-    """ 
-    DelFile Command 
-    """
-
-    del_file_parser = Cmd2ArgumentParser()
-    del_file_parser.add_argument('file', help='the file to delete')
-
-    @with_argparser(del_file_parser)
-    def do_delfile(self, args: argparse.Namespace):
-        """ Delete a file. """
-        file = string_to_base64(args.file)
-        self.post_job(f'"name":"delfile","arguments":"{file}","type":1')
+        self.post_job(f'"name":"dir","description":"list a directory","arguments":"{directory}","type":1')
 
     """ 
     Download Command 
@@ -64,7 +51,7 @@ class FilesCommands(CommandSet):
     def do_download(self, args: argparse.Namespace):
         """ Download a remote file. """
         file = string_to_base64(args.file)
-        self.post_job(f'"name":"download","arguments":"{file}","type":2')
+        self.post_job(f'"name":"download","description":"download a file","arguments":"{file}","type":2')
 
     """
     Upload Command
@@ -80,4 +67,4 @@ class FilesCommands(CommandSet):
         with open(args.file, 'rb') as fd:
             file = bytes_to_base64(fd.read())
         path = string_to_base64(args.path)
-        self.post_job(f'"name":"upload","arguments":"{file},{path}","type":1')
+        self.post_job(f'"name":"upload","description":"upload a file","arguments":"{file},{path}","type":1')

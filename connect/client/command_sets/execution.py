@@ -10,9 +10,9 @@ class ExecutionCommands(CommandSet):
     The execution command set.
     """
 
-    def __init__(self, post_job):
+    def __init__(self, post_task):
         super().__init__()
-        self.post_job = post_job
+        self.post_task = post_task
 
     """ 
     CMD Command 
@@ -25,7 +25,7 @@ class ExecutionCommands(CommandSet):
     def do_cmd(self, args: argparse.Namespace):
         """ Execute a command. """
         command = string_to_base64(args.command)
-        self.post_job(f'"name":"cmd","arguments":"{command}","type":1')
+        self.post_task(f'"name":"cmd","description":"execute a command","arguments":"{command}","type":1')
 
     """
     Execute Assembly
@@ -43,4 +43,4 @@ class ExecutionCommands(CommandSet):
         arg_str = ''
         for arg in args.args:
             arg_str = arg_str + ',' + string_to_base64(arg)
-        self.post_job(f'"name":"execute_assembly","arguments":"{key},{file}{arg_str}","type":1')
+        self.post_task(f'"name":"execute_assembly","description":"execute a .NET assembly","arguments":"{key},{file}{arg_str}","type":1')

@@ -17,7 +17,7 @@ team_server.add_blueprint(endpoint.check_in)
 team_server.add_event('connect', endpoint.connect)
 team_server.add_event('agents', endpoint.agents)
 team_server.add_event('stagers', endpoint.stagers)
-team_server.add_event('new_job', endpoint.new_job)
+team_server.add_event('new_task', endpoint.new_task)
 team_server.add_event('implants', endpoint.implants)
 
 for blueprint, stager in stagers.STAGERS.items():
@@ -33,8 +33,10 @@ def main():
     parser = argparse.ArgumentParser('ConnectServer', 'Connect Server', conflict_handler='resolve')
     parser.add_argument('ip', metavar='ip', help='Server ip.')
     parser.add_argument('port', metavar='port', help='Server port.')
+    parser.add_argument('-d', '--debug', action='store_true', help='Debugging mode.')
     args = parser.parse_args()
 
+    endpoint.debug_mode = args.debug if args.debug else False
     print_success(f'Generated client args: http://{args.ip}:{args.port}/ {endpoint.key}')
     team_server.run(args.ip, args.port)
 
