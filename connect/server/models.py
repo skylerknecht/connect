@@ -23,27 +23,29 @@ class ImplantModel(db.Model):
     sleep = db.Column(db.String, default=generate_sleep)
     jitter = db.Column(db.String, default=generate_jitter)
     endpoints = db.Column(db.String, default=generate_endpoints)
-    _commands = db.Column(db.String, default='')
-    _available_modules = db.Column(db.String, default='{}')
+    _commands = db.Column(db.String)
+    _available_commands = db.Column(db.String, default='{}')
 
     # relationships
     agents = db.relationship('AgentModel', backref='implant', lazy=True)
 
     @property
     def commands(self):
-        return [str(command) for command in self._commands.split(',')]
+        if not self._commands:
+            return ''
+        return [command for command in self._commands.split(',')]
 
     @commands.setter
     def commands(self, value):
         self._commands = value
     
     @property
-    def available_modules(self):
-        return json.loads(self._available_modules)
+    def available_commands(self):
+        return json.loads(self._available_commands)
 
-    @available_modules.setter
-    def available_modules(self, value):
-        self._available_modules = json.dumps(value)
+    @available_commands.setter
+    def available_commands(self, value):
+        self._available_commands = json.dumps(value)
 
     def get_implant(self):
         return Implant(self.key)
@@ -53,6 +55,7 @@ class AgentModel(db.Model):
     # properties
     name = db.Column(db.String, primary_key=True, default=name_identifier)
     check_in = db.Column(db.DateTime, default=datetime.datetime.fromtimestamp(823879740.0))
+    _loaded_commands = db.Column(db.String)
     sleep = db.Column(db.String)
     jitter = db.Column(db.String)
 
@@ -68,6 +71,16 @@ class AgentModel(db.Model):
     parent_name = db.Column(db.String, db.ForeignKey(name))
     children = db.relationship('AgentModel', backref=db.backref('parent', remote_side=[name]), lazy=True)
     tasks = db.relationship('TaskModel', backref='agent', lazy=True, order_by='TaskModel.created')
+
+    @property
+    def loaded_commands(self):
+        if not self._loaded_commands:
+            return ''
+        return [str(command) for command in self._loaded_commands.split(',')]
+
+    @loaded_commands.setter
+    def loaded_commands(self, value):
+        self._loaded_commands = value
 
     def get_agent(self):
         return Agent(self.name, str(self.check_in), self.username, self.hostname, self.pid, self.integrity,
