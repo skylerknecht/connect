@@ -11,7 +11,16 @@ db = SQLAlchemy()
 
 class StagerModel(db.Model):
     type = db.Column(db.String, primary_key=True)
-    endpoints = db.Column(db.Integer, nullable=True)
+    _endpoints = db.Column(db.Integer, nullable=True)
+
+    @property
+    def endpoints(self):
+        return json.loads(self._endpoints)
+
+    @endpoints.setter
+    def endpoints(self, value):
+        self._endpoints = json.dumps(value)
+
 
     def get_stager(self):
         return Stager(self.type, self.endpoints)
@@ -23,9 +32,10 @@ class ImplantModel(db.Model):
     sleep = db.Column(db.String, default=generate_sleep)
     jitter = db.Column(db.String, default=generate_jitter)
     endpoints = db.Column(db.String, default=generate_endpoints)
+    _startup_commands = db.Column(db.String)
     _commands = db.Column(db.String)
-    _available_commands = db.Column(db.String, default='{}')
-
+    _available_modules = db.Column(db.String, default='{}')
+    
     # relationships
     agents = db.relationship('AgentModel', backref='implant', lazy=True)
 
@@ -40,12 +50,22 @@ class ImplantModel(db.Model):
         self._commands = value
     
     @property
-    def available_commands(self):
-        return json.loads(self._available_commands)
+    def available_modules(self):
+        return json.loads(self._available_modules)
 
-    @available_commands.setter
-    def available_commands(self, value):
-        self._available_commands = json.dumps(value)
+    @available_modules.setter
+    def available_modules(self, value):
+        self._available_modules = json.dumps(value)
+
+    @property
+    def startup_commands(self):
+        if not self._startup_commands:
+            return ''
+        return [command for command in self._startup_commands.split(',')]
+
+    @startup_commands.setter
+    def startup_commands(self, value):
+        self._startup_commands = value
 
     def get_implant(self):
         return Implant(self.key)
@@ -55,7 +75,7 @@ class AgentModel(db.Model):
     # properties
     name = db.Column(db.String, primary_key=True, default=name_identifier)
     check_in = db.Column(db.DateTime, default=datetime.datetime.fromtimestamp(823879740.0))
-    _loaded_commands = db.Column(db.String)
+    _loaded_modules = db.Column(db.String)
     sleep = db.Column(db.String)
     jitter = db.Column(db.String)
 
@@ -70,17 +90,17 @@ class AgentModel(db.Model):
     implant_key = db.Column(db.String, db.ForeignKey(ImplantModel.key))
     parent_name = db.Column(db.String, db.ForeignKey(name))
     children = db.relationship('AgentModel', backref=db.backref('parent', remote_side=[name]), lazy=True)
-    tasks = db.relationship('TaskModel', backref='agent', lazy=True, order_by='TaskModel.created')
+    tasks = db.relationship('TaskModel', backref='agent', order_by='TaskModel.created')
 
     @property
-    def loaded_commands(self):
-        if not self._loaded_commands:
+    def loaded_modules(self):
+        if not self._loaded_modules:
             return ''
-        return [str(command) for command in self._loaded_commands.split(',')]
+        return [module for module in self._loaded_modules.split(',')]
 
-    @loaded_commands.setter
-    def loaded_commands(self, value):
-        self._loaded_commands = value
+    @loaded_modules.setter
+    def loaded_modules(self, value):
+        self._loaded_modules = value
 
     def get_agent(self):
         return Agent(self.name, str(self.check_in), self.username, self.hostname, self.pid, self.integrity,
@@ -92,7 +112,7 @@ class TaskModel(db.Model):
     name = db.Column(db.String, nullable=False)
     description = db.Column(db.String, nullable=False)
     _arguments = db.Column(db.String, nullable=False, default='')
-    agent_name = db.Column(db.Integer, db.ForeignKey(AgentModel.name), nullable=False)
+    agent_name = db.Column(db.Integer, db.ForeignKey(AgentModel.name))
     created = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now)
     completed = db.Column(db.DateTime)
     sent = db.Column(db.DateTime)

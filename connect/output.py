@@ -43,7 +43,7 @@ def stagers_table():
     _stagers_table = Table(style=TABLE_STYLE)
     _stagers_table.box = box.MINIMAL
     _stagers_table.add_column('Type', justify='center')
-    _stagers_table.add_column('Endpoints', justify='center')
+    _stagers_table.add_column('Endpoint')
     return _stagers_table
 
 
@@ -104,11 +104,12 @@ def print_stagers_table(stagers: list, server_uri):
     :param list stagers: The stagers to print.
     """
     _new_line()
-    _stagers_table = stagers_table()
     for _stager in stagers:
-        _endpoints = _stager.endpoints.replace('~server_uri~', server_uri)
-        _stagers_table.add_row(_stager.type, _endpoints, style=STATUS)
-    print(_stagers_table)
+        _stagers_table = stagers_table()
+        _stagers_table.title = _stager.type
+        for endpoint_type, endpoint_uri in _stager.endpoints.items():
+            _stagers_table.add_row(endpoint_type, endpoint_uri.replace('~server_uri~', server_uri), style=STATUS)
+        print(_stagers_table)
 
 
 def print_traceback():

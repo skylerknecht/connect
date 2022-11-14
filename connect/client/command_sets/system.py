@@ -58,3 +58,11 @@ class SystemCommands(CommandSet):
     def do_pid(self, _: Statement):
         """ Retrieve the current process ID. """
         self.post_job(f'"name":"pid","description":"retrieve the current process identifier","arguments":"","type":1')
+
+    """
+    Integrity Command
+    """
+
+    def do_integrity(self, _: Statement):
+        """ Retrieve the current process integrity. """
+        self.post_job(f'"name":"integrity","description":"retrieve the current process integrity","arguments":"","type":1')

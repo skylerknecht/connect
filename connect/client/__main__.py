@@ -6,7 +6,7 @@ from . import client
 from . import command_sets
 from connect.convert import base64_to_string
 from connect.output import print_agents_table, print_stagers_table
-from connect.output import print_success, print_info, print_error
+from connect.output import print_success, print_info, print_error, print_traceback
 from connect.output import Agent, Stager
 from os import getcwd
 from sys import exit
@@ -91,8 +91,11 @@ def main():
     parser.add_argument('team_server_uri', help='Team Server\'s URI.')
     parser.add_argument('key', help='Team Server\'s Key.')
     args = parser.parse_args()
-
-    client_websocket.connect(args.team_server_uri, auth=args.key)
+    try:
+        client_websocket.connect(args.team_server_uri, auth=args.key)
+    except socketio.exceptions.ConnectionError:
+        print_error(f'Team server connection failed {args.team_server_uri}')
+        return
     connect_client.team_server = client_websocket
     connect_client.cmdloop()
 
