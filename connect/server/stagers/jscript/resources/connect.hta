@@ -64,7 +64,7 @@ function main(){
     try {
       eval("batch_request=" + post(batch_response).responseText + ";");
     } catch (e) {
-      batch_response = '[{"jsonrpc": "2.0", "error": {"code":-32700, "message":"Parse error"}, "id": "' + check_in_job_id + '"}]';
+      batch_response = '[{"jsonrpc": "2.0", "error": {"code":-32700, "message":b64e("Parse error")}, "id": "' + check_in_job_id + '"}]';
       return;
     }
     try {

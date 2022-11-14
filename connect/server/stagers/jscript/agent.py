@@ -21,7 +21,7 @@ def generate_jscript_implant():
     implant will attempt to establish a command and control connection to the framework.
     """
 
-    implant = ImplantModel(commands=commands)
+    implant = ImplantModel(implant_type='jscript', commands=commands)
     db.session.add(implant)
     db.session.commit()
     websocket.emit('job_sent', 'JScript implant sent.')
@@ -40,7 +40,7 @@ def generate_mshta_implant():
     implant will attempt to establish a command and control connection to the framework.
     """
 
-    implant = ImplantModel(commands=commands)
+    implant = ImplantModel(implant_type='jscript', commands=commands)
     db.session.add(implant)
     db.session.commit()
     websocket.emit('job_sent', 'JScript MSHTA implant sent.')

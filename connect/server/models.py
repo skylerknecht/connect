@@ -29,6 +29,7 @@ class StagerModel(db.Model):
 class ImplantModel(db.Model):
     # properties
     key = db.Column(db.String, primary_key=True, default=digit_identifier)
+    implant_type = db.Column(db.String, nullable=False)
     sleep = db.Column(db.String, default=generate_sleep)
     jitter = db.Column(db.String, default=generate_jitter)
     endpoints = db.Column(db.String, default=generate_endpoints)
@@ -83,6 +84,7 @@ class AgentModel(db.Model):
     username = db.Column(db.String, nullable=False, default='....')
     hostname = db.Column(db.String, nullable=False, default='....')
     os = db.Column(db.String, nullable=False, default='....')
+    ip = db.Column(db.String, nullable=False, default='....')
     integrity = db.Column(db.String, nullable=False, default='....')
     pid = db.Column(db.String, nullable=False, default='....')
 
@@ -103,7 +105,7 @@ class AgentModel(db.Model):
         self._loaded_modules = value
 
     def get_agent(self):
-        return Agent(self.name, str(self.check_in), self.username, self.hostname, self.pid, self.integrity,
+        return Agent(self.name, str(self.check_in), self.username, self.hostname, self.implant.implant_type, self.ip, self.os, self.integrity,
                      self.implant.commands, self.sleep, self.jitter)
 
 

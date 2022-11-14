@@ -41,7 +41,15 @@ class SystemCommands(CommandSet):
 
     def do_os(self, _: Statement):
         """ Retrieve the operating system's product and build information. """
-        self.post_job(f'"name":"os","description":"retrieve the operating system","arguments":"","type":1')
+        self.post_job(f'"name":"os","description":"retrieve the current operating system version","arguments":"","type":1')
+
+    """
+    IP Command
+    """
+
+    def do_ip(self, _: Statement):
+        """ Retrieve the internet protocol address. """
+        self.post_job(f'"name":"ip","description":"retrieve the the internet protocol address","arguments":"","type":1')
 
     """
     PWD Command
