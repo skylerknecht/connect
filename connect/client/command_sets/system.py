@@ -19,6 +19,14 @@ class SystemCommands(CommandSet):
         """ Retrieves current process information. """
         self.post_job(f'"name":"ps","description":"retrieve current running processes","arguments":"","type":1')
 
+    """ 
+    TMP Command 
+    """
+
+    def do_tmp(self, _: Statement):
+        """ Retrieves current value of %TEMP% """
+        self.post_job(f'"name":"tmp","description":"retrieve the value of %TEMP%","arguments":"","type":1')
+
     """
     Whoami Command
     """

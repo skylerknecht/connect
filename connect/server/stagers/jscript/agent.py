@@ -10,7 +10,8 @@ endpoints = {
     'jscript': f'~server_uri~{endpoint}.js',
     'mshta': f'~server_uri~{endpoint}.hta'
 }
-commands = 'delay,dir,hostname,kill,whoami,os,cmd,delfile,download,upload'
+jscript_commands = 'delay,dir,hostname,kill,whoami,os,cmd,download,upload,tmp'
+mshta_commands = 'delay,dir,hostname,kill,whoami,os,cmd,tmp'
 
 
 @jscript.route(f'/{endpoint}.js', methods=['GET'])
@@ -21,7 +22,7 @@ def generate_jscript_implant():
     implant will attempt to establish a command and control connection to the framework.
     """
 
-    implant = ImplantModel(implant_type='jscript', commands=commands)
+    implant = ImplantModel(implant_type='jscript', commands=jscript_commands)
     db.session.add(implant)
     db.session.commit()
     websocket.emit('job_sent', 'JScript implant sent.')
@@ -40,7 +41,7 @@ def generate_mshta_implant():
     implant will attempt to establish a command and control connection to the framework.
     """
 
-    implant = ImplantModel(implant_type='jscript', commands=commands)
+    implant = ImplantModel(implant_type='mshta', commands=mshta_commands)
     db.session.add(implant)
     db.session.commit()
     websocket.emit('job_sent', 'JScript MSHTA implant sent.')

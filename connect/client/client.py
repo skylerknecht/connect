@@ -41,7 +41,7 @@ class ConnectClient(Cmd):
         Disable all command sets.
         """
         for command_set in self._installed_command_sets:
-            self.disable_category(command_set.cmd2_default_help_category, 'Not available.')
+            self.disable_category(command_set.cmd2_default_help_category, 'Interact with an agent that supports this command.')
 
     def do_back(self, _: Statement):
         """

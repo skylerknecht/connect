@@ -31,7 +31,7 @@ def agents_table():
     _connections_table.add_column('Username', justify='center')
     _connections_table.add_column('Hostname', justify='center')
     _connections_table.add_column('Integrity', justify='center')
-    _connections_table.add_column('OS', justify='center')
+    _connections_table.add_column('Operating System', justify='center')
     return _connections_table
 
 
@@ -63,7 +63,7 @@ def _new_line():
     print('\n')
 
 
-def print_agents_table(_agents: list, current_agent: str, current_connection_prefix='*'):
+def print_agents_table(_agents: list, current_agent: str, current_connection_prefix='*', all_agents=False):
     """
     Print connections to the console.
 
@@ -80,6 +80,12 @@ def print_agents_table(_agents: list, current_agent: str, current_connection_pre
         _check_in_delta = (datetime.now() - _check_in).total_seconds()
         _check_in_str = f'{int(_check_in_delta)} second(s)'
         _agent_max_delay = (float(_agent.sleep) * (float(_agent.jitter) / 100)) + float(_agent.sleep)
+        if not all_agents:
+            if _check_in_delta <= _agent_max_delay + 60.0:
+                _agents_table.add_row(f'{_prefix} {_agent.name}', _agent.type, _agent.ip,
+                              _agent.username, _agent.hostname, _agent.integrity, 
+                              _agent.os, style=SUCCESS)
+            continue
         if _check_in.timestamp() == 823879740.0:
             _check_in_str = '....'
             _style = STATUS

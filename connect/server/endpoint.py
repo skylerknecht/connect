@@ -4,7 +4,7 @@ import os
 
 from connect.server.models import db, StagerModel, AgentModel, TaskModel, ImplantModel
 from connect.generate import digit_identifier, string_identifier
-from connect.output import print_traceback, print_debug
+from connect.output import print_traceback, print_debug, print_error
 from connect.convert import base64_to_string, base64_to_bytes, string_to_base64, xor_base64
 from flask_socketio import emit, disconnect, SocketIO
 from flask import Blueprint, request, jsonify, redirect
@@ -14,6 +14,14 @@ check_in = Blueprint('check_in', __name__)
 key = digit_identifier()
 websocket = SocketIO(max_http_buffer_size=1e10)
 
+error_banners = {
+    -32700: 'failed to parse the batch request.',                          # Invalid JSON was received by the agent/implant.
+    -32600: 'failed to process a task.',                                   # The JSON is not a valid Task object.
+    -32601: 'does not support the command:',                               # The command does not exist / is not available.
+    -32602: 'was provided incorrect arguments for the command:',           # Invalid command arguments(s).
+    -32603: 'Internal error',                                              # Internal JSON-RPC error.
+    -32000: 'Server error'                                                 # Reserved for implementation-defined server-errors.
+}
 
 def _commit(models: list):
     """
@@ -27,24 +35,28 @@ def _commit(models: list):
 
 
 def _retrieve_error(task, error):
-    task.result = error['message']
+    agent = task.agent
+    error_result = error['message']
+    error_banner = error_banners[error['code']]
+    websocket.emit(f'task_error', f'{{"banner":"{agent.name} {error_banner} ",'
+                                    f'"results":"{error_result}"}}')                       
     task.completed = datetime.datetime.now()
+    task.results = error_result
     _commit([task])
 
 
-def _retrieve_results(task, result, errno):
+def _retrieve_results(task, result):
     agent = task.agent
     command = task.name
-
+        
     # A batch result is reserved to set agent properties.
-    if isinstance(result, list) and errno == 'results':
+    if isinstance(result, list):
         _result = result[0]
         _property = base64_to_string(result[1])
         if command == 'hostname':
             agent.hostname = _property
         if command == 'load':
             module_name = _property
-            print(_property)
             agent.loaded_modules = _property.lower() if not agent.loaded_modules else ','.join(agent.loaded_modules) + f',{_property.lower()}'
         if command == 'whoami':
             agent.username = _property
@@ -69,7 +81,7 @@ def _retrieve_results(task, result, errno):
     if task.type == 1 or task.type == -1:
         task.results = base64_to_string(_result)
         if task.type > 0:
-            websocket.emit(f'task_{errno}', f'{{"banner":"Task results from {agent.name}:",'
+            websocket.emit(f'task_results', f'{{"banner":"Task results from {agent.name}:",'
                                             f'"results":"{_result}"}}')
     if task.type == 2 or task.type == -2:
         file = base64_to_bytes(_result)
@@ -78,7 +90,7 @@ def _retrieve_results(task, result, errno):
         with open(filename, 'wb') as fd:
             fd.write(file)
         if task.type > 0:
-            websocket.emit(f'task_{errno}', f'{{"banner":"Wrote task results from {agent.name} to:",'
+            websocket.emit(f'task_results', f'{{"banner":"Wrote task results from {agent.name} to:",'
                                             f'"results":"{string_to_base64(filename)}"}}')
     task.completed = datetime.datetime.now()
     _commit([agent, task])
@@ -143,28 +155,54 @@ def endpoint(uri):
 
     try:
         if not request.get_data():
+            print_debug(f'Request made to /{uri} with no data.', debug_mode)
             return redirect("https://www.google.com")
         batch_response = request.get_json(force=True)        
     except Exception as e:
-        print_debug(f'Failed to parse JSON: {request.get_data()} {uri} : {e}', debug_mode)
+        print_error(f'The server failed to parse a batch response')
+        print(f'JSON Data: {request.get_data()} \nURI: /{uri} \nException: {e}')
+        print('-'*50)
         return redirect("https://www.google.com")
 
     try:
         batch_request = []
         for task in batch_response:
+            # parse task_id, task_result and task_error
+            # retrieve task with task_id
             task_id = task['id'] if 'id' in task.keys() else None
             task_result = task['result'] if 'result' in task.keys() else None
             task_error = task['error'] if 'error' in task.keys() else None
             task = TaskModel.query.filter_by(identifier=task_id).first()
-            if not task:
-                return redirect("https://www.google.com")
-            
-            if task_result:
-                _retrieve_results(task, task_result, 'results')
+            if not task and task_error:
+                # if there is a error with no task then it is an implant error
+                error_result = base64_to_string(task_error['message'])
+                error_banner = error_banners[task_error['code']]
+                print_error(f'An implant {error_banner}')
+                print(error_result)
+                print('-'*50)
+                continue
+            if not task and task_result:
+                # if there is a result with no task then throw a debug message
+                print_debug(f'Failed to process results: {task}', debug_mode)
+                continue
+            if task_error and task.name == 'check_in':
+                # if there is a error with a task name of check_in then throw error agent failed to parse the task
+                error_result = base64_to_string(task_error['message'])
+                error_banner = error_banners[task_error['code']]
+                print_error(f'{task.agent.name} {error_banner}')
+                print(error_result)
+                print('-'*50)
+                continue
+            if task_result and task.name == 'check_in':
+                # if there is a result with a task name of check_in then gather unsent tasks
+                batch_request.extend(_retrieve_unsent_tasks(task))         
+                continue
             if task_error:
-                _retrieve_results(task, task_error['message'], 'error')
-            if task.name == 'check_in':
-                batch_request.extend(_retrieve_unsent_tasks(task))
+                _retrieve_error(task, task_error)
+                continue
+            if task_result:
+                _retrieve_results(task, task_result)
+                continue
         return jsonify(batch_request)
     except Exception:
         print_traceback()
