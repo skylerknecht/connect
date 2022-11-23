@@ -1,5 +1,6 @@
-from cmd2 import CommandSet, Statement, with_default_category
+from connect.convert import string_to_base64
 
+from cmd2 import CommandSet, Statement, with_default_category, Cmd2ArgumentParser, with_argparser, argparse
 
 @with_default_category('System')
 class SystemCommands(CommandSet):
@@ -74,3 +75,18 @@ class SystemCommands(CommandSet):
     def do_integrity(self, _: Statement):
         """ Retrieve the current process integrity. """
         self.post_job(f'"name":"integrity","description":"retrieve the current process integrity","arguments":"","type":1')
+
+    """
+    Portscan Command
+    """
+
+    portscan_parser = Cmd2ArgumentParser()
+    portscan_parser.add_argument('ips', help='The ip(s) to scan. Supported input: 0.0.0.1 | 0.0.0.0/24 | 0.0.0.1-0.0.0.255')
+    portscan_parser.add_argument('ports', help='The port(s) to scan. Supported input: 445 | 443-445 | 80,443,445')
+
+    @with_argparser(portscan_parser)
+    def do_portscan(self, args: argparse.Namespace):
+        """ Scan for open ports. """
+        ips_b64 = string_to_base64(args.ips)
+        ports_b64 = string_to_base64(args.ports)
+        self.post_job(f'"name":"portscan","description":"scan for open ports","arguments":"{ips_b64},{ports_b64}","type":1')

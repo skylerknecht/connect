@@ -23,7 +23,12 @@ available_modules = {
     "cd":["/connect/server/stagers/csharp/resources/modules/FileSystem.exe", "FileSystem"],
     "download":["/connect/server/stagers/csharp/resources/modules/FileSystem.exe", "FileSystem"],
     "upload":["/connect/server/stagers/csharp/resources/modules/FileSystem.exe", "FileSystem"],
-    "drives":["/connect/server/stagers/csharp/resources/modules/FileSystem.exe", "FileSystem"]
+    "drives":["/connect/server/stagers/csharp/resources/modules/FileSystem.exe", "FileSystem"],
+    "make_token":["/connect/server/stagers/csharp/resources/modules/Tokens.exe", "Tokens"],
+    "steal_token":["/connect/server/stagers/csharp/resources/modules/Tokens.exe", "Tokens"],
+    "get_token":["/connect/server/stagers/csharp/resources/modules/Tokens.exe", "Tokens"],
+    "rev2self":["/connect/server/stagers/csharp/resources/modules/Tokens.exe", "Tokens"],
+    "portscan":["/connect/server/stagers/csharp/resources/modules/Portscan.exe", "Portscan"]
 }
 commands = 'kill,delay,whoami,hostname,integrity,os,ip,execute_assembly,cmd'
 commands = commands + ',' + ','.join(available_modules.keys()) if available_modules.keys() else commands

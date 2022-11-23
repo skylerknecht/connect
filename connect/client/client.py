@@ -157,6 +157,9 @@ class ConnectClient(Cmd):
         for command in _commands:
             self.hidden_commands.append(command)
 
+    def print(self, msg):
+        self.poutput(msg)
+
     @staticmethod
     def _stylize_prompt(_prompt: str, fg: Fg = Fg.DARK_GRAY) -> str:
         """

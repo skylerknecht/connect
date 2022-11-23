@@ -49,12 +49,14 @@ def task_results(data):
     print_success(data['banner'])
     print(base64_to_string(data['results']))
 
+
 @client_websocket.event
 def task_error(data):
     data = json.loads(data)
     print('\n')
     print_error(data['banner'])
     print(base64_to_string(data['results']))
+
 
 @client_websocket.event
 def agents(data):

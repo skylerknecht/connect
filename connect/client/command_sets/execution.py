@@ -19,12 +19,16 @@ class ExecutionCommands(CommandSet):
     """
 
     cmd_parser = Cmd2ArgumentParser()
-    cmd_parser.add_argument('command', help='Command to execute')
+    cmd_parser.add_argument('command', nargs="+", help='Command to execute')
 
     @with_argparser(cmd_parser)
     def do_cmd(self, args: argparse.Namespace):
         """ Execute a command. """
-        command = string_to_base64(args.command)
+        if isinstance(args.command, list):
+            #' '.join([string_to_base64(argument) for argument in args.command]
+            command = string_to_base64(' '.join(args.command))
+        else:
+            command = string_to_base64(args.command)
         self.post_task(f'"name":"cmd","description":"execute a command","arguments":"{command}","type":1')
 
     """
