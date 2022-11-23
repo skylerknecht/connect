@@ -6,7 +6,7 @@ function dir(path) {
     }
     folder = fs.GetFolder(path);
 
-    results = results + '  Directory of ' + path + '\n\n';
+    results = '  Directory of ' + path + '\n\n';
 
     files = folder.files;
     var enumerator = new Enumerator(files);
