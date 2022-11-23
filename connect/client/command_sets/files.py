@@ -1,7 +1,7 @@
 import argparse
 
 from connect.convert import string_to_base64, bytes_to_base64
-from cmd2 import Cmd2ArgumentParser, CommandSet, with_argparser, with_default_category, Cmd
+from cmd2 import Cmd2ArgumentParser, CommandSet, with_argparser, with_default_category, Cmd, Statement
 
 
 @with_default_category('Files')
@@ -13,6 +13,14 @@ class FilesCommands(CommandSet):
     def __init__(self, post_job):
         super().__init__()
         self.post_job = post_job
+
+    """
+    PWD Command
+    """
+
+    def do_pwd(self, _: Statement):
+        """ Retrieve the current working directory. """
+        self.post_job(f'"name":"pwd","description":"retrieve the current working directory","arguments":"","type":1')
 
     """ 
     CD Command 
@@ -26,6 +34,14 @@ class FilesCommands(CommandSet):
         """ Change the current working directory. """
         directory = string_to_base64(args.dir)
         self.post_job(f'"name":"cd","description":"change the current working directory","arguments":"{directory}","type":1')
+
+    """ 
+    Drives Command 
+    """
+
+    def do_drives(self, _: Statement):
+        """ Retrieve all the local drives. """
+        self.post_job(f'"name":"drives","description":"retrieve all local drives","arguments":"","type":1')
 
     """ 
     Dir Command 

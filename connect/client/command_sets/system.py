@@ -16,7 +16,7 @@ class SystemCommands(CommandSet):
     """
 
     def do_ps(self, _: Statement):
-        """ Retrieves current process information. """
+        """ Retrieves current running processes. """
         self.post_job(f'"name":"ps","description":"retrieve current running processes","arguments":"","type":1')
 
     """ 
@@ -58,14 +58,6 @@ class SystemCommands(CommandSet):
     def do_ip(self, _: Statement):
         """ Retrieve the internet protocol address. """
         self.post_job(f'"name":"ip","description":"retrieve the the internet protocol address","arguments":"","type":1')
-
-    """
-    PWD Command
-    """
-
-    def do_pwd(self, _: Statement):
-        """ Retrieve the current working directory. """
-        self.post_job(f'"name":"pwd","description":"retrieve the current working directory","arguments":"","type":1')
 
     """
     PID Command

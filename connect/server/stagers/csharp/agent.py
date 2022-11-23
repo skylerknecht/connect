@@ -22,9 +22,10 @@ available_modules = {
     "pwd":["/connect/server/stagers/csharp/resources/modules/FileSystem.exe", "FileSystem"],
     "cd":["/connect/server/stagers/csharp/resources/modules/FileSystem.exe", "FileSystem"],
     "download":["/connect/server/stagers/csharp/resources/modules/FileSystem.exe", "FileSystem"],
-    "upload":["/connect/server/stagers/csharp/resources/modules/FileSystem.exe", "FileSystem"]
+    "upload":["/connect/server/stagers/csharp/resources/modules/FileSystem.exe", "FileSystem"],
+    "drives":["/connect/server/stagers/csharp/resources/modules/FileSystem.exe", "FileSystem"]
 }
-commands = 'kill,delay,whoami,hostname,integrity,os,ip,execute_assembly'
+commands = 'kill,delay,whoami,hostname,integrity,os,ip,execute_assembly,cmd'
 commands = commands + ',' + ','.join(available_modules.keys()) if available_modules.keys() else commands
 startup_commands = 'whoami,hostname,integrity,os,ip'
 

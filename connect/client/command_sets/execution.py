@@ -37,7 +37,7 @@ class ExecutionCommands(CommandSet):
 
     @with_argparser(execute_assembly_parser)
     def do_execute_assembly(self, args: argparse.Namespace):
-        """ Executes a .NET assembly with reflection """
+        """ Executes a .NET assemblyn """
         with open(args.assembly, 'rb') as fd:
             key, file = xor_base64(fd.read())
         arg_str = ''

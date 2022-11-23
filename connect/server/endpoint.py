@@ -186,7 +186,7 @@ def endpoint(uri):
                 print_debug(f'Failed to process results: {task}', debug_mode)
                 continue
             if task_error and task.name == 'check_in':
-                # if there is a error with a task name of check_in then throw error agent failed to parse the task
+                # if there is a error with a task name of check_in then throw error agent failed to parse batch request
                 error_result = base64_to_string(task_error['message'])
                 error_banner = error_banners[task_error['code']]
                 print_error(f'{task.agent.name} {error_banner}')
