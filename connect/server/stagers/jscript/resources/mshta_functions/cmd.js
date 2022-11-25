@@ -14,7 +14,7 @@ function cmd(command) {
     fd = fs.OpenTextFile(stdout_path)
     results = results + fd.ReadAll();
     fd.close();
-    //delfile(stdout_path);
+    delfile(stdout_path);
     if (fs.FileExists(stdout_path)) {
       file_exists_message = file_exists_message + '[!] Failed to remove stdout file: ' + stdout_path + '\n';
     }
