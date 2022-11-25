@@ -8,6 +8,7 @@ function str2bin(data) {
    istream.Type = 1
    return istream.Read()
 }
+
 function b64e(data) {
   var xml = WScript.CreateObject("MSXml2.DOMDocument");
   var element = xml.createElement("Base64Data");
