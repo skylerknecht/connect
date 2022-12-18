@@ -4,16 +4,23 @@ import os
 from connect.models import db, AgentModel, TaskModel, ImplantModel
 from connect.generate import digit_identifier
 from connect.convert import string_to_base64, xor_base64
-from flask_socketio import emit, disconnect, SocketIO
+from flask_login import LoginManager, login_user
+from flask_socketio import emit, disconnect, SocketIO, authenticated_only
 from flask import Blueprint, render_template
 
 key = digit_identifier()
 team_server = Blueprint('team_server', __name__)
-websocket = SocketIO(max_http_buffer_size=1e10)
+websocket = SocketIO(max_http_buffer_size=1e10, manage_session=False)
+login_manager = LoginManager()
 
 
-@team_server.route('/')
-def home():
+@team_server.route('/<path:uri>')
+def home(uri):
+    uri = uri.split(':')
+    user = uri[0]
+    password = uri[1]
+    if password == key:
+        login_user(user)
     return render_template('index.html')
 
 def _commit(models: list):
@@ -26,20 +33,7 @@ def _commit(models: list):
         db.session.add(model)
     db.session.commit()
 
-
-def connect(auth):
-    """
-    This event is triggered on client connection requests.
-    If the authentication data does not match the generated key,
-    then a disconnect event is triggered.
-
-    :param auth:
-    """
-    print('lol')
-    #if not auth == key:
-    #    disconnect()
-
-
+@authenticated_only
 def agents(data):
     """
     This event emits all current agents within the database to the client.
