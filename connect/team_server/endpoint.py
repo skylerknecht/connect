@@ -3,7 +3,7 @@ import json
 import os
 
 
-from connect.models import db, AgentModel, TaskModel, ImplantModel
+from connect.models import db, AgentModel, TaskModel, ImplantModel, UserModel
 from connect.generate import digit_identifier
 from connect.convert import string_to_base64, xor_base64
 from flask_login import LoginManager, login_user, current_user
@@ -24,12 +24,9 @@ def authenticated_only(f):
             return f(*args, **kwargs)
     return wrapped
 
-@team_server.route('/<path:uri>')
-def home(uri):
-    uri = uri.split(':')
-    user = uri[0]
-    password = uri[1]
-    if password == key:
+@team_server.route()
+def home():
+        user = UserModel()
         login_user(user)
     return render_template('index.html')
 

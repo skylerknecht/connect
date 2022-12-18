@@ -7,6 +7,10 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
+class UserModel(db.model):
+    # primary key
+    name = db.Column(db.Integer, primary_key=True)
+
     
 class ImplantModel(db.Model):
     # primary key
