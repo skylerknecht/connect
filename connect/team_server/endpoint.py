@@ -1,11 +1,13 @@
+import functools
 import json
 import os
+
 
 from connect.models import db, AgentModel, TaskModel, ImplantModel
 from connect.generate import digit_identifier
 from connect.convert import string_to_base64, xor_base64
-from flask_login import LoginManager, login_user
-from flask_socketio import emit, disconnect, SocketIO, authenticated_only
+from flask_login import LoginManager, login_user, current_user
+from flask_socketio import emit, disconnect, SocketIO
 from flask import Blueprint, render_template
 
 key = digit_identifier()
@@ -13,6 +15,14 @@ team_server = Blueprint('team_server', __name__)
 websocket = SocketIO(max_http_buffer_size=1e10, manage_session=False)
 login_manager = LoginManager()
 
+def authenticated_only(f):
+    @functools.wraps(f)
+    def wrapped(*args, **kwargs):
+        if not current_user.is_authenticated:
+            disconnect()
+        else:
+            return f(*args, **kwargs)
+    return wrapped
 
 @team_server.route('/<path:uri>')
 def home(uri):

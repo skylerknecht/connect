@@ -15,7 +15,7 @@ from connect.configs.server import TeamServerConfig
 http_listener = HTTPListener.HTTPListener('HTTP Listener', TeamServerConfig, db, HTTPListenerEndpoints.websocket)
 http_listener.add_blueprint(HTTPListenerEndpoints.http_listener)
 
-team_server = TeamServer.TeamServer('Team Server', TeamServerConfig, db, TeamServerEndpoints.websocket)
+team_server = TeamServer.TeamServer('Team Server', TeamServerConfig, db, TeamServerEndpoints.login_manager, TeamServerEndpoints.websocket)
 team_server.create_database()
 team_server.add_blueprint(TeamServerEndpoints.team_server)
 team_server.add_event('agents', TeamServerEndpoints.agents)
