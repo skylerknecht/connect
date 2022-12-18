@@ -4,12 +4,13 @@ import json
 from connect.generate import digit_identifier, name_identifier
 from connect.generate import generate_sleep, generate_jitter, generate_endpoints
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
 
 db = SQLAlchemy()
 
-class UserModel(db.model):
+class UserModel(db.Model, UserMixin):
     # primary key
-    name = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
 
     
 class ImplantModel(db.Model):

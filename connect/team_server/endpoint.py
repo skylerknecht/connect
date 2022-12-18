@@ -24,10 +24,10 @@ def authenticated_only(f):
             return f(*args, **kwargs)
     return wrapped
 
-@team_server.route()
+@team_server.route('/')
 def home():
-        user = UserModel()
-        login_user(user)
+    user = UserModel()
+    login_user(user)
     return render_template('index.html')
 
 def _commit(models: list):
@@ -56,11 +56,10 @@ def implants(data):
     """
     if not data:
         implants = [implant.get_implant() for implant in ImplantModel.query.all()]
-        emit('implants', implants, broadcast=False)
-    data = json.loads(data)
+        emit('implants', implants, broadcast=False)    
     implant_name = data['implant_name'] if 'implant_name' in data.keys() else None
     if not implant_name:
-        return
+        return 
     implant = ImplantModel.query.filter_by(name=implant_name).first()
     if implant:
         emit('implants', {'key':f'http://192.168.1.23:9090/ {implant.key}'})
@@ -81,7 +80,6 @@ def tasks(data):
         tasks = [task.get_task() for task in TaskModel.query.all()]
         emit('tasks', tasks, broadcast=False)
 
-    data = json.loads(data)
     agent = AgentModel.query.filter_by(name=data['agent_name']).first()
     available_modules = agent.implant.available_modules
     command = data['name']
