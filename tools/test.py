@@ -4,7 +4,7 @@ client_websocket = socketio.Client()
 client_websocket.connect('http://192.168.1.23:8080/', auth='4666325248')
 
 @client_websocket.event
-def implant(data):
+def implants(data):
     print(data)
 
 @client_websocket.event

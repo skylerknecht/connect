@@ -60,10 +60,11 @@ def implants(data):
     implant_name = data['implant_name'] if 'implant_name' in data.keys() else None
     if not implant_name:
         return
-    implant = ImplantModel(name=implant_name, language=data['language'])
-    implant_exists = db.session.query(ImplantModel.name).filter_by(name=implant_name).first() is not None
-    if implant_exists:
+    implant = ImplantModel.query.filter_by(name=implant_name).first()
+    if implant:
+        emit('implants', {'key':f'http://192.168.1.23:9090/ {implant.key}'})
         return
+    implant = ImplantModel(name=implant_name, language=data['language'])
     _commit([implant])
     emit('implants', {'key':f'http://192.168.1.23:9090/ {implant.key}'})
         
