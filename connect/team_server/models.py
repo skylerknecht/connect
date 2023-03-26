@@ -69,7 +69,7 @@ class TaskModel(db.Model):
     @property
     def parameters(self):
         if not self._parameters:
-            return ''
+            return '[]'
         return [str(x) for x in self._parameters.split(',')]
 
     @parameters.setter

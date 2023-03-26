@@ -169,7 +169,7 @@ class TeamServerRoutes:
         agent = task.agent
         error_result = error['message']
         error_banner = self.ERROR_BANNERS[error['code']]
-        self.sio_server.emit(f'error', f'{{"banner":"{agent.name} {error_banner} ",'
+        self.sio_server.emit(f'task_error', f'{{"banner":"{agent.name} {error_banner} ",'
                                         f'"results":"{error_result}"}}')                       
         task.completed = datetime.datetime.now()
         task.results = error_result
@@ -200,7 +200,7 @@ class TeamServerRoutes:
         if task.type == 1 or task.type == -1:
             task.results = convert.base64_to_string(result)
             if task.type > 0:
-                event = 'success'
+                event = 'task_results'
                 event_banner = f'{{"banner":"Task results from {agent.name}:",' f'"results":"{result}"}}'
                 self.sio_server.emit(
                     event,
@@ -213,7 +213,7 @@ class TeamServerRoutes:
             with open(filename, 'wb') as fd:
                 fd.write(file)
             if task.type > 0:
-                event = 'success'
+                event = 'task_results'
                 event_banner = f'{{"banner":"Wrote task results from {agent.name} to:", f"results":"{convert.string_to_base64(filename)}"}}'
                 self.sio_server.emit(
                     event,
