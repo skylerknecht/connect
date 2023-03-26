@@ -70,6 +70,8 @@ class Options:
                 options.append(agent.name)
             for option in self.OPTIONS:
                 options.append(option.name)
+            for option in self.current_agent_options:
+                options.append(option.name)
             finished_options = [option for option in options if option.startswith(incomplete_option)]
             if '/' in incomplete_option:
                 finished_options.extend(self._complete_path(incomplete_option))
