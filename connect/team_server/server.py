@@ -1,37 +1,57 @@
-from connect.output import print_error, print_traceback
+import os
+import logging
 
+from . import models
+from connect import output
 from flask import Flask
 
 
+os.environ['WERKZEUG_RUN_MAIN'] = 'true'
+log = logging.getLogger('werkzeug')
+log.disabled = True
+
+
+class TeamServerConfig:
+    """
+    App Config for the team server.
+    """
+    TEMPLATES_AUTO_RELOAD = True
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SECRET_KEY = '463f1eabe8f830653b2ffd8a89cd1272'
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///connect.db'
+    JSON_SORT_KEYS = False
+
 class TeamServer(object):
     """
-    A WebSocket Flask App Wrapper.
+    A Flask App Wrapper.
     """
 
-    def __init__(self, name, config, db, login_manager, websocket):
-        self.app = Flask(name, template_folder='connect/team_server/templates', static_folder='connect/team_server/static')
-        self.app.config.from_object(config)
-        self.login_manager = login_manager
+    def __init__(self, name, db, websocket) -> None:
+        self.app = Flask(name)
+        self.app.config.from_object(TeamServerConfig)
         self.websocket = websocket
         self.db = db
-
-    def add_event(self, message, handler):
-        self.websocket.on_event(message, handler)
-
-    def add_blueprint(self, blueprint):
-        self.app.register_blueprint(blueprint)
 
     def create_database(self):
         self.db.init_app(self.app)
         with self.app.app_context():
             self.db.create_all()
-        
-    def run(self, ip: str, port: int):
+
+    def add_blueprint(self, blueprint):
+        self.app.register_blueprint(blueprint)
+
+    def add_event(self, event, function):
+        self.websocket.on_event(event, function)
+
+    def add_route(self, route, name, function, methods=['GET']):
+        self.app.add_url_rule(route, name, function, methods=methods)
+
+
+    def run(self, ip, port):
         try:
             self.websocket.init_app(self.app)
-            self.login_manager.init_app(self.app)
             self.websocket.run(self.app, host=ip, port=port)
         except PermissionError:
-            print_error(f'Failed to start team server on port {port}: Permission Denied.')
-        except Exception:
-            print_traceback()
+            output.display('ERROR', f'Failed to start team server on port {port}: Permission Denied.')
+        except Exception as e:
+            output.display('DEFAULT', e)

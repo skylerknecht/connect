@@ -18,10 +18,6 @@ with open(f'{os.getcwd()}/resources/lastnames.txt', 'r') as _lastnames:
     for lastname in _lastnames:
         lastnames.append(lastname)
 
-with open(f'{os.getcwd()}/resources/endpoints.txt', 'r') as _endpoints:
-    for endpoint in _endpoints:
-        endpoints.append(endpoint)
-
 
 def digit_identifier(length: int = 10) -> str:
     """
@@ -40,7 +36,6 @@ def digit_identifier(length: int = 10) -> str:
 def name_identifier() -> str:
     """
     Generate a random name in the format firstname lastname.
-
     :return: The generated name identifier.
     :rtype: str
     """
@@ -53,7 +48,6 @@ def string_identifier(length: int = 10) -> str:
     """
     Generate random upper and lowercase characters and concatenate
     them for a length of zero to *length*.
-
     :param: int length: The amount of random characters to concatenate.
     :return: The generated string identifier.
     :rtype: str
@@ -61,36 +55,3 @@ def string_identifier(length: int = 10) -> str:
     _identifier = [alphabet[random.randint(0, len(alphabet) - 1)].rstrip() for _ in range(0, length)]
     _identifier = ''.join(_identifier)
     return _identifier
-
-
-def generate_endpoints(length: int = 10) -> str:
-    """
-    Generate a list of endpoints for stagers.
-
-    :param length:
-    :return:
-    """
-    return ','.join([endpoints[random.randint(0, len(endpoints) - 1)].rstrip() for _ in range(0, length)])
-
-
-def generate_jitter(minimum: int = 1, maximum: int = 20) -> str:
-    """
-    Generate a random jitter between 1% and 20% for stagers.
-
-    :param maximum:
-    :param minimum:
-    :return:
-    """
-    return str(float(random.randint(minimum, maximum)))
-
-
-def generate_sleep(minimum: int = 5, maximum: int = 10) -> str:
-    """
-    Generate a random sleep between 5 and 10 for stagers.
-
-    :param maximum:
-    :param minimum: T
-    :return:
-    """
-    return str(float(random.randint(minimum, maximum)))
-
