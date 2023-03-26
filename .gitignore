@@ -1,8 +1,9 @@
 .idea
 .history
 connect/pyvenv.cfg
+.vscode/*
 env/*
 Pipfile.lock
-.backup/*
+instance/*
 connect/resources/*
 *__pycache__/
