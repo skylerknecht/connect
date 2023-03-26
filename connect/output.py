@@ -8,7 +8,7 @@ AgentOption = namedtuple('AgentOption', ['name', 'description', 'parameters','ty
 Implant = namedtuple('Implant', ['id', 'key'])
 Notification = namedtuple('Notification', ['prefix', 'color'])
 Parameter = namedtuple('Parameter', ['name', 'description'])
-Task = namedtuple('Task', ['name', 'description', 'paramters', 'type'])
+Task = namedtuple('Task', ['name', 'description', 'parameters', 'type'])
 
 
 """
@@ -44,3 +44,16 @@ def display(type: str, stdout: str, prefix_enabled: bool = True, newline: bool =
     postfix = os.linesep if newline else '' 
     sys.stdout.write('\033[1K\r' + f'{color}{prefix}{stdout}\001\033[0m\002' + postfix)
     sys.stdout.flush()
+
+def deserialize_agent_json_object(agent):
+    agent_options = []
+    for agent_option in agent[6]: #agents[6] is a list of agent_options
+        parameters = []
+        if isinstance(agent[2], list):
+            for paramter in agent[2]:
+                parameters.append(Parameter(*paramter))
+        else:
+            parameters.append(Parameter(*agent_option[2]))
+        agent_option = AgentOption(*agent_option[0:2], parameters, agent_option[3])
+        agent_options.append(agent_option)    
+    return Agent(*agent[0:6], agent_options)

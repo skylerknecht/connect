@@ -5,7 +5,7 @@ import os
 from connect import output
 from connect import convert
 from connect import generate
-from connect.team_server.models import  AgentModel, ImplantModel, db, TaskModel
+from connect.team_server.models import  AgentModel, ImplantModel, TaskModel
 from flask import jsonify, request, redirect
 
 
@@ -20,14 +20,14 @@ class TeamServerRoutes:
         -32000: 'Server error'                                                 # Reserved for implementation-defined server-errors.
     }
 
-    def __init__(self, sio_server):
+    def __init__(self, db, sio_server):
+        self.db = db
         self.sio_server = sio_server
 
-    def check_in_implant(self, implant, options):
+    def check_in_implant(self, implant):
         self.sio_server.emit('information', f'Implant {implant.id} checked in creating Agent')
         try:
-            options = json.loads(options)
-            agent = AgentModel(implant=implant, options=options)
+            agent = AgentModel(implant=implant)
             self.commit([agent])
         except Exception as e:
             self.sio_server.emit('error', f'Failed to create agent: {e}')
@@ -46,7 +46,7 @@ class TeamServerRoutes:
         implant = ImplantModel.query.filter_by(key=route).first()
 
         if implant:
-            agent = self.check_in_implant(implant, request.get_data())
+            agent = self.check_in_implant(implant)
             if not agent:
                 return '[]'
             check_in_task = self.create_check_in_task(agent)
@@ -80,8 +80,8 @@ class TeamServerRoutes:
         :param models: A list of models.
         """
         for model in models:
-            db.session.add(model)
-        db.session.commit()
+            self.db.session.add(model)
+        self.db.session.commit()
     
     def connected_notification(self, agent):
         time_delta = (datetime.datetime.now() - agent.check_in)
@@ -161,7 +161,7 @@ class TeamServerRoutes:
                 "jsonrpc": "2.0", 
                 "name": unsent_task.name, 
                 "parameters": unsent_task.parameters,
-                "id": str(unsent_task.identifier)
+                "id": str(unsent_task.id)
             })
         return unsent_tasks
     

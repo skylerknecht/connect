@@ -11,9 +11,21 @@ class ImplantModel(db.Model):
     # properties
     id = db.Column(db.String, primary_key=True, default=digit_identifier)
     key = db.Column(db.String, unique=True, default=string_identifier)
+    _options = db.Column(db.String)
 
     # relationships
     agents = db.relationship('AgentModel', backref='implant', lazy=True)
+
+    @property
+    def options(self):
+        if not self._options:
+            return '' 
+        return json.loads(self._options)
+
+    @options.setter
+    def options(self, value):
+        self._options = json.dumps(value)
+
 
     def get_implant(self):
         return Implant(self.id, self.key)
@@ -22,7 +34,6 @@ class AgentModel(db.Model):
     # properties
     name = db.Column(db.String, primary_key=True, default=name_identifier)
     check_in = db.Column(db.DateTime, default=datetime.datetime.fromtimestamp(823879740.0))
-    _options = db.Column(db.String)
 
     # relationships
     implant_key = db.Column(db.String, db.ForeignKey(ImplantModel.key))
@@ -36,18 +47,8 @@ class AgentModel(db.Model):
     integrity = db.Column(db.String, nullable=False, default='....')
     pid = db.Column(db.String, nullable=False, default='....')
 
-    @property
-    def options(self):
-        if not self._options:
-            return '' 
-        return json.loads(self._options)
-
-    @options.setter
-    def options(self, value):
-        self._options = json.dumps(value)
-
     def get_agent(self):
-        return Agent(self.name, str(self.check_in), self.username, self.hostname, self.ip, self.os, self.options)
+        return Agent(self.name, str(self.check_in), self.username, self.hostname, self.ip, self.os, self.implant.options)
 
 
 class TaskModel(db.Model):

@@ -19,20 +19,7 @@ def agents(data):
     cli.notify('DEFAULT', '{:<20}{:<10}{:<20}{:<20}{:<20}{:<20}'.format('Name', 'Delta', 'Username', 'Hostname', 'IP', 'OS'))
     cli.notify('DEFAULT', '{:<20}{:<10}{:<20}{:<20}{:<20}{:<20}'.format('-'*4, '-'*5, '-'*8, '-'*8, '-'*2, '-'*2))
     for index, agent in enumerate(agents):
-        agent_options = []
-        for agent_option in agent[6]: #agents[6] is a list of agent_options
-            parameters = []
-            if isinstance(agent[2], list):
-                for paramter in agent[2]:
-                    parameters.append(output.Parameter(*paramter))
-            else:
-                parameters.append(output.Parameter(*agent_option[2]))
-
-            agent_option = output.AgentOption(*agent_option[0:2], parameters, agent_option[3])
-            agent_options.append(agent_option)
-        
-        agents[index] = output.Agent(*agent[0:6], agent_options)
-        agent = agents[index]
+        agents[index] = agent = output.deserialize_agent_json_object(agent)
         check_in = datetime.fromisoformat(agent.check_in)
         delta = int((datetime.now() - check_in).total_seconds())
         cli.notify('DEFAULT', '{:<20}{:<10}{:<20}{:<20}{:<20}{:<20}'.format(agent.name, delta, agent.username, agent.hostname, agent.ip, agent.os))

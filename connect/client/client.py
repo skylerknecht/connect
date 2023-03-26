@@ -92,16 +92,6 @@ class Options:
                 func(self, *args, **kwargs)
         return wrapper
 
-    def schedule_task(self, task):
-        """
-        Schedules a new task to be propegated to the agent.
-
-        Parameters
-        ----------
-            task: Task to schedule.
-        """
-        self.sio_client.emit('schedule_task', task)
-
     def set_agent(self, agent):
         self.current_agent = agent
         self.current_agent_options = []
@@ -190,14 +180,27 @@ class Options:
             implants [-h, --help, --create, --delete]
 
         optional arguments:
-            -h, --help          show this help message and exit
-            --create            create an implant
-            --delete IMPLANT_ID delete an implant\
+            -h, --help              show this help message and exit
+            --create IMPLANT_JSON   create an implant
+            --delete IMPLANT_ID     delete an implant\
         """
         if not args:
             self.sio_client.emit('implants', '')
         elif '--create' in args:
-            self.sio_client.emit('implants', '{"action":"create"}')
+                pos = args.index('--create')
+                if pos == len(args) - 1:
+                    output.display('ERROR', 'No Implant JSON file provided.')
+                    return
+                else:
+                    implant_json = ''
+                    with open(args[pos+1], 'rb') as fd:
+                        implant_json = json.loads(fd.read())
+                    if not implant_json:
+                        output.display('ERROR', 'JSON file empty.')
+                        return
+                    data = {"action": "create", "options": implant_json}
+                    print(json.dumps(data))
+                    self.sio_client.emit('implants', json.dumps(data))
         elif '--delete' in args:
             try:
                 pos = args.index('--delete')
@@ -216,8 +219,8 @@ class Options:
     def agent_option(self, agent_option, *args):
         if not self.current_agent:
             output.display('ERROR', 'Not intreacting with an agent.')
-        task = output.Task(agent_option.name, agent_option.description, args[1:], agent_option.type)
-        self.sio_client.emit('task', f'{{"agent":"{self.current_agent.name}", "task": {task})}}')
+        task = output.Task(agent_option.name, agent_option.description, ','.join(args[1:]), agent_option.type)
+        self.sio_client.emit('task', f'{{"agent":"{self.current_agent.name}", "task": {json.dumps(task)}}}')
 
 class Interface:
 

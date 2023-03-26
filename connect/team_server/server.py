@@ -5,11 +5,9 @@ from . import models
 from connect import output
 from flask import Flask
 
-
 os.environ['WERKZEUG_RUN_MAIN'] = 'true'
 log = logging.getLogger('werkzeug')
 log.disabled = True
-
 
 class TeamServerConfig:
     """
@@ -45,7 +43,6 @@ class TeamServer(object):
 
     def add_route(self, route, name, function, methods=['GET']):
         self.app.add_url_rule(route, name, function, methods=methods)
-
 
     def run(self, ip, port):
         try:
