@@ -13,6 +13,16 @@ options = client.Options(sio_client)
 cli = client.Interface(options)
 
 @sio_client.event
+def agent_connected(data):
+    for agent in options.Agents:
+        if agent.name == data['agent'][0]:
+            output.display('ERROR', f'Agent {agent.name} attempt to connected but already exists!')
+            return
+    agent = output.deserialize_agent_json_object(data['agent'])
+    options.Agents.append(agent)
+    cli.notify('SUCCESS', f'Agent {agent.name} is connected!')
+
+@sio_client.event
 def agents(data):
     agents = data['agents']
     cli.notify('DEFAULT', '{:<40}{:<10}{:<40}'.format('', '[AGENTS]', ''))
@@ -24,7 +34,7 @@ def agents(data):
         check_in = datetime.fromisoformat(agent.check_in)
         delta = int((datetime.now() - check_in).total_seconds())
         cli.notify('DEFAULT', '{:<20}{:<10}{:<20}{:<20}{:<20}{:<20}'.format(agent.name, delta, agent.username, agent.hostname, agent.ip, agent.os))
-    options.Agents.extend(agents)
+    options.Agents = agents
 
 
 @sio_client.event

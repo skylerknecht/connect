@@ -84,11 +84,8 @@ class TeamServerRoutes:
         self.db.session.commit()
     
     def connected_notification(self, agent):
-        time_delta = (datetime.datetime.now() - agent.check_in)
         if datetime.datetime.fromtimestamp(823879740.0) == agent.check_in:
-            self.sio_server.emit('success', f'Agent {agent.name} is Connceted.')
-        elif time_delta.total_seconds() > 60:
-            self.sio_server.emit('success', f'Agent {agent.name} has Re-Connceted.')
+            self.sio_server.emit('agent_connected', {'agent': agent.get_agent()})
         agent.check_in = datetime.datetime.now()
         self.commit([agent])
 

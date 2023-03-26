@@ -1,3 +1,4 @@
+import atexit
 import functools
 import json
 import os
@@ -5,7 +6,6 @@ import readline
 import signal
 import sys
 import threading
-import textwrap
 
 from connect import output
 from collections import namedtuple
@@ -17,6 +17,7 @@ class Options:
     current_agent = None
     current_agent_options = []
 
+    
     def __init__(self, sio_client) -> None:
         self.sio_client = sio_client
         self.OPTIONS = [
@@ -226,13 +227,22 @@ class Options:
 
 class Interface:
 
+    HISTORY_FILE = f'{os.getcwd()}/instance/command_history.txt'
     MAIN_THREAD_IDENTIFIER = threading.current_thread().ident 
     PROMPT = '(connect)~#'
+
 
     def __init__(self, options: Options) -> None:
         signal.signal(signal.SIGINT, self.signal_handler)
         self.prompt = self.PROMPT
         self.options = options
+        readline.set_history_length(1000)
+        try:
+            readline.read_history_file(self.HISTORY_FILE)
+        except Exception:
+            print(self.HISTORY_FILE)
+            self.notify('ERROR', f'Failed to open {self.HISTORY_FILE}!')
+        atexit.register(readline.write_history_file, self.HISTORY_FILE)
         readline.parse_and_bind('tab: complete')
         readline.set_completer(self.options.complete_option)
         readline.set_completer_delims(" \t\n\"\\'`@$><=;|&{(")
