@@ -37,7 +37,7 @@ def main():
         team_server.run(args.ip, args.port, certfile=args.ssl[0], keyfile=args.ssl[1])
         return
     output.display('SUCCESS', f'Generated client args: http://{args.ip}:{args.port}/ {key}')
-    team_server.run(args.ip, args.port, certfile=args.ssl[0], keyfile=args.ssl[1])
+    team_server.run(args.ip, args.port)
 
 
 if __name__ == '__main__':
