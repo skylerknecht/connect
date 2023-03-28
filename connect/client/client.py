@@ -3,11 +3,14 @@ import functools
 import json
 import os
 import readline
+import shlex
 import signal
 import sys
 import threading
+import traceback
 
 from connect import output
+from connect import convert
 from collections import namedtuple
 
 class Options:
@@ -25,8 +28,8 @@ class Options:
             self.Option('back', self.back, [], 'Return to the main menu.'),
             self.Option('exit', self.exit, [], 'Exits the application.'),
             self.Option('help', self.help, [], 'Displays the help menu.'),
-            self.Option('hello', self.hello, [output.Parameter('name', 'individual to greet')], 'Displays the help menu.'),
-            self.Option('implants', self.implants, [output.Parameter('--create', 'create an implant'), output.Parameter('--delete', 'delete an implant')], 'Create, delete and display avaliable implants.'),
+            self.Option('hello', self.hello, [output.Parameter('name', 'individual to greet')], 'Greets an individual.'),
+            self.Option('implants', self.implants, [output.Parameter('--create IMPLANT_NAME /path/to/profile.json', 'Create an Implant.'), output.Parameter('--delete IMPLANT_ID', 'Delete an Implant.')], 'Create, delete and display avaliable implants.'),
         ]
 
     def _complete_path(self, incomplete_option):
@@ -36,7 +39,6 @@ class Options:
             return [filename for filename in os.listdir(f'/') if filename.startswith(incomplete_filename)]
         valid_path = '/'.join(path[:-1])
         return [f'{valid_path}/{filename}' if os.path.isfile(f'/{valid_path}/{filename}') else f'{valid_path}/{filename}/' for filename in os.listdir(f'/{valid_path}') if filename.startswith(incomplete_filename)]
-
 
     def complete_option(self, incomplete_option, state):
             '''
@@ -81,16 +83,25 @@ class Options:
     def detailed_help(func):
         @functools.wraps(func)
         def wrapper(self, *args, **kwargs):
-            if '-h' in args or '--help' in args:
+            if '--' in args:
+                parameters = args[:args.index('--')]
+                args = args[:args.index('--')] + args[args.index('--') + 1:]
+            else:
+                parameters = args
+            if '-h' in parameters or '--help' in parameters:
                 option = args[0]
                 output.display('DEFAULT', option.description)
                 output.display('DEFAULT', '')
                 output.display('DEFAULT', 'Parameters:')
                 output.display('DEFAULT', '-'*11)
-                output.display('DEFAULT', '{:<4}{:<15}{:<30}'.format('', '-h/--help', 'Display this menu.'))
                 if option.parameters:
+                    longest_parameter = max(len(parameter.name) for parameter in option.parameters) + 4
                     for parameter in option.parameters:
-                        output.display('DEFAULT', '{:<4}{:<15}{:<30}'.format('', parameter.name, parameter.description))
+                        output.display('DEFAULT', '{:<4}{:<{}}{:<30}'.format('', parameter.name, longest_parameter, parameter.description))
+                    output.display('DEFAULT', '{:<4}{:<{}}{:<30}'.format('', '-h/--help', longest_parameter, 'Display this menu.'))
+                else:
+                    output.display('DEFAULT', '{:<4}{:<30}{:<30}'.format('', '-h/--help', 'Display this menu.'))
+
             else:
                 func(self, *args, **kwargs)
         return wrapper
@@ -99,6 +110,7 @@ class Options:
         self.current_agent = agent
         self.current_agent_options = []
         self.current_agent_options = agent.options
+
     # Option Functions
 
     @detailed_help
@@ -111,7 +123,10 @@ class Options:
         Parameters:
             -h/--help     Display this menu.\
         """
-        self.sio_client.emit('agents')
+        if '--all' in args:
+            self.sio_client.emit('agents', {"all":"True"})
+            return
+        self.sio_client.emit('agents', {"all":"False"})
 
     @detailed_help
     def back(self, option, *args):
@@ -153,13 +168,14 @@ class Options:
         output.display('DEFAULT', 'Usage: <option> [parameters]')
         output.display('DEFAULT', '')
         output.display('DEFAULT', 'Options:')
+        longest_parameter = max(len(parameter.name) for parameter in self.OPTIONS + self.current_agent_options) + 4
         for option in self.OPTIONS:
-            output.display('DEFAULT', '  {:<15}{}'.format(option.name, option.description))
+            output.display('DEFAULT', '  {:<{}}{}'.format(option.name, longest_parameter, option.description))
         if not self.current_agent:
             return
         output.display('DEFAULT', 'Agent Options:')
         for option in self.current_agent_options:
-            output.display('DEFAULT', '  {:<15}{}'.format(option.name, option.description))
+            output.display('DEFAULT', '  {:<{}}{}'.format(option.name, longest_parameter, option.description))
 
     @detailed_help
     def hello(self, option, *args):
@@ -183,64 +199,76 @@ class Options:
             implants [-h, --help, --create, --delete]
 
         optional arguments:
-            -h, --help              show this help message and exit
-            --create IMPLANT_JSON   create an implant
-            --delete IMPLANT_ID     delete an implant\
+            -h, --help                          show this help message and exit
+            --create IMPLANT_NAME IMPLANT_JSON  create an implant
+            --delete IMPLANT_ID                 delete an implant\
         """
-        if not args:
-            self.sio_client.emit('implants', '')
-        elif '--create' in args:
-                pos = args.index('--create')
-                if pos == len(args) - 1:
-                    output.display('ERROR', 'No Implant JSON file provided.')
-                    return
-                else:
+        try: 
+            if not args:
+                self.sio_client.emit('implants', '')
+            elif '--create' in args:
+                    pos = args.index('--create')
                     implant_json = ''
-                    with open(args[pos+1], 'rb') as fd:
+                    with open(args[pos+2], 'rb') as fd:
                         implant_json = json.loads(fd.read())
                     if not implant_json:
                         output.display('ERROR', 'JSON file empty.')
                         return
-                    data = {"action": "create", "options": implant_json}
-                    print(json.dumps(data))
+                    implant_name = args[pos+1]
+                    data = {"action": "create", "options": implant_json, 'name': implant_name}
                     self.sio_client.emit('implants', json.dumps(data))
-        elif '--delete' in args:
-            try:
+            elif '--delete' in args:
                 pos = args.index('--delete')
-                if pos == len(args) - 1:
-                    output.display('ERROR', 'No implant ID provided for delete.')
-                else:
-                    implant_id = args[pos+1]
-                    data = {"action": "delete", "implant_id": implant_id}
-                    self.sio_client.emit('implants', json.dumps(data))
-            except ValueError:
-                output.display('ERROR', 'Invalid arguments provided.')
-        else:
-            output.display('ERROR', 'Invalid arguments provided.')
+                implant_id = args[pos+1]
+                data = {"action": "delete", "implant_id": implant_id}
+                self.sio_client.emit('implants', json.dumps(data))
+            else:
+                option.function(option, '--help')
+        except json.decoder.JSONDecodeError:
+            output.display('ERROR', 'Failed to parse JSON file.')
+        except Exception:
+            output.display('DEFAULT', traceback.format_exc())
+            option.function(option, '--help')
 
     @detailed_help
     def agent_option(self, agent_option, *args):
         if not self.current_agent:
             output.display('ERROR', 'Not intreacting with an agent.')
-        task = output.Task(agent_option.name, agent_option.description, ','.join(args[0:]), agent_option.type)
+        if len(agent_option.parameters) > len(args):
+            self.agent_option(agent_option, '--help')
+            return
+        parameters = [arg for arg in args]
+        for index, parameter in enumerate(parameters):
+            if os.path.exists(parameter):
+                with open(parameter, 'rb') as fd:
+                    parameters[index], key = convert.xor_base64(fd.read())
+                parameters = [*parameters[:index], parameters[index], key, *parameters[index+1:]]    
+        parameters = ','.join([convert.string_to_base64(parameter) for parameter in parameters])
+        task = output.Task(agent_option.name, agent_option.description, parameters, agent_option.type)
         self.sio_client.emit('task', f'{{"agent":"{self.current_agent.name}", "task": {json.dumps(task)}}}')
 
 class Interface:
 
-    HISTORY_FILE = f'{os.getcwd()}/instance/command_history.txt'
+    WORKING_DIRECTORY = os.path.expanduser("~/.connect")
+    HISTORY_FILE = f'{WORKING_DIRECTORY}/command_history.txt'
     MAIN_THREAD_IDENTIFIER = threading.current_thread().ident 
     PROMPT = '(connect)~#'
-
 
     def __init__(self, options: Options) -> None:
         signal.signal(signal.SIGINT, self.signal_handler)
         self.prompt = self.PROMPT
         self.options = options
-        readline.set_history_length(1000)
+        readline.set_history_length(10000)
+        if not os.path.exists(self.WORKING_DIRECTORY):
+            os.mkdir(self.WORKING_DIRECTORY)
+            self.notify('INFORMATION', f'Created working directory {self.WORKING_DIRECTORY}')
+        if not os.path.exists(self.HISTORY_FILE):
+            with open(self.HISTORY_FILE, "w") as file:
+                file.write("welcome to connect")
+            self.notify('INFORMATION', f'Created command history file {self.HISTORY_FILE}')
         try:
             readline.read_history_file(self.HISTORY_FILE)
         except Exception:
-            print(self.HISTORY_FILE)
             self.notify('ERROR', f'Failed to open {self.HISTORY_FILE}!')
         atexit.register(readline.write_history_file, self.HISTORY_FILE)
         readline.parse_and_bind('tab: complete')
@@ -269,12 +297,17 @@ class Interface:
                 return True
             except KeyError as ke:
                 output.display('ERROR', f'Invalid option: {ke}.')
+                self.notify('DEFAULT', traceback.format_exc())
             except ValueError as ve:
                 output.display('ERROR', f'Invalid value: {ve}')
+                self.notify('DEFAULT', traceback.format_exc())
             except IndexError as ie:
                 output.display('ERROR', f'Arguments expected: {ie}.')
+                self.notify('DEFAULT', traceback.format_exc())
             except Exception as e:
                 output.display('ERROR', f'Unknown error occured: {e}')
+                self.notify('DEFAULT', traceback.format_exc())
+
         return False
 
     def process_options(self, tokens):
@@ -289,27 +322,37 @@ class Interface:
                 return True
             except KeyError as ke:
                 output.display('ERROR', f'Invalid option: {ke}.')
+                self.notify('DEFAULT', traceback.format_exc())
             except ValueError as ve:
                 output.display('ERROR', f'Invalid value: {ve}')
+                self.notify('DEFAULT', traceback.format_exc())
             except IndexError as ie:
                 output.display('ERROR', f'Arguments expected: {ie}.')
+                self.notify('DEFAULT', traceback.format_exc())
             except Exception as e:
                 output.display('ERROR', f'Unknown error occured: {e}')
+                self.notify('DEFAULT', traceback.format_exc())
         return False
 
     def run(self):
         while True:
-                input = output.display('PROMPT', self.prompt)
-                if not input:
+            try:
+                user_input = output.display('PROMPT', self.prompt)
+                if not user_input:
                     continue
-                if self.process_agent_interaction(input):
+                if self.process_agent_interaction(user_input):
                     continue
-                tokens = input.split(' ')
+                tokens = shlex.split(user_input.replace("\\", "\\\\"))
                 if self.process_agent_options(tokens):
                     continue
                 if self.process_options(tokens):
                     continue
                 output.display('ERROR', 'Invalid option. Type "help" for a list of available options.')
+            except EOFError:
+                self.notify('DEFAULT', traceback.format_exc())
+                sys.exit()
+            except Exception:
+                self.notify('DEFAULT', traceback.format_exc())
            
     def signal_handler(self, sig, frame):
         self.notify('INFORMATION', 'Keyboard Interrupt Caught. Type exit to leave the application.', reprompt=True)

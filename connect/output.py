@@ -3,9 +3,9 @@ import os
 
 from collections import namedtuple
 
-Agent = namedtuple('Agent', ['name', 'check_in', 'username', 'hostname', 'ip', 'os', 'options'])
+Agent = namedtuple('Agent', ['name', 'check_in', 'username', 'hostname', 'ip', 'os', 'options', 'implant'])
 AgentOption = namedtuple('AgentOption', ['name', 'description', 'parameters','type'])
-Implant = namedtuple('Implant', ['id', 'key'])
+Implant = namedtuple('Implant', ['name', 'id', 'key'])
 Notification = namedtuple('Notification', ['prefix', 'color'])
 Parameter = namedtuple('Parameter', ['name', 'description'])
 Task = namedtuple('Task', ['name', 'description', 'parameters', 'type'])
@@ -56,4 +56,4 @@ def deserialize_agent_json_object(agent):
             parameters.append(Parameter(*agent_option[2]))
         agent_option = AgentOption(*agent_option[0:2], parameters, agent_option[3])
         agent_options.append(agent_option)    
-    return Agent(*agent[0:6], agent_options)
+    return Agent(*agent[0:6], agent_options, agent[7])

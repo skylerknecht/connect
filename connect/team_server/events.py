@@ -31,12 +31,12 @@ class TeamServerEvents:
         if not auth == self.key:
             disconnect()
 
-    def agents(self):
+    def agents(self, data):
         """
         Emit all available agents.
         """
         agents = [agent.get_agent() for agent in AgentModel.query.all()]
-        self.sio_server.emit('agents', {'agents': agents})
+        self.sio_server.emit('agents', {'agents': agents, 'all': data['all']})
 
     def implants(self, data):
         """
@@ -55,10 +55,11 @@ class TeamServerEvents:
 
         action = data.get('action')
         if action == 'create':
-            new_implant = ImplantModel(options=data.get('options'))
+            new_implant = ImplantModel(options=data.get('options'), name=data.get('name'))
             self.db.session.add(new_implant)
             self.db.session.commit()
             new_implant_dict = {
+                'name': new_implant.name,
                 'id': new_implant.id,
                 'key': new_implant.key
             }
@@ -89,7 +90,6 @@ class TeamServerEvents:
         The *data* excpeted is {'name':'', 'agent_name':'', 'parameters':'', type:''}
         :param data:
         """
-        print(data)
         data = json.loads(data)
         task = Task(*data['task'])
         agent = AgentModel.query.filter_by(name=data['agent']).first()

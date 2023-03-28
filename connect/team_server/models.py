@@ -10,6 +10,7 @@ db = SQLAlchemy()
 class ImplantModel(db.Model):
     # properties
     id = db.Column(db.String, primary_key=True, default=digit_identifier)
+    name = db.Column(db.String, unique=True)
     key = db.Column(db.String, unique=True, default=string_identifier)
     _options = db.Column(db.String)
 
@@ -28,7 +29,7 @@ class ImplantModel(db.Model):
 
 
     def get_implant(self):
-        return Implant(self.id, self.key)
+        return Implant(self.name, self.id, self.key)
     
 class AgentModel(db.Model):
     # properties
@@ -48,7 +49,7 @@ class AgentModel(db.Model):
     pid = db.Column(db.String, nullable=False, default='....')
 
     def get_agent(self):
-        return Agent(self.name, str(self.check_in), self.username, self.hostname, self.ip, self.os, self.implant.options)
+        return Agent(self.name, str(self.check_in), self.username, self.hostname, self.ip, self.os, self.implant.options, self.implant.name)
 
 
 class TaskModel(db.Model):
@@ -69,7 +70,7 @@ class TaskModel(db.Model):
     @property
     def parameters(self):
         if not self._parameters:
-            return '[]'
+            return []
         return [str(x) for x in self._parameters.split(',')]
 
     @parameters.setter
