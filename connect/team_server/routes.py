@@ -172,7 +172,7 @@ class TeamServerRoutes:
         task.results = error_result
         self.commit([task])
 
-    def retrieve_results(self,task, result):
+    def retrieve_results(self, task, result):
         agent = task.agent
         command = task.name
             

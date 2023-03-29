@@ -9,7 +9,7 @@ from connect import generate
 from connect import output
 from flask_socketio import SocketIO
 
-sio_server = SocketIO(max_http_buffer_size=1e10)
+sio_server = SocketIO(max_http_buffer_size=1e10) 
 key = generate.string_identifier(20)
 
 team_server = server.TeamServer('Team Server', models.db, sio_server)

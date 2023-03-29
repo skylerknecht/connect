@@ -237,14 +237,8 @@ class Options:
         if len(agent_option.parameters) > len(args):
             self.agent_option(agent_option, '--help')
             return
-        parameters = [arg for arg in args]
-        for index, parameter in enumerate(parameters):
-            if os.path.exists(parameter):
-                with open(parameter, 'rb') as fd:
-                    parameters[index], key = convert.xor_base64(fd.read())
-                parameters = [*parameters[:index], parameters[index], key, *parameters[index+1:]]    
-        parameters = ','.join([convert.string_to_base64(parameter) for parameter in parameters])
-        task = output.Task(agent_option.name, agent_option.description, parameters, agent_option.type)
+        task = output.Task(agent_option.name, agent_option.description, args, agent_option.type)
+        print(sys.getsizeof(json.dumps(task)))
         self.sio_client.emit('task', f'{{"agent":"{self.current_agent.name}", "task": {json.dumps(task)}}}')
 
 class Interface:

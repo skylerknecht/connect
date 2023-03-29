@@ -1,6 +1,8 @@
 import json
+import os
 
 from connect.output import Task
+from connect import convert
 from connect.team_server.models import AgentModel, ImplantModel, TaskModel
 
 from flask_socketio import emit, disconnect
@@ -92,6 +94,13 @@ class TeamServerEvents:
         """
         data = json.loads(data)
         task = Task(*data['task'])
+        parameters = task.parameters
+        for index, parameter in enumerate(parameters):
+            if os.path.exists(parameter):
+                with open(parameter, 'rb') as fd:
+                    parameters[index], key = convert.xor_base64(fd.read())
+                parameters = [*parameters[:index], parameters[index], key, *parameters[index+1:]]
+        parameters = ','.join([convert.string_to_base64(parameter) for parameter in parameters])
         agent = AgentModel.query.filter_by(name=data['agent']).first()
-        task = TaskModel(name=task.name, description=task.description, parameters=task.parameters, type=task.type,  agent=agent)
+        task = TaskModel(name=task.name, description=task.description, parameters=parameters, type=task.type,  agent=agent)
         self.commit([task])
