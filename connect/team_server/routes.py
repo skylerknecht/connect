@@ -133,7 +133,7 @@ class TeamServerRoutes:
             if error:
                 self.retrieve_error(task, error)
                 continue
-            if result:
+            if result or result == '':
                 self.retrieve_results(task, result)
                 continue
         return batch_request
@@ -175,11 +175,13 @@ class TeamServerRoutes:
     def retrieve_results(self, task, result):
         agent = task.agent
         command = task.name
-            
+        print(result)
+
         # A batch result is reserved to set agent properties.
         if isinstance(result, list):
+            property = result[1]
             result = result[0]
-            property = convert.base64_to_string(result[1])
+            property = convert.base64_to_string(property)
             if command == 'hostname':
                 agent.hostname = property
             if command == 'whoami':
@@ -201,7 +203,7 @@ class TeamServerRoutes:
                 event_banner = f'{{"banner":"Task results from {agent.name}:",' f'"results":"{result}"}}'
                 self.sio_server.emit(
                     event,
-                    event_banner
+                    event_banner 
                 )
         if task.type == 2 or task.type == -2:
             file = convert.base64_to_bytes(result)
