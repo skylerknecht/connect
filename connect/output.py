@@ -31,7 +31,6 @@ NOTIFICATIONS = {
     'SUCCESS': Notification('[SUCCESS] ', COLORS['green'])
 }
 
-
 def display(type: str, stdout: str, prefix_enabled: bool = True, newline: bool = True):
     if type == 'PROMPT':
         return input(stdout + ' ')
@@ -49,11 +48,11 @@ def deserialize_agent_json_object(agent):
     agent_options = []
     for agent_option in agent[6]: #agents[6] is a list of agent_options
         parameters = []
-        if isinstance(agent[2], list):
-            for paramter in agent[2]:
-                parameters.append(Parameter(*paramter))
+        if isinstance(agent_option[2], list):
+            for parameter in agent_option[2]:
+                parameters.append(Parameter(*parameter))
         else:
-            parameters.append(Parameter(*agent_option[2]))
+            parameters = []
         agent_option = AgentOption(*agent_option[0:2], parameters, agent_option[3])
         agent_options.append(agent_option)    
     return Agent(*agent[0:6], agent_options, agent[7])

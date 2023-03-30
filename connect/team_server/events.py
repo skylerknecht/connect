@@ -1,5 +1,7 @@
 import json
 import os
+import traceback
+import sqlalchemy
 
 from connect.output import Task
 from connect import convert
@@ -57,6 +59,10 @@ class TeamServerEvents:
 
         action = data.get('action')
         if action == 'create':
+            implant = ImplantModel.query.filter_by(name=data.get('name')).first()
+            if implant:
+                emit('error', f'Failed to create implant \'{implant.name}\' name already in use.')
+                return
             new_implant = ImplantModel(options=data.get('options'), name=data.get('name'))
             self.db.session.add(new_implant)
             self.db.session.commit()

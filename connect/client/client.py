@@ -238,7 +238,6 @@ class Options:
             self.agent_option(agent_option, '--help')
             return
         task = output.Task(agent_option.name, agent_option.description, args, agent_option.type)
-        print(sys.getsizeof(json.dumps(task)))
         self.sio_client.emit('task', f'{{"agent":"{self.current_agent.name}", "task": {json.dumps(task)}}}')
 
 class Interface:
