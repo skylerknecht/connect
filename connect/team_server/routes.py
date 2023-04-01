@@ -205,7 +205,7 @@ class TeamServerRoutes:
                 )
         if task.type == 2 or task.type == -2:
             file = convert.base64_to_bytes(result)
-            filename = f'{os.getcwd()}/.backup/downloads/{generate.string_identifier()}'
+            filename = f'{os.getcwd()}/instance/downloads/{generate.string_identifier()}'
             task.results = filename
             with open(filename, 'wb') as fd:
                 fd.write(file)
