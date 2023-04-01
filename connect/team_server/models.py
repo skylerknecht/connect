@@ -33,7 +33,7 @@ class ImplantModel(db.Model):
     
 class AgentModel(db.Model):
     # properties
-    name = db.Column(db.String, primary_key=True, default=name_identifier)
+    name = db.Column(db.String, primary_key=True, default=digit_identifier)
     check_in = db.Column(db.DateTime, default=datetime.datetime.fromtimestamp(823879740.0))
 
     # relationships

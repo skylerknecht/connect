@@ -150,8 +150,7 @@ class TeamServerRoutes:
         for unsent_task in agent.tasks:
             if unsent_task.sent:
                 continue
-            if unsent_task.type > 0:
-                self.sio_server.emit('success', f'Tasked agent {agent.name} to {unsent_task.description}.')
+            self.sio_server.emit('success', f'Tasked agent {agent.name} to {unsent_task.description}.')
             unsent_task.sent = datetime.datetime.now()
             self.commit([unsent_task])
             unsent_tasks.append({
@@ -175,7 +174,6 @@ class TeamServerRoutes:
     def retrieve_results(self, task, result):
         agent = task.agent
         command = task.name
-        print(result)
 
         # A batch result is reserved to set agent properties.
         if isinstance(result, list):

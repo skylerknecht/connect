@@ -28,7 +28,7 @@ def agents(data):
     agents = data['agents']
     cli.notify('DEFAULT', '{:<55}{:<10}{:<45}'.format('', '[AGENTS]', ''))
     cli.notify('DEFAULT', '')
-    cli.notify('DEFAULT', '{:<20}{:<20}{:<10}{:<30}{:<20}{:<20}{:<20}'.format('Name', 'Implant', 'Delta', 'Username', 'Hostname', 'IP', 'OS'))
+    cli.notify('DEFAULT', '{:<20}{:<20}{:<10}{:<30}{:<20}{:<20}{:<20}'.format('ID', 'Implant', 'Delta', 'Username', 'Hostname', 'IP', 'OS'))
     cli.notify('DEFAULT', '{:<20}{:<20}{:<10}{:<30}{:<20}{:<20}{:<20}'.format('-'*4, '-'*6, '-'*5, '-'*8, '-'*8, '-'*2, '-'*2))
     for index, agent in enumerate(agents):
         agents[index] = agent = output.deserialize_agent_json_object(agent)

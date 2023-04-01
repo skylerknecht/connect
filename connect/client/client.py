@@ -19,12 +19,12 @@ class Options:
     Agents = []
     current_agent = None
     current_agent_options = []
-
     
     def __init__(self, sio_client) -> None:
         self.sio_client = sio_client
         self.OPTIONS = [
             self.Option('agents', self.agents, [], 'Request and display avaliable agents.'),
+            self.Option('all', self.all, [], 'Interact with all agents.'),
             self.Option('back', self.back, [], 'Return to the main menu.'),
             self.Option('exit', self.exit, [], 'Exits the application.'),
             self.Option('help', self.help, [], 'Displays the help menu.'),
@@ -127,6 +127,26 @@ class Options:
             self.sio_client.emit('agents', {"all":"True"})
             return
         self.sio_client.emit('agents', {"all":"False"})
+
+    @detailed_help
+    def all(self, option, *args):
+        """\
+        Interact with all agents.
+
+        Usage: back [-h,--help]
+
+        Parameters:
+            -h/--help     Display this menu.\
+        """
+        non_duplicates = []
+        self.current_agent = self.Agents
+        self.current_agent_options = []
+        for agent in self.current_agent:
+            for option in agent.options:
+                if option in non_duplicates:
+                    continue
+                non_duplicates.append(option)
+        self.current_agent_options = non_duplicates
 
     @detailed_help
     def back(self, option, *args):
@@ -232,10 +252,15 @@ class Options:
 
     @detailed_help
     def agent_option(self, agent_option, *args):
-        if not self.current_agent:
-            output.display('ERROR', 'Not intreacting with an agent.')
         if len(agent_option.parameters) > len(args):
             self.agent_option(agent_option, '--help')
+            return
+        if not self.current_agent:
+            output.display('ERROR', 'Not intreacting with an agent.')
+        if isinstance(self.current_agent, list):
+            for agent in self.current_agent:
+                task = output.Task(agent_option.name, agent_option.description, args, agent_option.type)
+                self.sio_client.emit('task', f'{{"agent":"{agent.name}", "task": {json.dumps(task)}}}')
             return
         task = output.Task(agent_option.name, agent_option.description, args, agent_option.type)
         self.sio_client.emit('task', f'{{"agent":"{self.current_agent.name}", "task": {json.dumps(task)}}}')
@@ -309,6 +334,10 @@ class Interface:
             if option.name == 'back':
                 option.function(option)
                 self.prompt = self.PROMPT
+                return True
+            if option.name == 'all':
+                option.function(option)
+                self.prompt = '(all)~#'
                 return True
             try:
                 option.function(option, *tokens[1:])
