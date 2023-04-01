@@ -204,14 +204,14 @@ class TeamServerRoutes:
                     event_banner 
                 )
         if task.type == 2 or task.type == -2:
-            file = convert.base64_to_bytes(result)
+            file = convert.base64_to_string(result)
             filename = f'{os.getcwd()}/instance/downloads/{generate.string_identifier()}'
             task.results = filename
             with open(filename, 'wb') as fd:
                 fd.write(file)
             if task.type > 0:
                 event = 'task_results'
-                event_banner = f'{{"banner":"Wrote task results from {agent.name} to:", f"results":"{convert.string_to_base64(filename)}"}}'
+                event_banner = f'{{"banner":"Wrote task results from {agent.name} to:", "results":"{convert.string_to_base64(filename)}"}}'
                 self.sio_server.emit(
                     event,
                     event_banner

@@ -4,6 +4,8 @@ connect/pyvenv.cfg
 .vscode/*
 env/*
 Pipfile.lock
-instance/*
+instance/command_history.txt
+instance/connect.db
+instance/downloads/*
 connect/resources/*
 *__pycache__/
