@@ -76,17 +76,25 @@ class TeamServerEvents:
             implant_id = data.get('implant_id')
             if implant_id:
                 if implant_id == 'all':
-                    num_deleted = ImplantModel.query.delete()
-                    self.db.session.commit()
-                    emit('success', f'{num_deleted} implants deleted successfully')
-                else:
-                    implant = ImplantModel.query.filter_by(id=implant_id).first()
-                    if implant:
+                    for implant in ImplantModel.query.all():
+                        if implant.agents:
+                            emit('error', f'Failed to delete implant. There are {len(implant.agents)} agent(s) connected to {implant.id}.')
+                            continue
+                        emit('success', f'Implant {implant.id} deleted successfully')
                         self.db.session.delete(implant)
                         self.db.session.commit()
-                        emit('success', 'Implant deleted successfully')
-                    else:
-                        emit('information', 'Implant not found')
+                        
+                else:
+                    implant = ImplantModel.query.filter_by(id=implant_id).first()
+                    if not implant:
+                        emit('error', 'Implant not found')
+                        return
+                    if implant.agents:
+                        emit('error', f'Failed to delete implant. There are {len(implant.agents)} agent(s) connected to {implant.id}.')
+                        return
+                    self.db.session.delete(implant)
+                    self.db.session.commit()
+                    emit('success', 'Implant deleted successfully')
             else:
                 emit('error', 'No implant ID provided for delete')
         else:

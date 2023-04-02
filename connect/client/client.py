@@ -29,7 +29,7 @@ class Options:
             self.Option('exit', self.exit, [], 'Exits the application.'),
             self.Option('help', self.help, [], 'Displays the help menu.'),
             self.Option('hello', self.hello, [output.Parameter('name', 'individual to greet')], 'Greets an individual.'),
-            self.Option('implants', self.implants, [output.Parameter('--create IMPLANT_NAME /path/to/profile.json', 'Create an Implant.'), output.Parameter('--delete IMPLANT_ID', 'Delete an Implant.')], 'Create, delete and display avaliable implants.'),
+            self.Option('implants', self.implants, [output.Parameter('--create IMPLANT_NAME /path/to/profile.json', 'Create an Implant.'), output.Parameter('--delete [IMPLANT_ID, all]', 'Delete an Implant.')], 'Create, delete and display avaliable implants.'),
         ]
 
     def _complete_path(self, incomplete_option):
