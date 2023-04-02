@@ -96,12 +96,12 @@ class Options:
                 output.display('DEFAULT', '-'*11)
                 if option.parameters:
                     longest_parameter = max(len(parameter.name) for parameter in option.parameters) + 4
+                    longest_parameter = 13 if longest_parameter < 13 else longest_parameter # '-h,--help' is not included in option.parameters
                     for parameter in option.parameters:
                         output.display('DEFAULT', '{:<4}{:<{}}{:<30}'.format('', parameter.name, longest_parameter, parameter.description))
                     output.display('DEFAULT', '{:<4}{:<{}}{:<30}'.format('', '-h/--help', longest_parameter, 'Display this menu.'))
                 else:
                     output.display('DEFAULT', '{:<4}{:<30}{:<30}'.format('', '-h/--help', 'Display this menu.'))
-
             else:
                 func(self, *args, **kwargs)
         return wrapper
@@ -188,12 +188,12 @@ class Options:
         output.display('DEFAULT', 'Usage: <option> [parameters]')
         output.display('DEFAULT', '')
         output.display('DEFAULT', 'Options:')
-        longest_parameter = max(len(parameter.name) for parameter in self.OPTIONS + self.current_agent_options) + 4
+        longest_parameter = max(len(parameter.name) for parameter in self.OPTIONS + self.current_agent_options) + 4 
         for option in self.OPTIONS:
             output.display('DEFAULT', '  {:<{}}{}'.format(option.name, longest_parameter, option.description))
         if not self.current_agent:
             return
-        output.display('DEFAULT', 'Agent Options:')
+        output.display('DEFAULT', '\nAgent Options:')
         for option in self.current_agent_options:
             output.display('DEFAULT', '  {:<{}}{}'.format(option.name, longest_parameter, option.description))
 
