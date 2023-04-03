@@ -55,4 +55,4 @@ def deserialize_agent_json_object(agent):
             parameters = []
         agent_option = AgentOption(*agent_option[0:2], parameters, agent_option[3])
         agent_options.append(agent_option)    
-    return Agent(*agent[0:6], agent_options, agent[7:])
+    return Agent(*agent[0:6], agent_options, *agent[7:])
