@@ -86,12 +86,7 @@ def main():
     parser.add_argument('team_server_uri', help='Team Server\'s URI.')
     parser.add_argument('key', help='Team Server\'s Key.')
     args = parser.parse_args()
-    try:
-        sio_client.connect(args.team_server_uri, auth=args.key)
-    except socketio.exceptions.ConnectionError:
-        output.display('ERROR', f'Connection could not be stablished to {args.team_server_uri}')
-        return
-    cli.run()
+    cli.run(args.team_server_uri, args.key)
 
 if __name__ == '__main__':
     sys.exit(main())

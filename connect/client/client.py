@@ -273,7 +273,6 @@ class Interface:
     PROMPT = '(connect)~#'
 
     def __init__(self, options: Options) -> None:
-        signal.signal(signal.SIGINT, self.signal_handler)
         self.prompt = self.PROMPT
         self.options = options
         readline.set_history_length(10000)
@@ -296,7 +295,7 @@ class Interface:
     def notify(self, type: str, stdout: str, reprompt: bool = False):
         output.display(type, stdout)
         if self.MAIN_THREAD_IDENTIFIER != threading.current_thread().ident or reprompt:
-            output.display('DEFAULT', self.prompt + ' ' + readline.get_line_buffer(), newline=False)
+            output.display('DEFAULT', self.prompt + ' ', newline=False)
 
     def process_agent_interaction(self, input):
         agents = [agent for agent in self.options.Agents]
@@ -356,25 +355,29 @@ class Interface:
                 self.notify('DEFAULT', traceback.format_exc())
         return False
 
-    def run(self):
-        while True:
-            try:
-                user_input = output.display('PROMPT', self.prompt)
-                if not user_input:
+    def run(self, team_server_uri, key):
+            self.options.sio_client.connect(team_server_uri, auth=key)
+            while True:
+                try:
+                    self.ignore_input = False
+                    user_input = output.display('PROMPT', self.prompt)
+                    if not user_input or self.ignore_input:
+                        continue
+                    if self.process_agent_interaction(user_input):
+                        continue
+                    tokens = shlex.split(user_input.replace("\\", "\\\\"))
+                    if self.process_agent_options(tokens):
+                        continue
+                    if self.process_options(tokens):
+                        continue
+                    output.display('ERROR', 'Invalid option. Type "help" for a list of available options.')
+                except EOFError:
+                    self.notify('DEFAULT', traceback.format_exc())
+                    sys.exit()
+                except Exception:
+                    self.notify('DEFAULT', traceback.format_exc())
+                except KeyboardInterrupt:
+                    # ToDo: Find a better way to prevent the socket_io client from disconnecting when KeyboardInterrupt is caught.
+                    self.notify('INFORMATION', 'Keyboard Interrupt Caught. Type exit to leave the application.')  
+                    self.options.sio_client.connect(team_server_uri, auth=key)
                     continue
-                if self.process_agent_interaction(user_input):
-                    continue
-                tokens = shlex.split(user_input.replace("\\", "\\\\"))
-                if self.process_agent_options(tokens):
-                    continue
-                if self.process_options(tokens):
-                    continue
-                output.display('ERROR', 'Invalid option. Type "help" for a list of available options.')
-            except EOFError:
-                self.notify('DEFAULT', traceback.format_exc())
-                sys.exit()
-            except Exception:
-                self.notify('DEFAULT', traceback.format_exc())
-           
-    def signal_handler(self, sig, frame):
-        self.notify('INFORMATION', 'Keyboard Interrupt Caught. Type exit to leave the application.', reprompt=True)
