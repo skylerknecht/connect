@@ -379,5 +379,6 @@ class Interface:
                 except KeyboardInterrupt:
                     # ToDo: Find a better way to prevent the socket_io client from disconnecting when KeyboardInterrupt is caught.
                     self.notify('INFORMATION', 'Keyboard Interrupt Caught. Type exit to leave the application.')  
+                    self.options.sio_client.disconnect()
                     self.options.sio_client.connect(team_server_uri, auth=key)
                     continue
