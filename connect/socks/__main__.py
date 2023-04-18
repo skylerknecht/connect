@@ -1,4 +1,4 @@
-from . import socks
+from . import local_socks
 
-socks5server = socks.Proxy()
-socks5server.run('127.0.0.1', 9050)
+socks5server = local_socks.Proxy()
+socks5server.run('192.168.1.15', 9050)
