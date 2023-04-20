@@ -1,3 +1,10 @@
 [
-    ["shell", "Execute all of the commands", ["command", "The command to execute."], 1]
+    [
+		"shell",
+		"Execute commands",
+		[
+			[ "command", "The command to execute" ]
+		],
+		1
+	]
 ]

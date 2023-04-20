@@ -175,6 +175,14 @@ class TeamServerRoutes:
         agent = task.agent
         command = task.name
 
+        if command == 'socks_connect':
+            self.sio_server.emit('socks_connect', convert.base64_to_string(result))
+        
+        if command == 'socks_downstream':
+            results = convert.base64_to_string(result)
+            sid = json.loads(results)['sid']
+            self.sio_server.emit(f'socks_downstream_{sid}', results)
+
         # A batch result is reserved to set agent properties.
         if isinstance(result, list):
             property = result[1]

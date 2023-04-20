@@ -1,20 +1,22 @@
 import json
 import os
-import traceback
-import sqlalchemy
+import threading
 
 from connect.output import Task
 from connect import convert
+from connect.socks import socks
 from connect.team_server.models import AgentModel, ImplantModel, TaskModel
 
 from flask_socketio import emit, disconnect
 
 class TeamServerEvents:
 
-    def __init__(self, key, db, sio_server):
-        self.sio_server = sio_server
+    def __init__(self, db, sio_server, team_server_uri, key):
         self.key = key
         self.db = db
+        self.socks_proxies = {}
+        self.sio_server = sio_server
+        self.team_server_uri = team_server_uri
 
     def commit(self, models: list):
         """
@@ -54,7 +56,7 @@ class TeamServerEvents:
         try:
             data = json.loads(data)
         except json.JSONDecodeError:
-            emit('error', 'Invalid JSON provided')
+            emit('error', 'Invalid JSON provided to implants event')
             return
 
         action = data.get('action')
@@ -99,6 +101,35 @@ class TeamServerEvents:
                 emit('error', 'No implant ID provided for delete')
         else:
             emit('error', 'Invalid action provided')
+
+    def socks(self, data):
+        if not data:
+            self.sio_server.emit('success', {'socks': self.socks_proxies})
+            return
+        try:
+            data = json.loads(data)
+        except json.JSONDecodeError:
+            emit('error', 'Invalid JSON provided to socks event')
+            return
+        try:
+            action = data.get('action')
+            address = data.get('address')
+            port = int(data.get('port'))
+            if action == 'local':
+                proxy = socks.Proxy(address, port)
+                t = threading.Thread(target=proxy.run)
+                t.daemon = True
+                t.start()
+                self.sio_server.emit('success', f'Created local proxy on {address}:{port}')
+            elif action == 'remote':
+                agent_id = data.get('agent_id')
+                proxy = socks.Proxy(address, port, remote=[self.team_server_uri, self.key, agent_id])
+                t = threading.Thread(target=proxy.run)
+                t.daemon = True
+                t.start()
+                self.sio_server.emit('success', f'Created remote proxy on {address}:{port}')
+        except Exception as e:
+            self.sio_server.emit('error', f'Failed to parse socks event:\n{e}')
 
     def task(self, data):
         """

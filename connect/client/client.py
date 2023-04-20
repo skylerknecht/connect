@@ -30,6 +30,10 @@ class Options:
             self.Option('help', self.help, [], 'Displays the help menu.'),
             self.Option('hello', self.hello, [output.Parameter('name', 'individual to greet')], 'Greets an individual.'),
             self.Option('implants', self.implants, [output.Parameter('--create IMPLANT_NAME /path/to/profile.json', 'Create an Implant.'), output.Parameter('--delete [IMPLANT_ID, all]', 'Delete an Implant.')], 'Create, delete and display avaliable implants.'),
+            self.Option('socks', self.socks, [
+                output.Parameter('--local ADDRESS PORT', 'Emit a socks event with the action set to local and the given address and port.'),
+                output.Parameter('--remote ADDRESS PORT AGENT_ID', 'Emit a socks event with the action set to remote and the given address and port.')
+            ], 'Emit a socks event with the given action and address and port.')
         ]
 
     def _complete_path(self, incomplete_option):
@@ -112,6 +116,35 @@ class Options:
         self.current_agent_options = agent.options
 
     # Option Functions
+
+    @detailed_help
+    def socks(self, option, *args):
+        """\
+        Emit a socks event with the given action and address and port.
+
+        Usage: socks [--local ADDRESS PORT | --remote ADDRESS PORT] [-h,--help]
+
+        Parameters:
+            -h/--help               Display this menu.
+            --local ADDRESS PORT    Emit a socks event with the action set to local and the given address and port.
+            --remote ADDRESS PORT   Emit a socks event with the action set to remote and the given address and port.\
+        """
+        try:
+            if not args:
+                self.sio_client.emit('socks', '')
+            elif '--local' in args:
+                pos = args.index('--local')
+                data = {'action':'local','address':args[pos+1], 'port':args[pos+2]}
+                self.sio_client.emit('socks', json.dumps(data))
+            elif '--remote' in args:
+                pos = args.index('--remote')
+                data = {'action':'remote','address':args[pos+1], 'port':args[pos+2], 'agent_id': args[pos+3]}
+                self.sio_client.emit('socks', json.dumps(data))
+            else:
+                option.function(option, '--help')
+        except Exception:
+            output.display('DEFAULT', traceback.format_exc())
+            option.function(option, '--help')
 
     @detailed_help
     def agents(self, option, *args):
