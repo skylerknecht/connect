@@ -139,7 +139,6 @@ class TeamServerEvents:
         """
         data = json.loads(data)
         task = Task(*data['task'])
-        print(task)
         parameters = task.parameters
         for index, parameter in enumerate(parameters):
             if os.path.exists(parameter):
@@ -150,7 +149,6 @@ class TeamServerEvents:
         agent = AgentModel.query.filter_by(name=data['agent']).first()
         task = TaskModel(name=task.name, description=task.description, parameters=parameters, type=task.type,  agent=agent)
         self.commit([task])
-        print('commited')
 
     def version(self):
         emit('information', f'The current version is {__version__}')

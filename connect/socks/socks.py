@@ -5,6 +5,8 @@ import socketio
 import select
 import threading
 
+import time
+
 from connect import output
 from connect import convert
 from connect import generate
@@ -144,8 +146,6 @@ class AgentProxyClient(ProxyClient):
             self.client.close()
             return
 
-
-
         self.client.sendall(self.generate_reply(atype, rep, bind_addr, bind_port))
         self.socks_stream(remote)
 
@@ -163,12 +163,8 @@ class AgentProxyClient(ProxyClient):
             r, w, e = select.select([self.client], [], []) 
 
             if self.client in r:
+                print('upstream: ' + str(time.time()))
                 self.upstream(remote, self.client.recv(4096))
-
-
-
-        remote.close()
-        self.client.close()
  
     def upstream(self, remote, upstream_data):
         upstream_data = convert.bytes_to_base64(upstream_data)    
@@ -177,15 +173,18 @@ class AgentProxyClient(ProxyClient):
         self.sio_client.emit('task', f'{{"agent":"{self.agent_id}", "task": {json.dumps(task)}}}')
  
     def downstream(self, data):
-        print('downstream')
         data = json.loads(data)
-        print(data['socks_client_id'])
-        print(self.client_id)
         if data['socks_client_id'] != self.client_id:
             return
-        print('sending downstream')
         downstream_data = convert.base64_to_bytes(data.get('downstream_data'))
+        
+        # while True:
+        #     r, w, e = select.select([], [self.client], []) 
+
+        #     if self.client in w:
+        print('downstream: ' + str(time.time()))
         self.client.send(downstream_data)
+
 
 
 class LocalProxyClient(ProxyClient):
@@ -204,7 +203,8 @@ class LocalProxyClient(ProxyClient):
             rep = 0
         except socket.timeout:
             rep = 4
-        except Exception:
+        except Exception as e:
+            print(e)
             rep = 1
         
         if rep != 0:

