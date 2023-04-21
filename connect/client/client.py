@@ -33,7 +33,8 @@ class Options:
             self.Option('socks', self.socks, [
                 output.Parameter('--local ADDRESS PORT', 'Emit a socks event with the action set to local and the given address and port.'),
                 output.Parameter('--remote ADDRESS PORT AGENT_ID', 'Emit a socks event with the action set to remote and the given address and port.')
-            ], 'Emit a socks event with the given action and address and port.')
+            ], 'Emit a socks event with the given action and address and port.'),
+            self.Option('version', self.version, [], 'Request the current version.'),
         ]
 
     def _complete_path(self, incomplete_option):
@@ -160,6 +161,18 @@ class Options:
             self.sio_client.emit('agents', {"all":"True"})
             return
         self.sio_client.emit('agents', {"all":"False"})
+
+    @detailed_help
+    def version(self, option, *args):
+        """\
+        Request the current version.
+
+        Usage: version [-h,--help]
+
+        Parameters:
+            -h/--help     Display this menu.\
+        """
+        self.sio_client.emit('version')
 
     @detailed_help
     def all(self, option, *args):

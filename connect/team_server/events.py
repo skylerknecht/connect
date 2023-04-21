@@ -2,6 +2,7 @@ import json
 import os
 import threading
 
+from connect import __version__
 from connect.output import Task
 from connect import convert
 from connect.socks import socks
@@ -11,12 +12,13 @@ from flask_socketio import emit, disconnect
 
 class TeamServerEvents:
 
-    def __init__(self, db, sio_server, team_server_uri, key):
+    def __init__(self, db, sio_server, task_manager, team_server_uri, key):
         self.key = key
         self.db = db
         self.socks_proxies = {}
         self.sio_server = sio_server
         self.team_server_uri = team_server_uri
+        self.task_manager = task_manager
 
     def commit(self, models: list):
         """
@@ -116,18 +118,16 @@ class TeamServerEvents:
             address = data.get('address')
             port = int(data.get('port'))
             if action == 'local':
-                proxy = socks.Proxy(address, port)
+                proxy = socks.Proxy(address, port, self.team_server_uri, self.key)
                 t = threading.Thread(target=proxy.run)
                 t.daemon = True
                 t.start()
-                self.sio_server.emit('success', f'Created local proxy on {address}:{port}')
             elif action == 'remote':
                 agent_id = data.get('agent_id')
-                proxy = socks.Proxy(address, port, remote=[self.team_server_uri, self.key, agent_id])
+                proxy = socks.Proxy(address, port, self.team_server_uri, self.key, agent_id=agent_id)
                 t = threading.Thread(target=proxy.run)
                 t.daemon = True
                 t.start()
-                self.sio_server.emit('success', f'Created remote proxy on {address}:{port}')
         except Exception as e:
             self.sio_server.emit('error', f'Failed to parse socks event:\n{e}')
 
@@ -139,6 +139,7 @@ class TeamServerEvents:
         """
         data = json.loads(data)
         task = Task(*data['task'])
+        print(task)
         parameters = task.parameters
         for index, parameter in enumerate(parameters):
             if os.path.exists(parameter):
@@ -149,3 +150,7 @@ class TeamServerEvents:
         agent = AgentModel.query.filter_by(name=data['agent']).first()
         task = TaskModel(name=task.name, description=task.description, parameters=parameters, type=task.type,  agent=agent)
         self.commit([task])
+        print('commited')
+
+    def version(self):
+        emit('information', f'The current version is {__version__}')

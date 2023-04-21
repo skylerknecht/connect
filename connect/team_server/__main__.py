@@ -5,6 +5,7 @@ from . import events
 from . import models
 from . import routes
 from . import server
+from . import task_manager
 from connect import generate
 from connect import output
 from flask_socketio import SocketIO
@@ -21,8 +22,9 @@ args = parser.parse_args()
 team_server_uri = f'https://{args.ip}:{args.port}/' if args.ssl else f'http://{args.ip}:{args.port}/'
 
 team_server = server.TeamServer('Team Server', models.db, sio_server)
-team_server_events = events.TeamServerEvents(models.db, sio_server, team_server_uri, key)
-team_server_routes = routes.TeamServerRoutes(models.db, sio_server)
+team_server_task_manager = task_manager.TaskManager(models.db, sio_server)
+team_server_events = events.TeamServerEvents(models.db, sio_server, team_server_task_manager, team_server_uri, key)
+team_server_routes = routes.TeamServerRoutes(models.db, sio_server, team_server_task_manager)
 team_server.create_database()
 team_server.add_route('/<path:route>', 'check_in', team_server_routes.check_in_route, methods=['GET', 'POST'])    
 team_server.add_event('agents', team_server_events.agents)
@@ -30,6 +32,7 @@ team_server.add_event('connect', team_server_events.connect)
 team_server.add_event('implants', team_server_events.implants)
 team_server.add_event('socks', team_server_events.socks)
 team_server.add_event('task', team_server_events.task)
+team_server.add_event('version', team_server_events.version)
 
 if args.ssl:
     output.display('SUCCESS', f'Generated client args: https://{args.ip}:{args.port}/ {key}')
