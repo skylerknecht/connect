@@ -115,8 +115,10 @@ class AgentProxyClient(ProxyClient):
         self.sio_client.on(f'socks_downstream', self.downstream)
 
     def proxy(self, atype, address, port):
-        args = [address, str(port), str(int.from_bytes(atype, byteorder='big'))]
+        args = [address, str(port), self.client_id, str(int.from_bytes(atype, byteorder='big'))]
         task = output.Task('socks_connect', 'SOCKS5 Connect', args, 3)
+        print('emitting neww socks_connect')
+        print(task)
         self.sio_client.emit('task', f'{{"agent":"{self.agent_id}", "task": {json.dumps(task)}}}')
 
     def socks_connect(self, data):
@@ -130,6 +132,11 @@ class AgentProxyClient(ProxyClient):
             self.sio_client.emit('error', 'Invalid JSON provided to socks reply event')
             return
         
+        print(data.get('socks_client_id') != self.client_id)
+        print(data.get('socks_client_id') + ':' + str(self.client_id))
+        if data.get('socks_client_id') != self.client_id:
+            return
+        
         try:
             remote = data.get('remote')
             rep = int(data.get('rep'))
@@ -139,13 +146,16 @@ class AgentProxyClient(ProxyClient):
         except:
             self.client.sendall(self.generate_reply(atype, 1, None, None))
             self.sio_client.emit('error', 'Invalid JSON provided to socks reply event')
-            self.client.close()
+            if int(remote) != -1:
+                self.disconnect(remote=remote)
+            else:
+                self.disconnect()
             return
 
         if rep != 0:
             print(self.REPLIES[rep])
             self.client.sendall(self.generate_reply(atype, rep, None, None))
-            self.client.close()
+            self.disconnect()
             return
 
         self.client.sendall(self.generate_reply(atype, rep, bind_addr, bind_port))
@@ -165,13 +175,16 @@ class AgentProxyClient(ProxyClient):
             r, w, e = select.select([self.client], [], []) 
 
             if self.client in r:
-                print('upstream: ' + str(time.time()))
-                data = self.client.recv(4096)
-                if len(data) <= 0:
+                try:
+                    print('upstream: ' + str(time.time()))
+                    data = self.client.recv(4096)
+                    if len(data) <= 0:
+                        break
+                    self.upstream(remote, data)
+                except:
                     break
-                self.upstream(remote, data)
 
-        self.disconnect(remote)
+        self.disconnect(remote=remote)
  
     def upstream(self, remote, upstream_data):
         upstream_data = convert.bytes_to_base64(upstream_data)    
@@ -184,19 +197,27 @@ class AgentProxyClient(ProxyClient):
         if data.get('socks_client_id') != self.client_id or not self.stream:
             return
         downstream_data = convert.base64_to_bytes(data.get('downstream_data'))
-        print('downstream: ' + str(time.time()))
-        if self.client.send(downstream_data) <= 0:
-            self.disconnect(data.get('remote'))
+        try:
+            print('downstream: ' + str(time.time()))
+            self.client.send(downstream_data)
+        except:
+            self.disconnect(remote=data.get('remote'))
 
-    def disconnect(self, remote):
+    def disconnect(self, remote=None):
+        if self.stream == False:
+            return
+
         self.stream = False
 
-        # schedule socks_disconnect
-        args = [remote, self.client_id]
-        task = output.Task('socks_disconnect', 'SOCKS5 DISCONNECT', args, 3)
-        self.sio_client.emit('task', f'{{"agent":"{self.agent_id}", "task": {json.dumps(task)}}}')
+        if remote:
+            # schedule socks_disconnect
+            args = [remote, self.client_id]
+            task = output.Task('socks_disconnect', 'SOCKS5 DISCONNECT', args, 3)
+            self.sio_client.emit('task', f'{{"agent":"{self.agent_id}", "task": {json.dumps(task)}}}')
 
         self.client.close()
+        self.sio_client.disconnect()
+
 
 class LocalProxyClient(ProxyClient):
 
@@ -273,6 +294,7 @@ class Proxy:
 
     def listen_for_clients(self, server):
         print('SOCKS5 server listening for clients on {}:{}.'.format(*server.getsockname()))
+        
         while True:
             client, addr = server.accept()
             output.display('SUCCESS', 'New connection from {}:{}, creating proxy client.'.format(*addr))
