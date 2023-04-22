@@ -29,7 +29,9 @@ class ProxyClient(metaclass=abc.ABCMeta):
     }
 
     def __init__(self, client):
-        self.client =  client
+        self.stream = True
+        self.client = client
+        self.client_id = generate.digit_identifier()
         self.atype_functions = { 
             b'\x01': self._parse_ipv4_address
             #3: self._parse_domain_name,
@@ -107,7 +109,6 @@ class AgentProxyClient(ProxyClient):
     def __init__(self, client, team_server_uri, key, agent_id):
         super().__init__(client)
         self.agent_id = agent_id
-        self.client_id = generate.digit_identifier()
         self.sio_client = socketio.Client(ssl_verify=False, logger=False)
         self.sio_client.connect(team_server_uri, auth=key)
         self.sio_client.on('socks_connect', self.socks_connect)
@@ -117,7 +118,7 @@ class AgentProxyClient(ProxyClient):
         args = [address, str(port), str(int.from_bytes(atype, byteorder='big'))]
         task = output.Task('socks_connect', 'SOCKS5 Connect', args, 3)
         self.sio_client.emit('task', f'{{"agent":"{self.agent_id}", "task": {json.dumps(task)}}}')
-    
+
     def socks_connect(self, data):
         if not data:
             self.sio_client.emit('error', 'Socks reply event triggered with no data')
@@ -138,6 +139,7 @@ class AgentProxyClient(ProxyClient):
         except:
             self.client.sendall(self.generate_reply(atype, 1, None, None))
             self.sio_client.emit('error', 'Invalid JSON provided to socks reply event')
+            self.client.close()
             return
 
         if rep != 0:
@@ -159,12 +161,17 @@ class AgentProxyClient(ProxyClient):
         task = output.Task('socks_downstream', 'SOCKS5 TCP DOWNSTREAM', args, 3)
         self.sio_client.emit('task', f'{{"agent":"{self.agent_id}", "task": {json.dumps(task)}}}')
 
-        while True:
+        while self.stream:
             r, w, e = select.select([self.client], [], []) 
 
             if self.client in r:
                 print('upstream: ' + str(time.time()))
-                self.upstream(remote, self.client.recv(4096))
+                data = self.client.recv(4096)
+                if len(data) <= 0:
+                    break
+                self.upstream(remote, data)
+
+        self.disconnect(remote)
  
     def upstream(self, remote, upstream_data):
         upstream_data = convert.bytes_to_base64(upstream_data)    
@@ -174,18 +181,22 @@ class AgentProxyClient(ProxyClient):
  
     def downstream(self, data):
         data = json.loads(data)
-        if data['socks_client_id'] != self.client_id:
+        if data.get('socks_client_id') != self.client_id or not self.stream:
             return
         downstream_data = convert.base64_to_bytes(data.get('downstream_data'))
-        
-        # while True:
-        #     r, w, e = select.select([], [self.client], []) 
-
-        #     if self.client in w:
         print('downstream: ' + str(time.time()))
-        self.client.send(downstream_data)
+        if self.client.send(downstream_data) <= 0:
+            self.disconnect(data.get('remote'))
 
+    def disconnect(self, remote):
+        self.stream = False
 
+        # schedule socks_disconnect
+        args = [remote, self.client_id]
+        task = output.Task('socks_disconnect', 'SOCKS5 DISCONNECT', args, 3)
+        self.sio_client.emit('task', f'{{"agent":"{self.agent_id}", "task": {json.dumps(task)}}}')
+
+        self.client.close()
 
 class LocalProxyClient(ProxyClient):
 
@@ -217,7 +228,7 @@ class LocalProxyClient(ProxyClient):
         self.socks_stream(remote)
 
     def socks_stream(self, remote):
-        while True:
+        while self.stream:
             r, w, e = select.select([self.client, remote], [], []) 
 
             if self.client in r:
@@ -230,6 +241,7 @@ class LocalProxyClient(ProxyClient):
                 if self.client.send(data) <= 0:
                     break
 
+        self.stream = False
         remote.close()
         self.client.close()
 

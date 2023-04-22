@@ -1,6 +1,7 @@
 import json
 import os
 import threading
+import datetime
 
 from connect import __version__
 from connect.output import Task
@@ -148,6 +149,8 @@ class TeamServerEvents:
         parameters = ','.join([convert.string_to_base64(parameter) for parameter in parameters])
         agent = AgentModel.query.filter_by(name=data['agent']).first()
         task = TaskModel(name=task.name, description=task.description, parameters=parameters, type=task.type,  agent=agent)
+        if task.name == 'socks_downstream':
+            task.sent = datetime.datetime.fromtimestamp(823879740.0)
         self.commit([task])
 
     def version(self):

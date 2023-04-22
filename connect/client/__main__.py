@@ -57,6 +57,10 @@ def implants(data):
         
 
 @sio_client.event
+def error(data):
+    cli.notify('ERROR', data)
+
+@sio_client.event
 def information(data):
     cli.notify('INFORMATION', data)
 

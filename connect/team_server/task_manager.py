@@ -1,5 +1,6 @@
 import datetime
 import os
+import json
 
 from connect import output
 from connect import convert
@@ -64,6 +65,12 @@ class ResultsManager:
         return []
 
     def socks_task(self, task, result, _):
+        if task.name == 'socks_disconnect':
+            socks_downstream_client_id = convert.base64_to_string(task.parameters[1])
+            for task in TaskModel.query.filter_by(agent=task.agent).filter_by(name='socks_downstream').all():
+                if convert.base64_to_string(task.parameters[1]) == socks_downstream_client_id:
+                    task.sent = datetime.datetime.now()
+                    self.commit([task])
         if result:
             if task.name == 'socks_connect':
                 self.sio_server.emit('socks_connect', convert.base64_to_string(result))
@@ -77,7 +84,7 @@ class ResultsManager:
     def unsent_tasks(self, agent):
         unsent_tasks = []
         for unsent_task in agent.tasks:
-            if unsent_task.name == 'socks_downstream':
+            if unsent_task.sent == datetime.datetime.fromtimestamp(823879740.0):
                 unsent_tasks.append({
                     "jsonrpc": "2.0", 
                     "name": unsent_task.name, 
