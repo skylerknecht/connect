@@ -4,12 +4,14 @@ import os
 from collections import namedtuple
 
 Agent = namedtuple('Agent', ['name', 'check_in', 'username', 'hostname', 'ip', 'os', 'options', 'implant'])
-AgentOption = namedtuple('AgentOption', ['name', 'description', 'parameters','type'])
-Implant = namedtuple('Implant', ['name', 'id', 'key'])
+AgentOption = namedtuple('AgentOption', ['name', 'description', 'parameters', 'type', 'module'])
+Implant = namedtuple('Implant', ['name', 'id', 'key', 'location'])
 Notification = namedtuple('Notification', ['prefix', 'color'])
 Parameter = namedtuple('Parameter', ['name', 'description'])
 Task = namedtuple('Task', ['name', 'description', 'parameters', 'type'])
+SocksProxy = namedtuple('Socks', ['id', 'ip_port', 'status'])
 
+debug = False
 
 """
 These ANSI Color Codes need to start with 001 and end with 002 so readline does not count the as characters.
@@ -17,19 +19,22 @@ Please see https://stackoverflow.com/a/55773513 for more information.
 """
 
 COLORS = {
-    'cyan':'\001\033[0;36m\002',
-    'green':'\001\033[0;32m\002',
-    'red':'\001\033[0;31m\002',
-    'default':'\001\033[0;0m\002',
-    'yellow':'\001\033[0;33m\002',
+    'blue': '\001\033[0;34m\002',
+    'cyan': '\001\033[0;36m\002',
+    'default': '\001\033[0;0m\002',
+    'green': '\001\033[0;32m\002',
+    'red': '\001\033[0;31m\002',
+    'yellow': '\001\033[0;33m\002'
 }
 
 NOTIFICATIONS = {
     'DEFAULT': Notification('', COLORS['default']),
+    'DEBUG': Notification('[DEBUG] ', COLORS['blue']),
     'ERROR': Notification('[ERROR] ', COLORS['red']),
     'INFORMATION': Notification('[INFO] ', COLORS['yellow']),
     'SUCCESS': Notification('[SUCCESS] ', COLORS['green'])
 }
+
 
 def display(type: str, stdout: str, prefix_enabled: bool = True, newline: bool = True):
     if type == 'PROMPT':
@@ -38,11 +43,15 @@ def display(type: str, stdout: str, prefix_enabled: bool = True, newline: bool =
         notification = NOTIFICATIONS[type]
     except KeyError:
         display('ERROR', f'Notification type: {type} does not exist.')
+        return
+    if type == 'DEBUG' and not debug:
+        return
     prefix = notification.prefix if prefix_enabled else ''
     color = notification.color
     postfix = os.linesep if newline else '' 
     sys.stdout.write('\033[1K\r' + f'{color}{prefix}{stdout}\001\033[0m\002' + postfix)
     sys.stdout.flush()
+
 
 def deserialize_agent_json_object(agent):
     agent_options = []
@@ -53,6 +62,6 @@ def deserialize_agent_json_object(agent):
                 parameters.append(Parameter(*parameter))
         else:
             parameters = []
-        agent_option = AgentOption(*agent_option[0:2], parameters, agent_option[3])
+        agent_option = AgentOption(*agent_option[0:2], parameters, *agent_option[3:])
         agent_options.append(agent_option)    
     return Agent(*agent[0:6], agent_options, *agent[7:])

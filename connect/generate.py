@@ -1,6 +1,8 @@
 import os
 import random
 
+from hashlib import md5
+
 alphabet = []
 endpoints = []
 firstnames = []
@@ -55,3 +57,11 @@ def string_identifier(length: int = 10) -> str:
     _identifier = [alphabet[random.randint(0, len(alphabet) - 1)].rstrip() for _ in range(0, length)]
     _identifier = ''.join(_identifier)
     return _identifier
+
+
+def md5_hash(path: str) -> str:
+    _hash = md5()
+    with open(path, 'rb') as fd:
+        for chunk in iter(lambda: fd.read(4096), b''):
+            _hash.update(chunk)
+    return _hash.hexdigest()

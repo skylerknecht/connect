@@ -10,9 +10,10 @@ db = SQLAlchemy()
 class ImplantModel(db.Model):
     # properties
     id = db.Column(db.String, primary_key=True, default=digit_identifier)
-    name = db.Column(db.String, unique=True)
+    name = db.Column(db.String, unique=True, nullable=False)
     key = db.Column(db.String, unique=True, default=string_identifier)
-    _options = db.Column(db.String)
+    location = db.Column(db.String, nullable=False)
+    _options = db.Column(db.String, nullable=False)
 
     # relationships
     agents = db.relationship('AgentModel', backref='implant', lazy=True)
@@ -29,12 +30,14 @@ class ImplantModel(db.Model):
 
 
     def get_implant(self):
-        return Implant(self.name, self.id, self.key)
+        return Implant(self.name, self.id, self.key, self.location)
     
 class AgentModel(db.Model):
     # properties
+    # ToDo: Change this to ID instead of Name.
     name = db.Column(db.String, primary_key=True, default=digit_identifier)
     check_in = db.Column(db.DateTime, default=datetime.datetime.fromtimestamp(823879740.0))
+    _loaded_modules = db.Column(db.String, nullable=False, default='')
 
     # relationships
     implant_key = db.Column(db.String, db.ForeignKey(ImplantModel.key))
@@ -47,6 +50,16 @@ class AgentModel(db.Model):
     ip = db.Column(db.String, nullable=False, default='....')
     integrity = db.Column(db.String, nullable=False, default='....')
     pid = db.Column(db.String, nullable=False, default='....')
+
+    @property
+    def loaded_modules(self):
+        if not self._loaded_modules:
+            return []
+        return [str(x) for x in self._loaded_modules.split(',')]
+
+    @loaded_modules.setter
+    def loaded_modules(self, value):
+        self._loaded_modules = value
 
     def get_agent(self):
         return Agent(self.name, str(self.check_in), self.username, self.hostname, self.ip, self.os, self.implant.options, self.implant.name)
