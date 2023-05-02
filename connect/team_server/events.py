@@ -163,6 +163,9 @@ class TeamServerEvents:
         task = Task(*data['task'])
         module = data['module'] if 'module' in data.keys() else None
         if module:
+            if not os.path.exists(f'{agent.implant.location}{module}'):
+                emit('error', f'Module {agent.implant.location}{module} does not exist.', broadcast=False)
+                return
             _hash = generate.md5_hash(f'{agent.implant.location}{module}')
             if _hash not in agent.loaded_modules:
                 agent.loaded_modules = _hash if not agent.loaded_modules else ','.join(
