@@ -4,13 +4,11 @@ import json
 import os
 import readline
 import shlex
-import signal
 import sys
 import threading
 import traceback
 
 from connect import output
-from connect import convert
 from collections import namedtuple
 
 
@@ -46,7 +44,8 @@ class Options:
             self.Option('version', self.version, [], 'Request the current version.'),
         ]
 
-    def _complete_path(self, incomplete_option):
+    @staticmethod
+    def _complete_path(incomplete_option):
         path = incomplete_option.split('/')
         incomplete_filename = path[-1]
         if len(path) == 1:
@@ -57,29 +56,29 @@ class Options:
             for filename in os.listdir(f'/{valid_path}') if filename.startswith(incomplete_filename)]
 
     def complete_option(self, incomplete_option, state):
-        '''
-            Analyzes the length of current line buffer / incomplete_option and
-            determines the user(s) completion.
+        """
+        Analyzes the length of current line buffer / incomplete_option and
+        determines the user(s) completion.
 
-            If the current line buffer is greater or equal to one and the current line
-            buffer ends with a trailing space then that indicates the user is attempting
-            to complete a multi-worded option. The length of the current line buffer,
-            when delimeted by a space, must be incremented by one to correctly search
-            for the next option.
+        If the current line buffer is greater or equal to one and the current line
+        buffer ends with a trailing space then that indicates the user is attempting
+        to complete a multi-worded option. The length of the current line buffer,
+        when delimited by a space, must be incremented by one to correctly search
+        for the next option.
 
-            Otherwise, generate a list of all current menu options and file names that
-            start with the current incomplete_option aka the last line in the buffer.
+        Otherwise, generate a list of all current menu options and file names that
+        start with the current incomplete_option aka the last line in the buffer.
 
-            Parameters:
-                    incomplete_option (str()): The current incomplete option.
-                    state (int()): An integer so that when the funciton is called
-                                recursivley by readline it can gather all items
-                                within the current finished_option list.
+        Parameters:
+                incomplete_option (str()): The current incomplete option.
+                state (int()): An integer so that when the function is called
+                            recursively by readline it can gather all items
+                            within the current finished_option list.
 
-            Returns:
-                    finished_option (str): Whatever option the callee has not
-                                        gathered yet.
-            '''
+        Returns:
+                finished_option (str): Whatever option the callee has not
+                                    gathered yet.
+        """
         current_line = readline.get_line_buffer()
         current_line_list = current_line.split()
         if len(current_line_list) >= 1 and current_line.endswith(' '):
@@ -227,7 +226,8 @@ class Options:
                     output.display('ERROR', 'JSON file empty.')
                     return
                 implant_name = args[pos + 1]
-                data = {"action": "create", "options": implant_json, 'location': os.path.dirname(args[pos + 2]),'name': implant_name}
+                data = {"action": "create", "options": implant_json, 'location': os.path.dirname(args[pos + 2]),
+                        'name': implant_name}
                 self.sio_client.emit('implants', json.dumps(data))
             elif '--delete' in args:
                 pos = args.index('--delete')
@@ -252,10 +252,12 @@ class Options:
         if isinstance(self.current_agent, list):
             for agent in self.current_agent:
                 task = output.Task(agent_option.name, agent_option.description, args, agent_option.type)
-                self.sio_client.emit('task', f'{{"agent":"{agent.name}", "task": {json.dumps(task)}, "module":"{agent_option.module}"}}')
+                self.sio_client.emit('task',
+                                     f'{{"agent":"{agent.name}", "task": {json.dumps(task)}, "module":"{agent_option.module}"}}')
             return
         task = output.Task(agent_option.name, agent_option.description, args, agent_option.type)
-        self.sio_client.emit('task', f'{{"agent":"{self.current_agent.name}", "task": {json.dumps(task)}, "module":"{agent_option.module}"}}')
+        self.sio_client.emit('task',
+                             f'{{"agent":"{self.current_agent.name}", "task": {json.dumps(task)}, "module":"{agent_option.module}"}}')
 
 
 class Interface:

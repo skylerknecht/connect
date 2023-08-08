@@ -2,6 +2,7 @@ import base64
 import collections
 import random
 
+
 def base64_to_bytes(data) -> bytes:
     """
     Base64 encode a bytes object.
