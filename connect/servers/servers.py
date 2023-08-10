@@ -15,7 +15,7 @@ class FlaskServerBase:
     def __init__(self):
         self.app = Flask(self.NAME)
         self.setup_environment_keys()
-        self.app.config.from_pyfile(f'{os.getcwd()}/connect/server/settings.py')
+        self.app.config.from_pyfile(f'{os.getcwd()}/connect/servers/settings.py')
         models.db.init_app(self.app)
         with self.app.app_context():
             models.db.metadata.reflect(models.db.engine)
@@ -23,7 +23,7 @@ class FlaskServerBase:
                 models.db.create_all()
 
     def run(self, arguments):
-        raise NotImplementedError('The {self.NAME} has not implemented run.')
+        raise NotImplementedError(f'The {self.NAME} has not implemented run.')
 
     @staticmethod
     def setup_environment_keys():
@@ -41,10 +41,20 @@ class TeamServer(FlaskServerBase):
     def __init__(self):
         self.NAME = 'team_server'
         super().__init__()
-        events.sio.init_app(self.app)
+        events.team_server_sio.init_app(self.app)
+
+    def run(self, arguments):
+        try:
+            # if arguments: #ToDo: does ssl really affect SocketIO?
+            #     events.socketio.run(self.app, host=ip, port=port, keyfile=keyfile, certfile=certfile)
+            #     return
+            events.team_server_sio.run(self.app, host=arguments.ip, port=arguments.port)
+        except PermissionError:
+            output.display('ERROR', f'Failed to start team server on port {arguments.port}: Permission Denied.')
 
     def setup_parser(self, subparser):
-        parser = subparser.add_parser(self.NAME, help='The Connect Team Server',
+        parser = subparser.add_parser(self.NAME, help='SocketIO Webserver used to retrieve information on agents, '
+                                                      'create implants and schedule tasks.',
                                       formatter_class=argparse.RawTextHelpFormatter, usage=argparse.SUPPRESS)
         parser.add_argument('ip', metavar='ip', help='Server ip.')
         parser.add_argument('port', metavar='port', help='Server port.')
@@ -68,7 +78,7 @@ class HTTPListener(FlaskServerBase):
             output.display('ERROR', f'Failed to start team server on port {arguments.port}: Permission Denied.')
 
     def setup_parser(self, subparser):
-        parser = subparser.add_parser(self.NAME, help='The Connect HTTP Listener',
+        parser = subparser.add_parser(self.NAME, help='HTTP Listener that implants or agents will check in to.',
                                       formatter_class=argparse.RawTextHelpFormatter, usage=argparse.SUPPRESS)
         parser.add_argument('ip', metavar='ip', help='Server ip.')
         parser.add_argument('port', metavar='port', help='Server port.')
@@ -80,18 +90,19 @@ class SocketIOListener(FlaskServerBase):
     def __init__(self):
         self.NAME = 'socketio_listener'
         super().__init__()
-        events.sio.init_app(self.app)
+        events.listener_sio.init_app(self.app)
 
     def run(self, arguments):
         try:
             # if arguments: #ToDo: does ssl really affect SocketIO?
             #     events.socketio.run(self.app, host=ip, port=port, keyfile=keyfile, certfile=certfile)
             #     return
-            events.sio.run(self.app, host=arguments.ip, port=arguments.port)
+            events.listener_sio.run(self.app, host=arguments.ip, port=arguments.port)
         except PermissionError:
             output.display('ERROR', f'Failed to start team server on port {arguments.port}: Permission Denied.')
+
     def setup_parser(self, subparser):
-        parser = subparser.add_parser(self.NAME, help='The Connect SocketIO Listener',
+        parser = subparser.add_parser(self.NAME, help='SocketIO Listener that implants or agents will check in to.',
                                       formatter_class=argparse.RawTextHelpFormatter, usage=argparse.SUPPRESS)
         parser.add_argument('ip', metavar='ip', help='Server ip.')
         parser.add_argument('port', metavar='port', help='Server port.')

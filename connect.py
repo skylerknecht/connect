@@ -4,20 +4,20 @@ import sys
 
 
 def main():
-    parser = argparse.ArgumentParser(description='connect', formatter_class=argparse.RawTextHelpFormatter,
+    parser = argparse.ArgumentParser(description=connect.BANNER, formatter_class=argparse.RawTextHelpFormatter,
                                      usage=argparse.SUPPRESS)
 
     # setup connect argument switches for client and server.
-    parser._positionals.title = 'Connect Controllers'
-    subparser = parser.add_subparsers(dest='controller', required=True)
-    for controller in connect.SUPPORTED_CONTROLLERS.values():
-        controller.setup_parser(subparser)
+    parser._positionals.title = 'Connect Tools'
+    subparser = parser.add_subparsers(dest='tool', required=True)
+    for tool in connect.SUPPORTED_TOOLS.values():
+        tool.setup_parser(subparser)
     if len(sys.argv) == 1:  # if there are no arguments provided display the help menu.
         parser.print_help()
         return
     arguments = parser.parse_args()
-    controller = connect.SUPPORTED_CONTROLLERS.get(arguments.controller)
-    controller.run(arguments)
+    tool = connect.SUPPORTED_TOOLS.get(arguments.tool)
+    tool.run(arguments)
 
 
 if __name__ == '__main__':
