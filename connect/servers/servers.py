@@ -1,29 +1,35 @@
 import argparse
 import os
+import threading
 
 from . import events
 from . import models
 from . import views
+from . import tasks
 from connect import generate
-from connect import output
+from connect.output import display
 from flask import Flask
+from flask_socketio import SocketIO
 
 
 class FlaskServerBase:
     NAME = 'untitled'
 
     def __init__(self):
+        self.app = None
+
+    def run(self, arguments):
+        raise NotImplementedError(f'The {self.NAME} has not implemented run.')
+
+    def setup_app(self):
         self.app = Flask(self.NAME)
         self.setup_environment_keys()
         self.app.config.from_pyfile(f'{os.getcwd()}/connect/servers/settings.py')
         models.db.init_app(self.app)
         with self.app.app_context():
-            models.db.metadata.reflect(models.db.engine)
-            if not models.db.metadata.tables:
+            if not os.path.exists(f'{os.getcwd()}/instance/connect.db'):
+                print('Database does not exist, creating it.')
                 models.db.create_all()
-
-    def run(self, arguments):
-        raise NotImplementedError(f'The {self.NAME} has not implemented run.')
 
     @staticmethod
     def setup_environment_keys():
@@ -41,23 +47,29 @@ class TeamServer(FlaskServerBase):
     def __init__(self):
         self.NAME = 'team_server'
         super().__init__()
-        events.team_server_sio.init_app(self.app)
+        self.key = generate.string_identifier()
+        self.team_server_sio = SocketIO()
 
     def run(self, arguments):
+        self.setup_app()
+        events.TeamServerEvents(self.key, self.team_server_sio)
+        self.team_server_sio.init_app(self.app)
         try:
             # if arguments: #ToDo: does ssl really affect SocketIO?
             #     events.socketio.run(self.app, host=ip, port=port, keyfile=keyfile, certfile=certfile)
             #     return
-            events.team_server_sio.run(self.app, host=arguments.ip, port=arguments.port)
+            display(f'Starting Team Server on {arguments.ip}:{arguments.port}', 'INFORMATION')
+            display(f'The super secret key `{self.key}`', 'INFORMATION')
+            self.team_server_sio.run(self.app, host=arguments.ip, port=arguments.port)
         except PermissionError:
-            output.display('ERROR', f'Failed to start team server on port {arguments.port}: Permission Denied.')
+            display(f'Failed to start team server on port {arguments.port}: Permission Denied.', 'ERROR')
 
     def setup_parser(self, subparser):
         parser = subparser.add_parser(self.NAME, help='SocketIO Webserver used to retrieve information on agents, '
                                                       'create implants and schedule tasks.',
                                       formatter_class=argparse.RawTextHelpFormatter, usage=argparse.SUPPRESS)
-        parser.add_argument('ip', metavar='ip', help='Server ip.')
-        parser.add_argument('port', metavar='port', help='Server port.')
+        parser.add_argument('--ip', metavar='ip', help='Server ip.', default='127.0.0.1')
+        parser.add_argument('--port', metavar='port', help='Server port.', default=1337)
         parser.add_argument('--ssl', nargs=2, metavar=('CERT', 'KEY'), help='Use SSL.')
         parser.add_argument('--debug', action='store_true', help='Enable debug mode.')
 
@@ -66,16 +78,18 @@ class HTTPListener(FlaskServerBase):
     def __init__(self):
         self.NAME = 'http_listener'
         super().__init__()
-        self.app.register_blueprint(views.check_in_blueprint)
 
     def run(self, arguments):
+        self.setup_app()
+        task_manager = tasks.TaskManager()
+        views.HTTPListenerRoutes(self.app, task_manager)
         try:
             # if arguments:
             #     events.socketio.run(self.app, host=ip, port=port, keyfile=keyfile, certfile=certfile)
             #     return
             self.app.run(host=arguments.ip, port=arguments.port)
         except PermissionError:
-            output.display('ERROR', f'Failed to start team server on port {arguments.port}: Permission Denied.')
+            display(f'Failed to start {self.NAME} on port {arguments.port}: Permission Denied.', 'ERROR')
 
     def setup_parser(self, subparser):
         parser = subparser.add_parser(self.NAME, help='HTTP Listener that implants or agents will check in to.',
@@ -90,16 +104,17 @@ class SocketIOListener(FlaskServerBase):
     def __init__(self):
         self.NAME = 'socketio_listener'
         super().__init__()
-        events.listener_sio.init_app(self.app)
 
     def run(self, arguments):
+        self.setup_app()
+        events.listener_sio.init_app(self.app)
         try:
             # if arguments: #ToDo: does ssl really affect SocketIO?
             #     events.socketio.run(self.app, host=ip, port=port, keyfile=keyfile, certfile=certfile)
             #     return
             events.listener_sio.run(self.app, host=arguments.ip, port=arguments.port)
         except PermissionError:
-            output.display('ERROR', f'Failed to start team server on port {arguments.port}: Permission Denied.')
+            display(f'Failed to start {self.NAME} on port {arguments.port}: Permission Denied.', 'ERROR')
 
     def setup_parser(self, subparser):
         parser = subparser.add_parser(self.NAME, help='SocketIO Listener that implants or agents will check in to.',

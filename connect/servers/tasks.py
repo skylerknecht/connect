@@ -1,6 +1,80 @@
+import os
 import datetime
 
-from .models import AgentModel, ImplantModel, TaskModel
+from connect.output import display
+from connect.generate import string_identifier
+from connect.convert import base64_to_string, base64_to_bytes
+from .models import AgentModel, db, TaskModel
+
+
+class ResultsHandler:
+
+    def __init__(self):
+        self.task_types = {
+            0: self.process_string_results,
+            1: self.process_file_results
+        }
+
+    def process_results(self, task, results):
+        self.task_types[task.type](task, results)
+
+    def process_string_results(self, task, results):
+        results = base64_to_string(results)
+        task.results = results
+        self.commit(task)
+        display(f'{task.agent.id} returned results for `{task.method}`:', 'SUCCESS')
+        display(results, 'DEFAULT')
+
+    def process_file_results(self, task, results):
+        results = base64_to_bytes(results)
+        file_name = f'{os.getcwd()}/instance/downloads/{string_identifier()}'
+        with open(file_name, 'wb') as fd:
+            fd.write(results)
+        task.results = file_name
+        self.commit(task)
+        display(f'{task.agent.id} returned results for `{task.method}` wrote results to: `{file_name}`', 'SUCCESS')
+
+    @staticmethod
+    def commit(model):
+        db.session.add(model)
+        db.session.commit()
+
+
+class TaskManager:
+    def __init__(self):
+        self.incoming_tasks = {}
+        self.results_handler = ResultsHandler()
+
+    def parse_batch_response(self, batch_response: list) -> list:
+        batch_request = []
+        for task in batch_response:
+            #ToDo: Verify JSON_RPC 2.0 compliance of `task`
+            task_id = next((v for k, v in task.items() if k.lower() == 'id'), None)
+            result = next((v for k, v in task.items() if k.lower() == 'result'), None)
+            error = next((v for k, v in task.items() if k.lower() == 'error'), None)
+            agent = AgentModel.query.filter_by(check_in_task_id=task_id).first()
+            if agent:
+                batch_request = agent.get_tasks()
+                agent.check_in = datetime.datetime.now()
+                db.session.add(agent)
+                db.session.commit()
+                continue
+            task = TaskModel.query.filter_by(id=task_id).first()
+            if not task:
+                display(f'Failed to find task with id {task_id}', 'ERROR')
+                continue
+            if result:
+                task.completed = datetime.datetime.now()
+                db.session.add(task)
+                db.session.commit()
+                self.results_handler.process_results(task, result)
+                continue
+            if error:
+                display(error['message'], 'ERROR')
+                continue
+        return batch_request
+
+
 """
 Example Batch Response:
 
@@ -46,56 +120,3 @@ Example Batch Request:
     }
 ]
 """
-
-
-class ResultsHandler:
-
-    def __init__(self):
-        self.task_types = {
-            0: self.process_string_results,
-            1: self.process_file_results
-        }
-
-    def process_results(self, task, results):
-        self.task_types[task.type](task, results)
-
-    def process_string_results(self, task, results):
-        print(results)
-
-    def process_file_results(self, task, results):
-        print(results)
-
-
-class TaskManager:
-    def __init__(self):
-        self.incoming_tasks = {}
-        self.results_handler = ResultsHandler()
-
-    def parse_batch_response(self, batch_response: list) -> list:
-        batch_request = []
-        for task in batch_response:
-            #ToDo: Verify JSON_RPC 2.0 compliance of `task`
-            task_id = next((v for k, v in task.items() if k.lower() == 'id'), None)
-            result = next((v for k, v in task.items() if k.lower() == 'result'), None)
-            error = next((v for k, v in task.items() if k.lower() == 'error'), None)
-            agent = AgentModel.query.filter_by(check_in_task_id=task_id)
-            if agent:
-                batch_request = agent.get_tasks()
-                continue
-            task = TaskModel.query.filter_by(id=task_id)
-            if not task:
-                print(f'Failed to find task with id {task_id}')
-                continue
-            if result:
-                self.incoming_tasks[task] = result
-                continue
-            if error:
-                print(error['message'])
-                continue
-        return batch_request
-
-    def parse_results(self):
-        while True:
-            for task, result in self.incoming_tasks.items():
-                task.completed = datetime.datetime.now()
-                self.results_handler.process_results(task, result)

