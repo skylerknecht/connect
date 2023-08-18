@@ -70,6 +70,9 @@ class TaskManager:
                 self.results_handler.process_results(task, result)
                 continue
             if error:
+                task.completed = datetime.datetime.now()
+                db.session.add(task)
+                db.session.commit()
                 display(error['message'], 'ERROR')
                 continue
         return batch_request

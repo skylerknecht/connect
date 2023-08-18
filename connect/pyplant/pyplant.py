@@ -71,11 +71,12 @@ class Pyplant:
                         "jsonrpc": "0.0.0",
                         "error": {
                             'code': -32601,
-                            'message': f'{method} not found.'
+                            'message': f'The {method} method is not supported.'
                         },
                         "id": task_id
                     }])
-                    return
+                    self.batch_request.remove(task)
+                    continue
                 self.batch_response.extend([{
                     "jsonrpc": "0.0.0",
                     "result": self.string_to_base64(results) if results else None,
