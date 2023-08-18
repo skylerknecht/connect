@@ -84,13 +84,6 @@ class Pyplant:
                 }])
                 self.batch_request.remove(task)
 
-    def setup_parser(self, subparser):
-        parser = subparser.add_parser(self.NAME, help='Python Implant for debugging.',
-                                      formatter_class=argparse.RawTextHelpFormatter, usage=argparse.SUPPRESS)
-        parser.add_argument('url', metavar='url', help='Listener URL.')
-        parser.add_argument('key', metavar='key', help='Implant Key.')
-        parser.add_argument('--debug', action='store_true', help='Enable debug mode.')
-
     @staticmethod
     def verify_task_format(task: dict) -> bool:
         return True

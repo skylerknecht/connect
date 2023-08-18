@@ -2,7 +2,7 @@ import json
 import textwrap
 
 from connect.output import display
-from .commands import BuiltinCommand
+from connect.cli.commands.commands import BuiltinCommand
 
 
 class Implant(BuiltinCommand):

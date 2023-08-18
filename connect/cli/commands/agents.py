@@ -1,7 +1,7 @@
 import json
 import textwrap
 
-from .commands import BuiltinCommand
+from connect.cli.commands.commands import BuiltinCommand
 from connect.output import display
 
 

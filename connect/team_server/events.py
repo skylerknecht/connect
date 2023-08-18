@@ -1,7 +1,7 @@
 import json
 from functools import wraps
 from flask_socketio import disconnect
-from .models import AgentModel, db, ImplantModel, TaskModel
+from connect.server.models import AgentModel, db, ImplantModel, TaskModel
 
 
 class TeamServerEvents:

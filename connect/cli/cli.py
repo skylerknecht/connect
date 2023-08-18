@@ -8,14 +8,14 @@ from .events import Events
 
 
 class CLI:
-    NAME = 'cli'
-    PROMPT = '(connect)~# '
 
-    def __init__(self):
+    def __init__(self, name, prompt, commands):
+        self.PROMPT = prompt
+        self.prompt = self.PROMPT
         self.arguments = None
         self.client_sio = Events(self.notify).sio
-        self.commands_manager = CommandsManager(COMMANDS, self.client_sio)
-        self.prompt = self.PROMPT
+        self.commands_manager = CommandsManager(COMMANDS | commands, self.client_sio)
+        self.NAME = name
 
     def listen_for_user_input(self):
         print('Welcome to the Connect CLI, type help or ? to get started.')
@@ -59,11 +59,3 @@ class CLI:
             self.prompt = self.PROMPT
             return
         self.prompt = prompt if prompt else None
-
-    def setup_parser(self, subparser):
-        parser = subparser.add_parser(self.NAME, help='Command Line Interface (CLI) for interacting with the '
-                                                      'team server.',
-                                      formatter_class=argparse.RawTextHelpFormatter, usage=argparse.SUPPRESS)
-        parser.add_argument('key', metavar='key', help='Team Server Key.', default='8080')
-        parser.add_argument('--url', metavar='url', help='Team Server URL.', default='http://127.0.0.1:1337/')
-        parser.add_argument('--no-server', action='store_true', help='Don\'t connect to the team server.')

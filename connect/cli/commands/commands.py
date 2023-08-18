@@ -53,7 +53,6 @@ class CommandsManager:
 
     def execute_command(self, user_input, set_cli_properties):
         tokens = shlex.split(user_input.replace("\\", "\\\\"))
-
         if '@' in tokens[0][0]:
             if not len(tokens[0]) > 1:
                 set_cli_properties(reset=True)
@@ -71,7 +70,7 @@ class CommandsManager:
         try:
             command = self.commands[tokens[0]]
         except KeyError:
-            display(f'{tokens[0]} is not a valid command.', 'INFORMATION')
+            display(f'{tokens[0]} is not a valid command.', 'ERROR')
             return
 
         if '--help' in tokens or '-h' in tokens:

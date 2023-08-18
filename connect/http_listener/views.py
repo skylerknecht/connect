@@ -1,8 +1,7 @@
 import json
-import threading
 
 from connect.output import display
-from .models import AgentModel, db, ImplantModel
+from connect.server.models import AgentModel, db, ImplantModel
 from flask import redirect, request, jsonify
 
 

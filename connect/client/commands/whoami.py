@@ -1,6 +1,6 @@
 import json
 
-from .commands import AgentCommand
+from connect.cli.commands.commands import AgentCommand
 
 
 class Whoami(AgentCommand):
