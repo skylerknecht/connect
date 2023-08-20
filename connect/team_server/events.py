@@ -76,8 +76,9 @@ class TeamServerEvents:
         if create_task:
             agent = AgentModel.query.filter_by(id=create_task['agent']).first()
             parameters = ','.join(create_task.get('parameters', []))
+            misc = ','.join(create_task.get('misc', []))
             new_task = TaskModel(agent=agent, method=create_task['method'], type=create_task['type'],
-                                 parameters=parameters)
+                                 parameters=parameters, misc=misc)
             self.commit(new_task)
             self.team_server_sio.emit('success', f'Scheduled task for method: `{new_task.method}`')
             return

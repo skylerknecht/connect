@@ -1,6 +1,8 @@
-Flask
+Flask~=2.3.2
 flask_sqlalchemy
 flask_socketio
 python-socketio[client]
-requests
+requests~=2.31.0
 eventlet
+urllib3~=2.0.4
+SQLAlchemy~=2.0.19

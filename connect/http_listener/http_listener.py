@@ -10,7 +10,7 @@ class HTTPListener(FlaskServerBase):
 
     def run(self, arguments):
         self.setup_app()
-        task_manager = TaskManager()
+        task_manager = TaskManager(self.app)
         views.HTTPListenerRoutes(self.app, task_manager)
         try:
             # if arguments:

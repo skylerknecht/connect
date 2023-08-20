@@ -1,5 +1,6 @@
 import datetime
 
+from connect.output import display
 from connect.generate import digit_identifier, string_identifier
 from flask_sqlalchemy import SQLAlchemy
 
@@ -64,8 +65,9 @@ class AgentModel(db.Model):
         for task in self.tasks:
             if task.sent:
                 continue
-            task.sent = datetime.datetime.now()
+            display(f'Sending task {task.method} to {task.agent.id}', 'INFORMATION')
             batch_request.append(task.get_task())
+            task.sent = datetime.datetime.now()
             db.session.commit()
         return batch_request
 
@@ -79,6 +81,7 @@ class TaskModel(db.Model):
 
     # optional properties
     _parameters = db.Column(db.String)
+    _misc = db.Column(db.String)
     sent = db.Column(db.DateTime)
     completed = db.Column(db.DateTime)
     results = db.Column(db.Text)
@@ -95,6 +98,16 @@ class TaskModel(db.Model):
     @parameters.setter
     def parameters(self, value):
         self._parameters = value
+
+    @property
+    def misc(self):
+        if not self._misc:
+            return []
+        return [str(x) for x in self._misc.split(',')]
+
+    @misc.setter
+    def misc(self, value):
+        self._misc = value
 
     def get_task(self):
         return {

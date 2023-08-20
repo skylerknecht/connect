@@ -1,6 +1,6 @@
 import argparse
 
-from . import cli
+from connect.cli import cli
 from connect import BANNER
 
 parser = argparse.ArgumentParser(description=BANNER, formatter_class=argparse.RawTextHelpFormatter,
