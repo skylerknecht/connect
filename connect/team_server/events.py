@@ -48,7 +48,6 @@ class TeamServerEvents:
         self.team_server_sio.emit('information', f'Agent event hit with the following data: {data}')
 
 
-
     # Event handler for implant actions
     @json_event_handler
     def implant(self, data):

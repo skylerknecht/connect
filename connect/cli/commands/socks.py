@@ -13,10 +13,19 @@ class Socks(AgentCommand):
         )
 
     def execute_command(self, parameters, current_agent, client_sio):
+        if len(parameters) != 1:
+            display('Please provide a port', 'ERROR')
+            return
+        try:
+            port = int(parameters[0])
+        except ValueError:
+            display(f'{parameters[0]} is not an integer', 'ERROR')
+            return
         socks_task = {
             'create': {
                 'agent': current_agent,
                 'method': self.name,
+                'misc': [str(port)],
                 'type': 2
             }
         }

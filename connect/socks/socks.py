@@ -1,21 +1,17 @@
-import os
-import socket
-import select
 import datetime
-import json
-import threading
+import select
+import socket
+import time
+
 from collections import namedtuple
+from connect import get_debug_level
 from connect.output import display
-from connect.convert import bytes_to_base64, base64_to_string, base64_to_bytes
+from connect.convert import bytes_to_base64, base64_to_bytes
 from connect.generate import string_identifier, digit_identifier
 from sqlalchemy import text
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
 
 
 class SocksClient:
-    SOCKS_VERSION = 5
-    stream = True
     REPLIES = {
         0: 'succeeded',
         1: 'general SOCKS server failure',
@@ -28,17 +24,54 @@ class SocksClient:
         8: 'Address type not supported',
         **{i: 'unassigned' for i in range(9, 256)}
     }
+    SOCKS_VERSION = 5
 
-    def __init__(self, agent, client, database_session):
-        self.agent = agent
-        self.client = client
-        self.database_session = database_session
-        self.client_id = string_identifier()
+    def __init__(self, agent_id, client, database_session):
+        self.agent_id = agent_id
         self.atype_functions = {
-            b'\x01': self._parse_ipv4_address
-            # 3: self._parse_domain_name,
-            # 4: self._parse_ipv6_address
+            b'\x01': self._parse_ipv4_address,
+            b'\x03': self._parse_domain_name,
+            b'\x04': self._parse_ipv6_address
         }
+        self.client = client
+        self.client_id = string_identifier()
+        self.database_session = database_session
+        self.downstream_buffer = []
+        self.socks_task = namedtuple('SocksTask', ['event', 'data'])
+        self.socks_tasks = []
+        self.streaming = False
+
+    def generate_reply(self, atype, rep, address, port):
+        reply = b''.join([
+            self.SOCKS_VERSION.to_bytes(1, 'big'),
+            int(rep).to_bytes(1, 'big'),
+            int(0).to_bytes(1, 'big'),
+            int(atype).to_bytes(length=1, byteorder='big'),
+            socket.inet_aton(address) if address else int(0).to_bytes(1, 'big'),
+            port.to_bytes(2, 'big') if port else int(0).to_bytes(1, 'big')
+        ])
+        return reply
+
+    def parse_address(self):
+        atype = self.client.recv(1)
+        try:
+            address, port = self.atype_functions.get(atype)(), int.from_bytes(self.client.recv(2), 'big', signed=False)
+            return atype, address, port
+        except KeyError:
+            self.client.sendall(self.generate_reply(str(int.from_bytes(atype, byteorder='big')), 8, None, None))
+            return None, None, None
+
+    def _parse_ipv4_address(self):
+        return socket.inet_ntoa(self.client.recv(4))
+
+    def _parse_ipv6_address(self):
+        ipv6_address = self.client.recv(16)
+        return socket.inet_ntop(socket.AF_INET6, ipv6_address)
+
+    def _parse_domain_name(self):
+        domain_length = self.client.recv(1)[0]
+        domain_name = self.client.recv(domain_length).decode('utf-8')
+        return domain_name
 
     def negotiate_cmd(self):
         ver, cmd, rsv = self.client.recv(3)
@@ -55,106 +88,98 @@ class SocksClient:
         self.client.sendall(bytes([self.SOCKS_VERSION, 0]))
         return True
 
-    def parse_address(self):
-        atype = self.client.recv(1)
-        try:
-            address, port = self.atype_functions.get(atype)(), int.from_bytes(self.client.recv(2), 'big', signed=False)
-            return atype, address, port
-        except:
-            self.client.sendall(self.generate_reply(atype, 8, None, None))
-            return None, None, None
-
-    def _parse_ipv4_address(self):
-        return socket.inet_ntoa(self.client.recv(4))
-
-    def proxy(self):
+    def parse_socks_connect(self):
         if not self.negotiate_method():
-            display('Socks client failed to negotiate method.', 'ERROR')
+            display(f'Client {self.client_id} failed to negotiate method.', 'ERROR')
             self.client.close()
             return
         if not self.negotiate_cmd():
-            display('Socks client failed to negotiate cmd.', 'ERROR')
+            display(f'Client {self.client_id} failed to negotiate cmd.', 'ERROR')
             self.client.close()
             return
         atype, address, port = self.parse_address()
         if not address:
-            display('Socks client failed to negotiate address.', 'ERROR')
+            display(f'Client {self.client_id} failed to negotiate address.', 'ERROR')
             self.client.close()
             return
-        self.create_new_task(
-            method='socks_connect',
-            task_type=2,
-            parameters=[
-                str(address),
-                str(port),
-                self.client_id,
-            ])
+        if get_debug_level() >= 1: display(f'Client {self.client_id} sent socks_connect request for {address}:{str(port)}'
+                                         , 'INFORMATION')
+        atype = int.from_bytes(atype, byteorder='big')
+        self.create_new_task('socks_connect', parameters=[str(atype), address, str(port), self.client_id])
 
     def upstream(self, upstream_data):
         upstream_data = bytes_to_base64(upstream_data)
         self.create_new_task(method='socks_upstream',
-                             task_type=2,
                              parameters=[
                                  self.client_id,
                                  upstream_data
-                             ])
+                             ],
+                             delete_on_send=True)
 
-    def generate_reply(self, rep, address, port):
-        print(f"generating_reply: {','.join([str(rep), address, str(port)])}")
-        return b''.join([
-            self.SOCKS_VERSION.to_bytes(1, 'big'),
-            int(rep).to_bytes(1, 'big'),
-            int(0).to_bytes(1, 'big'),
-            int(1).to_bytes(length=1, byteorder='big'),
-            socket.inet_aton(address) if address else int(0).to_bytes(1, 'big'),
-            port.to_bytes(2, 'big') if port else int(0).to_bytes(1, 'big')
-        ])
+    def stream(self):
+        self.streaming = True
+        if get_debug_level() >= 1: display(f'Client {self.client_id} is streaming', 'INFORMATION')
+        while self.streaming:
+            time.sleep(0.1)
+            r, w, e = select.select([self.client], [self.client], [])
+            if self.client in w and len(self.downstream_buffer) > 0:
+                self.client.send(self.downstream_buffer.pop(0))
+                continue
+            if self.client in r:
+                try:
+                    data = self.client.recv(4096)
+                    if len(data) <= 0:
+                        break
+                    print(data)
+                    self.upstream(data)
+                except Exception:
+                    break
+        if get_debug_level() >= 1: display(f'Client {self.client_id} stopped streaming', 'INFORMATION')
+        self.streaming = False
+        self.client.close()
 
     def handle_socks_connect_results(self, results):
-        rep = int(results['rep'])
+        atype = results['atype']
+        rep = results['rep']
         bind_addr = results['bind_addr'] if results['bind_addr'] else None
         bind_port = int(results['bind_port']) if results['bind_port'] else None
+        if get_debug_level() >= 1: display(f'Client {self.client_id} received socks_connect reply: {results}', 'INFORMATION')
         try:
-            self.client.sendall(self.generate_reply(rep, bind_addr, bind_port))
+            self.client.sendall(self.generate_reply(atype, rep, bind_addr, bind_port))
+            if get_debug_level() >= 1: display(f'Client {self.client_id} sent socks_connect', 'SUCCESS')
         except socket.error as e:
-            print("Could not send sock_connect:", e)
+            if get_debug_level() >= 1: display(f'Client {self.client_id} could not send sock_connect: {e}', 'ERROR')
             return
-        while True:
-            r, w, e = select.select([self.client], [], [], 1)
-
-            if self.client in r:
-                print('reading')
-                data = self.client.recv(4096)
-                if len(data) == 0:
-                    break
-                self.upstream(data)
+        if not bind_addr:
+            return
+        self.stream()
 
     def handle_socks_downstream_results(self, results):
-        downstream_data = base64_to_bytes(results['downstream_data'])
-        print(downstream_data)
+        if get_debug_level() >= 2: display('Received downstream results', 'INFORMATION')
         try:
-            self.client.sendall(downstream_data)
-        except:
-            print('failed to send downstream')
+            data = base64_to_bytes(results['data'])
+            if len(data) == 0:
+                return
+            self.downstream_buffer.append(data)
+        except socket.error as e:
+            if get_debug_level() >= 1: display(f"Failed to send downstream results {e}", 'ERROR')
+            return
 
-    def create_new_task(self, method, task_type, parameters=None, misc=None):
-        new_task_query = text(
-            """
-            INSERT INTO task_model (id, created, method, type, _parameters, _misc, agent_id)
-            VALUES (:id, :created, :method, :type, :parameters, :misc, :agent_id)
-            """
-        )
-        # if parameters:
-        #     for parameter in parameters:
-        #         parameter[]
+    def create_new_task(self, method, parameters=None, delete_on_send=False):
+        new_task_query = text("""
+            INSERT INTO task_model (id, created, method, type, _parameters, _misc, delete_on_send, agent_id)
+            VALUES (:id, :created, :method, :type, :parameters, :misc, :delete_on_send, :agent_id)
+            """)
+
         params = {
             'id': digit_identifier(),
             'created': datetime.datetime.now(),
             'method': method,
-            'type': task_type,
+            'type': 2,
             'parameters': ','.join(parameters) if parameters else '',
-            'misc': ','.join(misc) if misc else '',
-            'agent_id': self.agent,
+            'misc': '',
+            'delete_on_send': delete_on_send,
+            'agent_id': self.agent_id
         }
 
         self.database_session.execute(new_task_query, params)
@@ -166,15 +191,21 @@ class SocksServer:
     socks_client = namedtuple('SocksClient', ['thread', 'socks_client'])
     socks_clients = []
 
-    def __init__(self, address, port, agent, database_session):
+    def __init__(self, address, port, agent_id, database_session):
         self.address = address
         self.port = port
-        self.agent = agent
+        self.agent_id = agent_id
         self.database_session = database_session
 
     def listen_for_clients(self):
         socks_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        socks_server.bind((self.address, self.port))
+        try:
+            socks_server.bind((self.address, self.port))
+            display(f'Agent {self.agent_id} is listening on {self.address}:{self.port}', 'SUCCESS')
+        except Exception as e:
+            display(f'Failed to start socks server {e}', 'ERROR')
+            self.proxy = False
+            return
         socks_server.settimeout(1.0)
         socks_server.listen(5)
         while self.proxy:
@@ -182,55 +213,12 @@ class SocksServer:
                 client, addr = socks_server.accept()
             except:
                 continue
-            #client.settimeout(5.0)
-            socks_client = SocksClient(self.agent, client, self.database_session)
-            socks_client_thread = threading.Thread(target=socks_client.proxy)
-            socks_client_thread.daemon = True
-            socks_client_thread.start()
-            self.socks_clients.append(self.socks_client(socks_client_thread, socks_client))
+            socks_client = SocksClient(self.agent_id, client, self.database_session)
+            socks_client.parse_socks_connect()
+            self.socks_clients.append(socks_client)
         socks_server.close()
 
     def shutdown(self):
         for socks_client in self.socks_clients:
-            socks_client.socks_client.stream = False
-            socks_client.thread.join()
+            socks_client.stream = False
         self.proxy = False
-
-
-class SocksManager:
-    socks_server = namedtuple('SocksServer', ['thread', 'socks_server'])
-    socks_servers = {}
-
-    def __init__(self):
-        engine = create_engine(f'sqlite:///{os.getcwd()}/instance/connect.db')
-        self.session = sessionmaker(bind=engine)()
-
-    def create_socks_server(self, *args):
-        new_socks_server = SocksServer(*args, self.session)
-        socks_server_thread = threading.Thread(target=new_socks_server.listen_for_clients)
-        socks_server_thread.daemon = True
-        socks_server_thread.start()
-        self.socks_servers[args[2]] = self.socks_server(socks_server_thread, new_socks_server)
-        display(f'Successfully created socks server: {args[0]}:{str(args[1])}', 'SUCCESS')
-
-    def shutdown_socks_server(self, agent_id):
-        self.socks_servers[agent_id].socks_server.shutdown()
-        self.socks_servers[agent_id].thread.join()
-        del self.socks_servers[agent_id]
-        display(f'Successfully shutdown socks server for agent {agent_id}', 'SUCCESS')
-
-    def shutdown_socks_servers(self):
-        for socks_server in self.socks_servers:
-            socks_server.socks_server.shutdown()
-            socks_server.thread.join()
-
-    def handle_socks_task_results(self, method, results):
-        print(base64_to_string(results))
-        results = json.loads(base64_to_string(results))
-        for socks_server in self.socks_servers.values():
-            for socks_client in socks_server.socks_server.socks_clients:
-                if socks_client.socks_client.client_id == results['client_id']:
-                    if method == 'socks_connect':
-                        socks_client.socks_client.handle_socks_connect_results(results)
-                    if method == 'socks_downstream':
-                        socks_client.socks_client.handle_socks_downstream_results(results)

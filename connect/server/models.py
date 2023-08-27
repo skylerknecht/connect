@@ -68,6 +68,8 @@ class AgentModel(db.Model):
             display(f'Sending task {task.method} to {task.agent.id}', 'INFORMATION')
             batch_request.append(task.get_task())
             task.sent = datetime.datetime.now()
+            if task.delete_on_send:
+                db.session.delete(task)
             db.session.commit()
         return batch_request
 
@@ -78,6 +80,7 @@ class TaskModel(db.Model):
     method = db.Column(db.String, nullable=False)
     created = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now)
     type = db.Column(db.Integer, nullable=False)
+    delete_on_send = db.Column(db.Boolean, default=False)
 
     # optional properties
     _parameters = db.Column(db.String)
