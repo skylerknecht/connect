@@ -1,22 +1,22 @@
 import json
 
-from .commands import SystemInformationCommand
+from .commands import MiscAgentCommand
 
 
-class Whoami(SystemInformationCommand):
+class ByPause(MiscAgentCommand):
     def __init__(self):
         super().__init__(
-            'whoami',
+            'bypause',
             'Retrieve the current username.'
         )
 
     def execute_command(self, parameters, current_agent, client_sio):
-        whoami_task = {
+        bypause_task = {
             'create': {
                 'agent': current_agent,
                 'method': self.name,
                 'type': 0,
-                'module': self.module
+                'module': f'{self.MODULE_PATH}/Bypause.dll'
             }
         }
-        client_sio.emit('task', json.dumps(whoami_task))
+        client_sio.emit('task', json.dumps(bypause_task))

@@ -1,95 +1,84 @@
-import readline
-import shlex
-
-from connect.output import display
-
+import os
 
 class Command:
 
-    def __init__(self, name, category, description, parameters):
+    def __init__(self, name, description, category='undefined', parameters=None):
         self.name = name
         self.category = category
         self.description = description
         self.parameters = parameters
 
     def help(self):
-        print(f'{self.description}\n')
+        print(f'{self.description}')
         if not self.parameters:
             return
-        print('parameters:')
+        print('\nparameters:')
+        longest_parameter = 0
+        for parameter in self.parameters.keys():
+            if len(parameter) > longest_parameter:
+                longest_parameter = len(parameter)
         for parameter, description in self.parameters.items():
-            print('{:<{}}{:<{}}{}'.format(' ', 4, parameter, 8, description))
-        print(self.usage)
+            print('{:<{}}{:<{}}{}'.format(' ', 4, parameter, longest_parameter + 4, description))
+        if self.example: print(self.example)
 
     @property
-    def usage(self) -> str:
-        return f"""
-            No usage available for {self.name}.
-        """
+    def example(self) -> str:
+        return ''
 
 
-class BuiltinCommand(Command):
-    def __init__(self, name, description, parameters=()):
-        super().__init__(name, 'builtin', description, parameters)
+class STDPAPICommand(Command):
+    def __init__(self, name, description, category='stdpapi', parameters=None):
+        super().__init__(name, description, category=category, parameters=parameters)
 
     def execute_command(self, parameters, client_sio):
         raise NotImplementedError(f'{self.name} command has not implemented execute_command')
 
 
 class AgentCommand(Command):
-    def __init__(self, name, description, parameters=()):
-        super().__init__(name, 'agent', description, parameters)
+    def __init__(self, name, description, category=None, parameters=None):
+        super().__init__(name, description, category=category, parameters=parameters)
 
     def execute_command(self, parameters, current_agent, client_sio):
         raise NotImplementedError(f'{self.name} command has not implemented execute_command')
 
 
-class CommandsManager:
+class BuiltinAgentCommand(AgentCommand):
+    def __init__(self, name, description, category='builtin', parameters=None):
+        super().__init__(name, description, category=category, parameters=parameters)
 
-    def __init__(self, commands, client_sio):
-        self.client_sio = client_sio
-        self.commands = commands
-        self.current_agent = None
 
-    def execute_command(self, user_input, set_cli_properties):
-        tokens = shlex.split(user_input.replace("\\", "\\\\"))
-        if '@' in tokens[0][0]:
-            if not len(tokens[0]) > 1:
-                set_cli_properties(reset=True)
-                self.current_agent = None
-                return
-            agent = tokens[0].split('@')[1]
-            set_cli_properties(prompt=f'({agent})~# ')
-            self.current_agent = agent
-            return
+class ModuleAgentCommand(AgentCommand):
 
-        if tokens[0] == '?':
-            self.help_menu()
-            return
+    MODULE_PATH = f'{os.getcwd()}/resources/modules'
 
-        try:
-            command = self.commands[tokens[0]]
-        except KeyError:
-            display(f'{tokens[0]} is not a valid command.', 'ERROR')
-            return
+    def __init__(self, name, description, category=None, parameters=None):
+        super().__init__(name, description, category=category, parameters=parameters)
 
-        if '--help' in tokens or '-h' in tokens:
-            command.help()
-            return
 
-        if isinstance(command, BuiltinCommand):
-            command.execute_command(tokens[1:], self.client_sio)
-            return
+class ExecutionCommand(ModuleAgentCommand):
 
-        if isinstance(command, AgentCommand):
-            if not self.current_agent:
-                display(f'Please interact with an agent to execute {command.name}', 'ERROR')
-                return
-            command.execute_command(tokens[1:], self.current_agent, self.client_sio)
-            return
+    def __init__(self, name, description, category='execution', parameters=None):
+        super().__init__(name, description, category=category, parameters=parameters)
+        self.module = f'{self.MODULE_PATH}/Execution.dll'
 
-    def help_menu(self):
-        for command in self.commands.values():
-            if not self.current_agent and command.category == 'agent':
-                continue
-            print('{:<{}}{:<30}'.format(command.name, 10, command.description))
+
+class FileSystemCommand(ModuleAgentCommand):
+
+    def __init__(self, name, description, category='file system', parameters=None):
+        super().__init__(name, description, category=category, parameters=parameters)
+        self.module = f'{self.MODULE_PATH}/FileSystem.dll'
+
+
+class MiscAgentCommand(ModuleAgentCommand):
+
+    def __init__(self, name, description, category='misc', parameters=None):
+        super().__init__(name, description, category=category, parameters=parameters)
+
+
+class SystemInformationCommand(ModuleAgentCommand):
+
+    def __init__(self, name, description, category='system information', parameters=None):
+        super().__init__(name, description, category=category, parameters=parameters)
+        self.module = f'{self.MODULE_PATH}/SystemInformation.dll'
+
+

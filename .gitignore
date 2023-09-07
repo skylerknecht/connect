@@ -6,7 +6,7 @@ env/*
 Pipfile.lock
 instance/command_history.txt
 instance/connect.db
-instace/*
+instance/*
 instance/downloads/*
 connect/resources/*
 *__pycache__/

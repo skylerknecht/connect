@@ -1,19 +1,27 @@
 import json
 import textwrap
 
-from connect.cli.commands.commands import BuiltinCommand
+from connect.cli.commands.commands import STDPAPICommand
 from connect.output import display
 
 
-class Agent(BuiltinCommand):
+class Agent(STDPAPICommand):
     def __init__(self):
         super().__init__(
             'agents',
             'List agents.',
+            parameters={
+                'seconds': 'What should the maximum check in time be'
+            }
         )
 
     def execute_command(self, parameters, client_sio):
-        if len(parameters) >= 1:
-            display(f'The {self.name} command does not accept parameters', 'ERROR')
+        if len(parameters) > 1:
+            self.help()
             return
-        client_sio.emit('agent', json.dumps({'list': None}))
+        try:
+            seconds = int(parameters[0]) if len(parameters) == 1 else 60
+        except ValueError:
+            display('Seconds must be an integer', 'ERROR')
+            return
+        client_sio.emit('agent', json.dumps({'list': {'seconds': seconds}}))

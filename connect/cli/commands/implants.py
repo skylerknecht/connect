@@ -2,15 +2,15 @@ import json
 import textwrap
 
 from connect.output import display
-from connect.cli.commands.commands import BuiltinCommand
+from connect.cli.commands.commands import STDPAPICommand
 
 
-class Implant(BuiltinCommand):
+class Implant(STDPAPICommand):
     def __init__(self):
         super().__init__(
             'implants',
             'Create and list implants.',
-            {
+            parameters={
                 'create': 'Create a new implant.',
                 'list': 'List all implants.'
             }

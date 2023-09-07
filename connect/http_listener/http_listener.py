@@ -3,6 +3,7 @@ from connect.server.flask_server import FlaskServerBase
 from connect.server.tasks import TaskManager
 from . import views
 
+
 class HTTPListener(FlaskServerBase):
     def __init__(self):
         self.NAME = 'http_listener'

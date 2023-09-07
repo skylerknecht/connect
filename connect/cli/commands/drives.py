@@ -1,22 +1,22 @@
 import json
 
-from .commands import SystemInformationCommand
+from .commands import FileSystemCommand
 
 
-class Whoami(SystemInformationCommand):
+class Drives(FileSystemCommand):
     def __init__(self):
         super().__init__(
-            'whoami',
-            'Retrieve the current username.'
+            'drives',
+            'Retrieve available drives'
         )
 
     def execute_command(self, parameters, current_agent, client_sio):
-        whoami_task = {
+        drives_task = {
             'create': {
                 'agent': current_agent,
                 'method': self.name,
                 'type': 0,
-                'module': self.module
+                'module': self.module,
             }
         }
-        client_sio.emit('task', json.dumps(whoami_task))
+        client_sio.emit('task', json.dumps(drives_task))

@@ -3,15 +3,15 @@ import json
 from .commands import SystemInformationCommand
 
 
-class Whoami(SystemInformationCommand):
+class Hostname(SystemInformationCommand):
     def __init__(self):
         super().__init__(
-            'whoami',
-            'Retrieve the current username.'
+            'hostname',
+            'Retrieve the hostname'
         )
 
     def execute_command(self, parameters, current_agent, client_sio):
-        whoami_task = {
+        hostname_task = {
             'create': {
                 'agent': current_agent,
                 'method': self.name,
@@ -19,4 +19,4 @@ class Whoami(SystemInformationCommand):
                 'module': self.module
             }
         }
-        client_sio.emit('task', json.dumps(whoami_task))
+        client_sio.emit('task', json.dumps(hostname_task))

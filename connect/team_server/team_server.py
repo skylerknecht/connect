@@ -10,7 +10,8 @@ class TeamServer(FlaskServerBase):
         self.NAME = 'team_server'
         super().__init__()
         self.key = string_identifier()
-        self.team_server_sio = SocketIO()
+        self.team_server_sio = SocketIO(max_http_buffer_size=1e10)
+
 
     def run(self, arguments):
         self.setup_app()

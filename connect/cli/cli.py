@@ -1,15 +1,19 @@
-import argparse
+import atexit
+import os
 import readline
 
 from .commands import COMMANDS
-from .commands.commands import CommandsManager
-from connect.output import display
+from .commands.manager import CommandsManager
 from .events import Events
+from connect.output import display
 
 
 class CLI:
 
+    HISTORY_FILE = f'{os.getcwd()}/instance/.history'
+
     def __init__(self, name, prompt, commands):
+        self.completer = Completer(commands)
         self.PROMPT = prompt
         self.prompt = self.PROMPT
         self.arguments = None
@@ -19,6 +23,7 @@ class CLI:
 
     def listen_for_user_input(self):
         print('Welcome to the Connect CLI, type help or ? to get started.')
+        self.setup_readline()
         while True:
             try:
                 user_input = input(self.prompt)
@@ -59,3 +64,65 @@ class CLI:
             self.prompt = self.PROMPT
             return
         self.prompt = prompt if prompt else None
+
+    def setup_readline(self):
+        if not os.path.exists(self.HISTORY_FILE):
+            with open(self.HISTORY_FILE, "w") as file:
+                file.write("welcome to connect")
+            display(f'Created command history file {self.HISTORY_FILE}', 'INFORMATION')
+        try:
+            readline.read_history_file(self.HISTORY_FILE)
+        except Exception:
+            display(f'Failed to open {self.HISTORY_FILE}', 'ERROR')
+        readline.parse_and_bind('tab: complete')
+        readline.set_completer(self.completer.complete_option)
+        readline.set_completer_delims(" \t\n\"\\'`@$><=;|&{(")
+        atexit.register(readline.write_history_file, self.HISTORY_FILE)
+
+
+class Completer:
+    # ToDo: we need to change option to command - nomenclature
+    def __init__(self, commands):
+        self.commands = commands
+
+    def complete_option(self, incomplete_option, state):
+            '''
+            Analyzes the length of current line buffer / incomplete_option and
+            determines the user(s) completion.
+
+            If the current line buffer is greater or equal to one and the current line
+            buffer ends with a trailing space then that indicates the user is attempting
+            to complete a multi-worded option. The length of the current line buffer,
+            when delimeted by a space, must be incremented by one to correctly search
+            for the next option.
+
+            Otherwise, generate a list of all current menu options and file names that
+            start with the current incomplete_option aka the last line in the buffer.
+
+            Parameters:
+                    incomplete_option (str()): The current incomplete option.
+                    state (int()): An integer so that when the funciton is called
+                                recursivley by readline it can gather all items
+                                within the current finished_option list.
+
+            Returns:
+                    finished_option (str): Whatever option the callee has not
+                                        gathered yet.
+            '''
+            current_line = readline.get_line_buffer()
+            current_line_list = current_line.split()
+            if len(current_line_list) >= 1 and current_line.endswith(' '):
+                current_line_list.append('')
+            finished_options = [command for command in self.commands if command.startswith(incomplete_option)]
+            if '/' in incomplete_option:
+                finished_options.extend(self._complete_path(incomplete_option))
+            return finished_options[state]
+
+    @staticmethod
+    def _complete_path(incomplete_option):
+        path = incomplete_option.split('/')
+        incomplete_filename = path[-1]
+        if len(path) == 1:
+            return [filename for filename in os.listdir(f'/') if filename.startswith(incomplete_filename)]
+        valid_path = '/'.join(path[:-1])
+        return [f'{valid_path}/{filename}' if os.path.isfile(f'/{valid_path}/{filename}') else f'{valid_path}/{filename}/' for filename in os.listdir(f'/{valid_path}') if filename.startswith(incomplete_filename)]

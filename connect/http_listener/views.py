@@ -16,13 +16,16 @@ class HTTPListenerRoutes:
         try:
             batch_response = json.loads(request.get_data())
         except json.decoder.JSONDecodeError:
-            data = request.get_data().decode('utf-8')
-            display(f'Failed to parse batch response as JSON:\n{data}', 'ERROR')
+            #data = request.get_data().decode('utf-8')
+            #display(f'Failed to parse batch response as JSON:\n{data}', 'ERROR')
             return redirect("https://www.google.com")
 
         if isinstance(batch_response, dict):
             display('Retrieved implant authentication: ' + str(batch_response), 'INFORMATION')
             implant = ImplantModel.query.filter_by(key=batch_response['id']).first()
+            if not implant:
+                display(f'Failed to find implant with id {id}', 'ERROR')
+                return redirect("https://www.google.com")
             agent = AgentModel(implant=implant)
             db.session.add(agent)
             db.session.commit()
