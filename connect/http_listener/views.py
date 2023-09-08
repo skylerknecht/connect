@@ -10,7 +10,13 @@ class HTTPListenerRoutes:
     def __init__(self, flask_app, task_manager):
         self.flask_app = flask_app
         self.task_manager = task_manager
+        self.flask_app.add_url_rule('/<path:route>', 'dummy', self.dummy_route, methods=['GET'])
         self.flask_app.add_url_rule('/<path:route>', 'check_in', self.check_in, methods=['POST'])
+
+    @staticmethod
+    def dummy_route(route):
+        display(f'{request.remote_addr} requested /{route} redirecting them to google', 'INFORMATION')
+        return redirect("https://www.google.com")
 
     def check_in(self, route):
         try:

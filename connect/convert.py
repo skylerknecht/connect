@@ -41,7 +41,8 @@ def string_to_base64(data) -> str:
     """
     return str(base64.b64encode(data.encode()), 'utf-8')
 
-def xor_base64(data):
+
+def xor_base64(data, key:int = random.randint(0, 255)):
     """
     Encrypt data using the XOR algorithm and return a Base64 string
     of the encrypted data. This function is used for light obfuscation
@@ -52,7 +53,6 @@ def xor_base64(data):
     :return: The base64 encoded string of the XOR encryption.
     :rtype: tuple
     """
-    key = random.randint(0, 255)
     encoded_data = collections.deque()
     for byte in data:
         e_byte = (byte ^ key)
