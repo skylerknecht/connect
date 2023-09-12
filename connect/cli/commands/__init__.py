@@ -17,6 +17,7 @@ from .ps import PS
 from .pwd import PWD
 from .shell import Shell
 from .spawn import Spawn
+from .type import Type as _Type
 from .upload import Upload
 from .whoami import Whoami
 
@@ -39,6 +40,7 @@ ps = PS()
 pwd = PWD()
 shell = Shell()
 spawn = Spawn()
+_type = _Type()
 upload = Upload()
 whoami = Whoami()
 
@@ -62,6 +64,7 @@ COMMANDS = {
     pwd.name: pwd,
     shell.name: shell,
     spawn.name: spawn,
+    _type.name: _type,
     upload.name: upload,
     whoami.name: whoami
 }
