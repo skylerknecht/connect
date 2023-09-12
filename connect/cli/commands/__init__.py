@@ -10,8 +10,10 @@ from .hostname import Hostname
 from .implants import Implant
 from .integrity import Integrity
 from .ip import IP
+from .kill import Kill
 from .os import OS
 from .pid import PID
+from .ps import PS
 from .pwd import PWD
 from .shell import Shell
 from .spawn import Spawn
@@ -30,8 +32,10 @@ hostname = Hostname()
 implant = Implant()
 integrity = Integrity()
 ip = IP()
+kill = Kill()
 os = OS()
 pid = PID()
+ps = PS()
 pwd = PWD()
 shell = Shell()
 spawn = Spawn()
@@ -51,8 +55,10 @@ COMMANDS = {
     implant.name: implant,
     integrity.name: integrity,
     ip.name: ip,
+    kill.name: kill,
     os.name: os,
     pid.name: pid,
+    ps.name: ps,
     pwd.name: pwd,
     shell.name: shell,
     spawn.name: spawn,

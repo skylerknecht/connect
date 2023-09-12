@@ -1,5 +1,6 @@
 import os
 
+
 class Command:
 
     def __init__(self, name, description, category='undefined', parameters=None):
@@ -73,6 +74,13 @@ class MiscAgentCommand(ModuleAgentCommand):
 
     def __init__(self, name, description, category='misc', parameters=None):
         super().__init__(name, description, category=category, parameters=parameters)
+
+
+class ProcessesCommand(ModuleAgentCommand):
+
+    def __init__(self, name, description, category='system information', parameters=None):
+        super().__init__(name, description, category=category, parameters=parameters)
+        self.module = f'{self.MODULE_PATH}/Processes.dll'
 
 
 class SystemInformationCommand(ModuleAgentCommand):

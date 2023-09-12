@@ -70,9 +70,9 @@ class AgentModel(db.Model):
             'id': self.id,
             'time': self.get_delta(),
             'username': self.username,
+            'integrity': self.integrity,
             'os': self.os,
             'ip': self.ip,
-            'integrity': self.integrity,
             'pid': self.pid
         }
 
