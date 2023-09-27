@@ -1,22 +1,21 @@
 import json
 
-from .commands import ProcessesCommand
+from .commands import BuiltinAgentCommand
 
 
-class PS(ProcessesCommand):
+class Interactive(BuiltinAgentCommand):
     def __init__(self):
         super().__init__(
-            'ps',
-            'Retrieve the current processes'
+            'interactive',
+            'Enable interactive mode'
         )
 
     def execute_command(self, parameters, current_agent, client_sio):
-        ps_task = {
+        interactive_task = {
             'create': {
                 'agent': current_agent,
                 'method': self.name,
-                'type': 1,
-                'module': self.module
+                'type': 0,
             }
         }
-        client_sio.emit('task', json.dumps(ps_task))
+        client_sio.emit('task', json.dumps(interactive_task))

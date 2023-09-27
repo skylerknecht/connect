@@ -32,7 +32,7 @@ class ExecuteAssembly(ExecutionCommand):
             'create': {
                 'agent': current_agent,
                 'method': self.name,
-                'type': 0,
+                'type': 1,
                 'module': self.module,
                 'parameters': [
                     string_to_base64(base64_assembly_to_execute),

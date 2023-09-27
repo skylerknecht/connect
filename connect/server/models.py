@@ -1,19 +1,25 @@
 import datetime
+import os
 
 from connect.output import display
 from connect.generate import digit_identifier, string_identifier
-from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, DateTime, Text, Boolean
+from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
 
-db = SQLAlchemy()
+Base = declarative_base()
 
+# Create a database engine and session
+engine = create_engine('sqlite:///instance/connect.db')
+Session = sessionmaker(bind=engine)
 
-class ImplantModel(db.Model):
-    # properties
-    id = db.Column(db.String, primary_key=True, default=digit_identifier)
-    key = db.Column(db.String, unique=True, default=string_identifier)
+class ImplantModel(Base):
+    __tablename__ = 'implants'
 
-    # relationships
-    agents = db.relationship('AgentModel', backref='implant', lazy=True)
+    id = Column(String, primary_key=True, default=digit_identifier)
+    key = Column(String, unique=True, default=string_identifier)
+
+    agents = relationship('AgentModel', backref='implant', lazy=True)
 
     def get_implant(self):
         return {
@@ -22,24 +28,23 @@ class ImplantModel(db.Model):
         }
 
 
-class AgentModel(db.Model):
-    # properties
-    id = db.Column(db.String, primary_key=True, default=digit_identifier)
-    check_in = db.Column(db.DateTime)
-    check_in_task_id = db.Column(db.String, nullable=False, default=digit_identifier)
-    _loaded_modules = db.Column(db.String)
+class AgentModel(Base):
+    __tablename__ = 'agents'
 
-    # relationships
-    implant_key = db.Column(db.String, db.ForeignKey(ImplantModel.key))
-    tasks = db.relationship('TaskModel', backref='agent', order_by='TaskModel.created')
+    id = Column(String, primary_key=True, default=digit_identifier)
+    check_in = Column(DateTime)
+    check_in_task_id = Column(String, nullable=False, default=digit_identifier)
+    _loaded_modules = Column(String)
 
-    # system information
-    username = db.Column(db.String, nullable=False, default='•'*4)
-    hostname = db.Column(db.String, nullable=False, default='•'*4)
-    os = db.Column(db.String, nullable=False, default='•'*4)
-    ip = db.Column(db.String, nullable=False, default='•'*4)
-    integrity = db.Column(db.String, nullable=False, default='•'*4)
-    pid = db.Column(db.String, nullable=False, default='•'*4)
+    implant_key = Column(String, ForeignKey(ImplantModel.key))
+    tasks = relationship('TaskModel', backref='agent', order_by='TaskModel.created')
+
+    username = Column(String, nullable=False, default='•' * 4)
+    hostname = Column(String, nullable=False, default='•' * 4)
+    os = Column(String, nullable=False, default='•' * 4)
+    ip = Column(String, nullable=False, default='•' * 4)
+    integrity = Column(String, nullable=False, default='•' * 4)
+    pid = Column(String, nullable=False, default='•' * 4)
 
     @property
     def loaded_modules(self):
@@ -55,10 +60,18 @@ class AgentModel(db.Model):
         if not self.check_in:
             return 'Not Connected'
         check_in_seconds = self.get_delta_seconds()
+        check_in_milliseconds = check_in_seconds * 1000
         check_in_minutes = check_in_seconds // 60
         check_in_hours = check_in_minutes // 60
-        return f'{check_in_seconds} Second(s)' if check_in_seconds <= 60 else f'{check_in_minutes} Minute(s)' if \
-            check_in_minutes <= 60 else f'{check_in_hours} Hour(s)'
+
+        if check_in_milliseconds < 1000:
+            return f'{check_in_milliseconds} ms'
+        elif check_in_seconds < 60:
+            return f'{check_in_seconds} sec'
+        elif check_in_minutes < 60:
+            return f'{check_in_minutes} min'
+        else:
+            return f'{check_in_hours} hr'
 
     def get_delta_seconds(self):
         if not self.check_in:
@@ -68,7 +81,7 @@ class AgentModel(db.Model):
     def get_agent(self):
         return {
             'id': self.id,
-            'time': self.get_delta(),
+            'latency': self.get_delta(),
             'username': self.username,
             'integrity': self.integrity,
             'os': self.os,
@@ -84,29 +97,30 @@ class AgentModel(db.Model):
             display(f'Sending task {task.method} to {task.agent.id}', 'INFORMATION')
             batch_request.append(task.get_task())
             task.sent = datetime.datetime.now()
+            session = Session()
             if task.delete_on_send:
-                db.session.delete(task)
-            db.session.commit()
+                session.delete(task)
+                session.close()
+            session.commit()
         return batch_request
 
 
-class TaskModel(db.Model):
-    # required properties
-    id = db.Column(db.String, primary_key=True, default=digit_identifier)
-    method = db.Column(db.String, nullable=False)
-    created = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now)
-    type = db.Column(db.Integer, nullable=False)
-    delete_on_send = db.Column(db.Boolean, default=False)
+class TaskModel(Base):
+    __tablename__ = 'tasks'
 
-    # optional properties
-    _parameters = db.Column(db.String)
-    _misc = db.Column(db.String)
-    sent = db.Column(db.DateTime)
-    completed = db.Column(db.DateTime)
-    results = db.Column(db.Text)
+    id = Column(String, primary_key=True, default=digit_identifier)
+    method = Column(String, nullable=False)
+    created = Column(DateTime, nullable=False, default=datetime.datetime.now)
+    type = Column(Integer, nullable=False)
+    delete_on_send = Column(Boolean, default=False)
 
-    # relationships
-    agent_id = db.Column(db.String, db.ForeignKey(AgentModel.id))
+    _parameters = Column(String)
+    _misc = Column(String)
+    sent = Column(DateTime)
+    completed = Column(DateTime)
+    results = Column(Text)
+
+    agent_id = Column(String, ForeignKey(AgentModel.id))
 
     @property
     def parameters(self):
@@ -134,3 +148,8 @@ class TaskModel(db.Model):
             'params': self.parameters,
             'id': self.id
         }
+
+
+if not os.path.exists(f'{os.getcwd()}/instance/connect.db'):
+    display('Database does not exist, creating it.', 'INFORMATION')
+    Base.metadata.create_all(engine)

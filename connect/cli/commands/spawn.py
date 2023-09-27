@@ -24,7 +24,7 @@ class Spawn(MiscAgentCommand):
             'create': {
                 'agent': current_agent,
                 'method': self.name,
-                'type': 0,
+                'type': 1,
                 'module': f'{self.MODULE_PATH}/Spawn.dll',
                 'parameters': [
                     string_to_base64(parameters[0]),

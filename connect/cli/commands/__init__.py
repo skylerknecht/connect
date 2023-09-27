@@ -9,8 +9,10 @@ from .exit import Exit
 from .hostname import Hostname
 from .implants import Implant
 from .integrity import Integrity
+from .interactive import Interactive
 from .ip import IP
 from .kill import Kill
+from .listeners import Listeners
 from .os import OS
 from .pid import PID
 from .ps import PS
@@ -32,8 +34,10 @@ exit = Exit()
 hostname = Hostname()
 implant = Implant()
 integrity = Integrity()
+interactive = Interactive()
 ip = IP()
 kill = Kill()
+listeners = Listeners()
 os = OS()
 pid = PID()
 ps = PS()
@@ -56,8 +60,10 @@ COMMANDS = {
     hostname.name: hostname,
     implant.name: implant,
     integrity.name: integrity,
+    interactive.name: interactive,
     ip.name: ip,
     kill.name: kill,
+    listeners.name: listeners,
     os.name: os,
     pid.name: pid,
     ps.name: ps,

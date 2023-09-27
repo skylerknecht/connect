@@ -15,7 +15,7 @@ class Kill(BuiltinAgentCommand):
             'create': {
                 'agent': current_agent,
                 'method': self.name,
-                'type': 0,
+                'type': 1,
             }
         }
         client_sio.emit('task', json.dumps(kill_task))

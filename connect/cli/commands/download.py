@@ -23,7 +23,7 @@ class Download(FileSystemCommand):
             'create': {
                 'agent': current_agent,
                 'method': self.name,
-                'type': 1,
+                'type': 2,
                 'module': self.module,
                 'parameters': [
                     string_to_base64(parameters[0]),

@@ -1,5 +1,4 @@
 import json
-import textwrap
 
 from connect.cli.commands.commands import STDPAPICommand
 from connect.output import display

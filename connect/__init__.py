@@ -12,3 +12,10 @@ def set_debug_level(level: int):
 def get_debug_level():
     global debug_level
     return debug_level
+
+
+# Clean up the Code
+# Invalid Result Types cause Stack Trace
+# Any other Stack Traces?
+# Invalid Listener port ip?
+# remove json.dumps for socketio

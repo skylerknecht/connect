@@ -25,7 +25,7 @@ class Shell(ExecutionCommand):
             'create': {
                 'agent': current_agent,
                 'method': self.name,
-                'type': 0,
+                'type': 1,
                 'module': self.module,
                 'parameters': [
                     *shell_arguments

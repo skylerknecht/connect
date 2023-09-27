@@ -1,6 +1,7 @@
 import atexit
 import os
 import readline
+import sys
 
 from .commands import COMMANDS
 from .commands.manager import CommandsManager
@@ -26,7 +27,7 @@ class CLI:
         self.setup_readline()
         while True:
             try:
-                user_input = input(self.prompt)
+                user_input = input('\r' + self.prompt)
                 if not user_input:
                     continue
                 self.commands_manager.execute_command(user_input, self.set_cli_properties)
@@ -40,18 +41,10 @@ class CLI:
                 continue
 
     def notify(self, *args):
-        """
-        Asynchronous requests to stdout may cause issues with terminal output. We proxy all of these
-        requests through this function to prevent this from happening. When an operator executes a
-        command a new prompt will display prior to the results being received. We'll first remove this
-        prompt with `\033[1k\r` and then print the results. Secondly, the stdin will be holding all stdout
-        until a carriage return is provided. To provide a new prompt and statisfy stdin we'll prefix the prompt
-        with a carriage return. Finally, to prevent the cursor from starting on the next line we'll instruct
-        print to not add a carriage return to the suffix of stdout.
-        """
-        display('\033[1K\r', end='')
+        display('\r', end='')
         display(*args)
-        display(f'\r{self.prompt}{readline.get_line_buffer()}', end='')
+        display(self.prompt + readline.get_line_buffer(), end='')
+        sys.stdout.flush()
 
     def run(self, arguments):
         self.arguments = arguments

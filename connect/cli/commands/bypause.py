@@ -15,7 +15,7 @@ class ByPause(MiscAgentCommand):
             'create': {
                 'agent': current_agent,
                 'method': self.name,
-                'type': 0,
+                'type': 1,
                 'module': f'{self.MODULE_PATH}/Bypause.dll'
             }
         }
