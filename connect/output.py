@@ -52,8 +52,7 @@ def colorize(string: str, color: str, bold: bool = False) -> str:
     return formatted_string
 
 
-def display(stdin: str, notification_type: str = 'DEFAULT', prefix: bool = True, end: str = '\n',
-            debug: bool = False, reprint=False):
+def display(stdin: str, notification_type: str = 'DEFAULT', prefix: bool = True, end: str = '\n'):
     """
     Display a notification with an optional prefix. 
 
@@ -68,8 +67,6 @@ def display(stdin: str, notification_type: str = 'DEFAULT', prefix: bool = True,
         end (str, optional): The character to append at the end of the displayed message.
                              Defaults to '\\n'.
     """
-    if debug:
-        return
     if notification_type not in NOTIFICATIONS:
         notification_keys = ', '.join(NOTIFICATIONS.keys())
         raise ValueError(

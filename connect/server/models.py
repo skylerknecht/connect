@@ -1,6 +1,8 @@
 import datetime
 import os
+import threading
 
+from contextlib import contextmanager
 from connect.output import display
 from connect.generate import digit_identifier, string_identifier
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, DateTime, Text, Boolean
@@ -12,6 +14,22 @@ Base = declarative_base()
 # Create a database engine and session
 engine = create_engine('sqlite:///instance/connect.db')
 Session = sessionmaker(bind=engine)
+lock = threading.Lock()
+
+
+@contextmanager
+def get_session():
+    #with lock:
+    session = Session()
+    try:
+        yield session
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
 
 class ImplantModel(Base):
     __tablename__ = 'implants'
@@ -81,7 +99,7 @@ class AgentModel(Base):
     def get_agent(self):
         return {
             'id': self.id,
-            'latency': self.get_delta(),
+            'last': self.get_delta(),
             'username': self.username,
             'integrity': self.integrity,
             'os': self.os,
@@ -89,7 +107,7 @@ class AgentModel(Base):
             'pid': self.pid
         }
 
-    def get_tasks(self):
+    def get_tasks(self, session):
         batch_request = []
         for task in self.tasks:
             if task.sent:
@@ -97,11 +115,8 @@ class AgentModel(Base):
             display(f'Sending task {task.method} to {task.agent.id}', 'INFORMATION')
             batch_request.append(task.get_task())
             task.sent = datetime.datetime.now()
-            session = Session()
             if task.delete_on_send:
                 session.delete(task)
-                session.close()
-            session.commit()
         return batch_request
 
 

@@ -1,6 +1,6 @@
 import shlex
 
-from .commands import AgentCommand, STDPAPICommand
+from .commands import AgentCommand, ConnectCommand
 from connect.output import display
 
 
@@ -23,8 +23,13 @@ class CommandsManager:
             self.current_agent = agent
             return
 
-        if tokens[0] == '?':
+        if tokens[0] == '?' or tokens[0] == 'help':
             self.help_menu()
+            return
+
+        if tokens[0] == 'back':
+            set_cli_properties(reset=True)
+            self.current_agent = None
             return
 
         try:
@@ -37,7 +42,7 @@ class CommandsManager:
             command.help()
             return
 
-        if isinstance(command, STDPAPICommand):
+        if isinstance(command, ConnectCommand):
             command.execute_command(tokens[1:], self.client_sio)
             return
 

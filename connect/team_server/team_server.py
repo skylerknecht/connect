@@ -6,6 +6,7 @@ from aiohttp import web
 from connect.generate import string_identifier
 from connect.output import display
 
+
 class TeamServer:
     NAME = 'Connect Team Server'
 

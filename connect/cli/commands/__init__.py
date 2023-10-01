@@ -1,5 +1,4 @@
 from .agents import Agent
-from .arch import Arch
 from .bypause import ByPause
 from .dir import Dir
 from .drives import Drives
@@ -24,7 +23,6 @@ from .upload import Upload
 from .whoami import Whoami
 
 agent = Agent()
-arch = Arch()
 bypause = ByPause()
 dir = Dir()
 drives = Drives()
@@ -50,7 +48,6 @@ whoami = Whoami()
 
 COMMANDS = {
     agent.name: agent,
-    arch.name: arch,
     bypause.name: bypause,
     dir.name: dir,
     drives.name: drives,

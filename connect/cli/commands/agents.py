@@ -1,10 +1,10 @@
 import json
 
-from connect.cli.commands.commands import STDPAPICommand
+from connect.cli.commands.commands import ConnectCommand
 from connect.output import display
 
 
-class Agent(STDPAPICommand):
+class Agent(ConnectCommand):
     def __init__(self):
         super().__init__(
             'agents',

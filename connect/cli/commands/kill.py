@@ -1,9 +1,9 @@
 import json
 
-from .commands import BuiltinAgentCommand
+from .commands import STDPapiAgentCommand
 
 
-class Kill(BuiltinAgentCommand):
+class Kill(STDPapiAgentCommand):
     def __init__(self):
         super().__init__(
             'kill',

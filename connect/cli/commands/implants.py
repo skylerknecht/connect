@@ -2,10 +2,10 @@ import json
 import textwrap
 
 from connect.output import display
-from connect.cli.commands.commands import STDPAPICommand
+from connect.cli.commands.commands import ConnectCommand
 
 
-class Implant(STDPAPICommand):
+class Implant(ConnectCommand):
     def __init__(self):
         super().__init__(
             'implants',

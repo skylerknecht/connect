@@ -27,8 +27,8 @@ class Command:
         return ''
 
 
-class STDPAPICommand(Command):
-    def __init__(self, name, description, category='stdpapi', parameters=None):
+class ConnectCommand(Command):
+    def __init__(self, name, description, category='connect', parameters=None):
         super().__init__(name, description, category=category, parameters=parameters)
 
     def execute_command(self, parameters, client_sio):
@@ -43,8 +43,8 @@ class AgentCommand(Command):
         raise NotImplementedError(f'{self.name} command has not implemented execute_command')
 
 
-class BuiltinAgentCommand(AgentCommand):
-    def __init__(self, name, description, category='builtin', parameters=None):
+class STDPapiAgentCommand(AgentCommand):
+    def __init__(self, name, description, category='stdpapi', parameters=None):
         super().__init__(name, description, category=category, parameters=parameters)
 
 
