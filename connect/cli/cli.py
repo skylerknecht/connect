@@ -3,7 +3,6 @@ import os
 import readline
 import sys
 
-from .commands import COMMANDS
 from .commands.manager import CommandsManager
 from .events import Events
 from connect.output import display
@@ -14,8 +13,8 @@ class CLI:
 
     def __init__(self, name, prompt, commands):
         self.agents = []
-        self.commands = commands | COMMANDS
-        self.completer = Completer(self.commands.keys())
+        self.commands = commands
+        self.completer = Completer(list(self.commands.keys()))
         self.PROMPT = prompt
         self.prompt = self.PROMPT
         self.arguments = None
@@ -53,21 +52,19 @@ class CLI:
             self.client_sio.connect(arguments.url, auth=arguments.key)
         self.listen_for_user_input()
 
-    def set_cli_properties(self, agents=None, prompt=None, reset: bool = False):
+    def set_cli_properties(self, agents=None, implants=None, listeners=None, prompt=None, reset: bool = False):
         if reset:
             self.prompt = self.PROMPT
             return
         self.prompt = prompt if prompt else self.prompt
         self.agents = agents if agents else self.agents
-        if agents: self.completer.update_options(self.commands.keys() | [agent['id'] for agent in self.agents])
+        if agents: self.completer.update_options([agent['id'] for agent in self.agents])
+        if implants: self.completer.update_options([implant['id'] for implant in implants])
+        if listeners: self.completer.update_options([listener['id'] for listener in listeners])
 
     def get_cli_properties(self, agent_ids=False):
         if agent_ids:
             return [agent['id'] for agent in self.agents]
-
-    def retrieve_options(self):
-        print(self.commands | [agent['id'] for agent in self.agents])
-        return self.commands | [agent['id'] for agent in self.agents]
 
     def setup_readline(self):
         if not os.path.exists(self.HISTORY_FILE):
@@ -90,32 +87,32 @@ class Completer:
         self.options = options
 
     def update_options(self, options):
-        self.options = options
+        self.options.extend(options)
 
     def complete_option(self, incomplete_option, state):
-        '''
-            Analyzes the length of current line buffer / incomplete_option and
-            determines the user(s) completion.
+        """
+        Analyzes the length of current line buffer / incomplete_option and
+        determines the user(s) completion.
 
-            If the current line buffer is greater or equal to one and the current line
-            buffer ends with a trailing space then that indicates the user is attempting
-            to complete a multi-worded option. The length of the current line buffer,
-            when delimited by a space, must be incremented by one to correctly search
-            for the next option.
+        If the current line buffer is greater or equal to one and the current line
+        buffer ends with a trailing space then that indicates the user is attempting
+        to complete a multi-worded option. The length of the current line buffer,
+        when delimited by a space, must be incremented by one to correctly search
+        for the next option.
 
-            Otherwise, generate a list of all current menu options and file names that
-            start with the current incomplete_option aka the last line in the buffer.
+        Otherwise, generate a list of all current menu options and file names that
+        start with the current incomplete_option aka the last line in the buffer.
 
-            Parameters:
-                    incomplete_option (str()): The current incomplete option.
-                    state (int()): An integer so that when the function is called
-                                recursively by readline it can gather all items
-                                within the current finished_option list.
+        Parameters:
+                incomplete_option (str()): The current incomplete option.
+                state (int()): An integer so that when the function is called
+                            recursively by readline it can gather all items
+                            within the current finished_option list.
 
-            Returns:
-                    finished_option (str): Whatever option the callee has not
-                                        gathered yet.
-            '''
+        Returns:
+                finished_option (str): Whatever option the callee has not
+                                    gathered yet.
+        """
         current_line = readline.get_line_buffer()
         current_line_list = current_line.split()
         if len(current_line_list) >= 1 and current_line.endswith(' '):

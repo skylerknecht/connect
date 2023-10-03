@@ -55,7 +55,6 @@ class TeamServerEvents:
                 if not agents:
                     await self.sio_server.emit('information', 'There are no agents.')
                     return
-                #table = self.create_table('AGENTS', agents[0].keys(), agents)
                 await self.sio_server.emit('agents', agents)
                 return
 
@@ -79,8 +78,7 @@ class TeamServerEvents:
                 if not implants:
                     await self.sio_server.emit('information', 'There are no implants.')
                     return
-                table = self.create_table('IMPLANTS', implants[0].keys(), implants)
-                await self.sio_server.emit('default', table)
+                await self.sio_server.emit('implants', implants)
                 return
 
             await self.sio_server.emit('information', f'Implant event hit with the following data: {data}')
@@ -148,8 +146,7 @@ class TeamServerEvents:
             if not listeners:
                 await self.sio_server.emit('information', 'There are no listeners.')
                 return
-            table = self.create_table('LISTENERS', listeners[0].keys(), listeners)
-            await self.sio_server.emit('default', table)
+            await self.sio_server.emit('listeners', listeners)
             return
 
         await self.sio_server.emit('information', f'Listener event hit with the following data: {data}')

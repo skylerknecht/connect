@@ -9,6 +9,8 @@ class Events:
         self.notify = notify
         self.set_cli_properties = set_cli_properties
         self.sio.on('agents', self.agents)
+        self.sio.on('implants', self.implants)
+        self.sio.on('listeners', self.listeners)
         self.sio.on('default', self.default)
         self.sio.on('error', self.error)
         self.sio.on('information', self.information)
@@ -17,6 +19,16 @@ class Events:
     def agents(self, data):
         self.set_cli_properties(agents=data)
         table = self.create_table('AGENTS', data[0].keys(), data)
+        self.notify(table, 'DEFAULT')
+
+    def implants(self, data):
+        self.set_cli_properties(implants=data)
+        table = self.create_table('IMPLANTS', data[0].keys(), data)
+        self.notify(table, 'DEFAULT')
+
+    def listeners(self, data):
+        self.set_cli_properties(listeners=data)
+        table = self.create_table('listeners', data[0].keys(), data)
         self.notify(table, 'DEFAULT')
 
     def default(self, data):

@@ -12,7 +12,6 @@ class Implant(ConnectCommand):
             'Create and list implants.',
             parameters={
                 'create': 'Create a new implant.',
-                'list': 'List all implants.'
             }
         )
 

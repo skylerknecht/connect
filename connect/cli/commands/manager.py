@@ -28,6 +28,11 @@ class CommandsManager:
             self.current_agent = None
             return
 
+        if tokens[0] == 'all':
+            set_cli_properties(prompt=f'(all)~# ')
+            self.current_agent = 'all'
+            return
+
         try:
             command = self.commands[tokens[0]]
         except KeyError:
@@ -45,6 +50,10 @@ class CommandsManager:
         if isinstance(command, AgentCommand):
             if not self.current_agent:
                 display(f'Please interact with an agent to execute {command.name}', 'ERROR')
+                return
+            if self.current_agent == 'all':
+                for agent_id in get_cli_properties(agent_ids=True):
+                    command.execute_command(tokens[1:], agent_id, self.client_sio)
                 return
             command.execute_command(tokens[1:], self.current_agent, self.client_sio)
             return

@@ -14,8 +14,11 @@ def get_debug_level():
     return debug_level
 
 
-# Clean up the Code
-# Invalid Result Types cause Stack Trace
-# Any other Stack Traces?
-# Invalid Listener port ip?
-# remove json.dumps for socketio
+# ToDo Clean up the Code
+# ToDo Invalid Result Types cause Stack Trace
+# ToDo Any other Stack Traces?
+# ToDo Invalid Listener port ip?
+# ToDo remove json.dumps for socketio
+# ToDo Reconnecting to team_server every CTRL+C
+# ToDo Guardrails?
+# ToDo Implant Profiles
