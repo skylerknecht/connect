@@ -11,14 +11,10 @@ class CommandsManager:
         self.commands = commands
         self.current_agent = None
 
-    def execute_command(self, user_input, set_cli_properties):
+    def execute_command(self, user_input, set_cli_properties, get_cli_properties):
         tokens = shlex.split(user_input.replace("\\", "\\\\"))
-        if '@' in tokens[0][0]:
-            if not len(tokens[0]) > 1:
-                set_cli_properties(reset=True)
-                self.current_agent = None
-                return
-            agent = tokens[0].split('@')[1]
+        if tokens[0] in get_cli_properties(agent_ids=True):
+            agent = tokens[0]
             set_cli_properties(prompt=f'({agent})~# ')
             self.current_agent = agent
             return

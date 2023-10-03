@@ -55,8 +55,8 @@ class TeamServerEvents:
                 if not agents:
                     await self.sio_server.emit('information', 'There are no agents.')
                     return
-                table = self.create_table('AGENTS', agents[0].keys(), agents)
-                await self.sio_server.emit('default', table)
+                #table = self.create_table('AGENTS', agents[0].keys(), agents)
+                await self.sio_server.emit('agents', agents)
                 return
 
             await self.sio_server.emit('information', f'Agent event hit with the following data: {data}')
@@ -133,36 +133,6 @@ class TeamServerEvents:
             agent.loaded_modules) + f',{module_md5}'
         session.add(agent)
         return True
-
-
-    # Calculate the length of the longest value in a list of dictionaries
-    @staticmethod
-    def longest_value(items: list[dict]):
-        return max(len(value) for item in items for value in item.values())
-
-    # Generate a formatted table output
-    @staticmethod
-    def create_table(title, columns: list, items: list[dict]) -> str:
-        # Calculate the maximum width for each column
-        col_widths = [len(col) for col in columns]
-        for item in items:
-            for idx, col in enumerate(columns):
-                col_widths[idx] = max(col_widths[idx], len(str(item.get(col, ''))) + 4)
-
-        # Create the table header
-        header = f"{title:^{sum(col_widths) + len(columns) - 1}}\n"
-        header += ' '.join([f"{col:^{width}}" for col, width in zip(columns, col_widths)]) + '\n'
-        header += ' '.join(['-' * width for width in col_widths]) + '\n'
-
-        # Create the table rows
-        rows = []
-        for item in items:
-            row = ' '.join([f"{str(item.get(col, '')):^{width}}" for col, width in zip(columns, col_widths)]) + '\n'
-            rows.append(row)
-
-        # Combine header and rows to form the table
-        table = header + ''.join(rows)
-        return table
 
     @json_event_handler
     async def listener(self, data):
