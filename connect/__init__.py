@@ -22,3 +22,4 @@ def get_debug_level():
 # ToDo Reconnecting to team_server every CTRL+C
 # ToDo Guardrails?
 # ToDo Implant Profiles
+# ToDo Update status messages
