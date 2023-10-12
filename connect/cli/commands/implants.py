@@ -30,5 +30,5 @@ class Implant(ConnectCommand):
         return textwrap.dedent("""\
         usage:
             implants
-            implants create
+            implants create\
         """)

@@ -52,7 +52,7 @@ class CLI:
             self.client_sio.connect(arguments.url, auth=arguments.key)
         self.listen_for_user_input()
 
-    def set_cli_properties(self, agents=None, implants=None, listeners=None, prompt=None, reset: bool = False):
+    def set_cli_properties(self, agents=None, implants=None, prompt=None, reset: bool = False):
         if reset:
             self.prompt = self.PROMPT
             return
@@ -60,7 +60,6 @@ class CLI:
         self.agents = agents if agents else self.agents
         if agents: self.completer.update_options([agent['id'] for agent in self.agents])
         if implants: self.completer.update_options([implant['id'] for implant in implants])
-        if listeners: self.completer.update_options([listener['id'] for listener in listeners])
 
     def get_cli_properties(self, agent_ids=False):
         if agent_ids:

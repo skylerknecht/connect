@@ -27,8 +27,7 @@ class Events:
         self.notify(table, 'DEFAULT')
 
     def listeners(self, data):
-        self.set_cli_properties(listeners=data)
-        table = self.create_table('listeners', data[0].keys(), data)
+        table = self.create_table('LISTENERS', data[0].keys(), data)
         self.notify(table, 'DEFAULT')
 
     def default(self, data):

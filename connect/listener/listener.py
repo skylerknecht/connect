@@ -1,27 +1,53 @@
 import asyncio
-import json
-import time
 import socketio
-
-from . import events
-from . import routes
 from aiohttp import web
-from connect.server import tasks
 from connect.server.models import AgentModel, get_session
+from connect.server.tasks import TaskManager
+from .events import ListenerEvents
+from .routes import ListenerRoutes
+
 
 class ConnectListener:
-    NAME = 'Connect Listener'
 
-    def __init__(self, ip, port):
+    def __init__(self, ip, port, socks_manager, sio_team_server):
+        """
+        Initialize a new Connect Listener
+
+        Args:
+            ip (str): The IP address or hostname of the server.
+            port (int): The port number to connect to on the server.
+            socks_manager: Manager to create and shutdown socks servers.
+        """
         self.ip = ip
         self.port = port
+        self.sio_team_server = sio_team_server
+
+        self.sio_server = socketio.AsyncServer(async_mode='aiohttp')
+        task_manager = TaskManager(self.sio_team_server)
+        self.listener_events = ListenerEvents(self.sio_server, self.sio_team_server, task_manager, socks_manager)
         self.application = web.Application()
-        self.sio_client = socketio.Client()
-        self.sio_server = socketio.AsyncServer(async_mode='aiohttp', async_handlers=True)
-        self.loop = asyncio.new_event_loop()
-        task_manager = tasks.TaskManager(self.sio_client)
-        self.listener_routes = routes.ListenerRoutes(self.application, self.sio_client, task_manager)
-        self.listener_events = events.ListenerEvents(self.sio_server, self.sio_client, task_manager)
+        self.listener_routes = ListenerRoutes(self.application, self.sio_team_server, task_manager)
+        self.socks_manager = socks_manager
+
+        self.loop = asyncio.get_event_loop()
+        self.runner = web.AppRunner(self.application)
+        self.site = None
+
+        self.asyncio_tasks = []
+
+    async def start(self):
+        self.sio_server.attach(self.application)
+        self.asyncio_tasks.append(self.loop.create_task(self.ping()))
+        self.asyncio_tasks.append(self.loop.create_task(self.send_tasks()))
+        await self.runner.setup()
+        self.site = web.TCPSite(self.runner, self.ip, self.port)
+        await self.site.start()
+
+    async def stop(self):
+        for task in self.asyncio_tasks:
+            task.cancel()
+        await self.site.stop()
+        await self.runner.cleanup()
 
     async def ping(self):
         while True:
@@ -36,30 +62,7 @@ class ConnectListener:
                     sid = self.listener_events.agent_id_to_sid.get(agent.id, None)
                     if not sid:
                         continue
+                    for task in self.socks_manager.get_socks_tasks(agent.id):
+                        await self.sio_server.emit(task.event, task.data, room=sid)
                     await self.sio_server.emit('tasks', agent.get_tasks(session), room=sid)
-            await self.sio_server.sleep(1)
-
-    def run(self, team_server_uri, team_server_key):
-        self.sio_client.connect(team_server_uri, auth=team_server_key)
-        self.sio_server.attach(self.application)
-        runner = web.AppRunner(self.application)
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(runner.setup())
-        loop.create_task(self.ping())
-        loop.create_task(self.send_tasks())
-        try:
-            self.sio_client.emit('proxy', json.dumps(['information', f'Starting HTTP listener on {self.ip}:{self.port}']))
-            site = web.TCPSite(runner, self.ip, self.port)
-            loop.run_until_complete(site.start())
-            loop.run_forever()
-        except PermissionError:
-            self.sio_client.emit('proxy', json.dumps(['error', f'Failed to start HTTP listener on {self.ip}:{self.port}, Permission Denied.']))
-        except OSError as e:
-            if e.errno == 98:
-                self.sio_client.emit('proxy', json.dumps(
-                    ['error', f'Failed to start HTTP listener on {self.ip}:{self.port}, Address Already In Use.']))
-                return
-            self.sio_client.emit('proxy', json.dumps(
-                ['error', f'Failed to start HTTP listener on {self.ip}:{self.port}:\n{e}']))
-
+            await self.sio_server.sleep(0.1)

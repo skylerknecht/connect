@@ -12,6 +12,7 @@ class Listeners(ConnectCommand):
             'Create and list listeners.',
             parameters={
                 'create': 'Create a new listener.',
+                'stop': 'Stop a listener.'
             }
         )
 
@@ -19,23 +20,40 @@ class Listeners(ConnectCommand):
         if len(parameters) < 1:
             client_sio.emit('listener', json.dumps({'list': None}))
             return
-        try:
-            parameters[2] = int(parameters[2])
-        except ValueError:
-            display(f'Port must be an integer', 'ERROR')
-            return
-        if not (0 <= parameters[2] < 65535):
-            display(f'Port must be between 0 and 65,535', 'ERROR')
-            return
         switch = parameters[0]
         if switch == 'create':
-            listener = {
+            try:
+                parameters[2] = int(parameters[2])
+            except ValueError:
+                display(f'Port must be an integer', 'ERROR')
+                return
+            if not (0 <= parameters[2] < 65535):
+                display(f'Port must be between 0 and 65,535', 'ERROR')
+                return
+            listener_task = {
                 'create': {
                     'ip': parameters[1],
                     'port': int(parameters[2]),
                 }
             }
-            client_sio.emit('listener', json.dumps(listener))
+            client_sio.emit('listener', json.dumps(listener_task))
+            return
+        if switch == 'stop':
+            try:
+                parameters[2] = int(parameters[2])
+            except ValueError:
+                display(f'Port must be an integer', 'ERROR')
+                return
+            if not (0 <= parameters[2] < 65535):
+                display(f'Port must be between 0 and 65,535', 'ERROR')
+                return
+            listener_task = {
+                'stop': {
+                    'ip': parameters[1],
+                    'port': int(parameters[2]),
+                }
+            }
+            client_sio.emit('listener', json.dumps(listener_task))
             return
         display(f'Invalid parameters: {" ".join(parameters)}', 'ERROR')
 
@@ -44,5 +62,6 @@ class Listeners(ConnectCommand):
         return textwrap.dedent("""\
         usage:
             listeners
-            listeners create
+            listeners create 127.0.0.1 443
+            listeners stop 127.0.0.1 443\
         """)

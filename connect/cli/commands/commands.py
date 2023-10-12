@@ -20,10 +20,10 @@ class Command:
                 longest_parameter = len(parameter)
         for parameter, description in self.parameters.items():
             print('{:<{}}{:<{}}{}'.format(' ', 4, parameter, longest_parameter + 4, description))
-        if self.example: print(self.example)
+        if self.usage: print('\n' + self.usage)
 
     @property
-    def example(self) -> str:
+    def usage(self) -> str:
         return ''
 
 
