@@ -1,7 +1,5 @@
-import json
-
+import textwrap
 from .commands import FileSystemCommand
-from connect.convert import string_to_base64
 
 
 class Dir(FileSystemCommand):
@@ -10,7 +8,7 @@ class Dir(FileSystemCommand):
             'dir',
             'Retrieve the contents of a directory',
             parameters={
-                'directory': 'What directory contents should we retrieve'
+                'directory': 'The path to the directory whose contents you want to retrieve'
             }
         )
 
@@ -30,3 +28,10 @@ class Dir(FileSystemCommand):
             }
         }
         client_sio.emit('task', dir_task)
+
+    @property
+    def usage(self) -> str:
+        return textwrap.dedent("""\
+        usage: 
+            dir <directory>
+        """)

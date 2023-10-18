@@ -1,7 +1,8 @@
-import json
-
+import textwrap
+import os
 from .commands import FileSystemCommand
-from connect.convert import string_to_base64, xor_base64
+from connect.convert import xor_base64
+from connect.output import display
 
 
 class Upload(FileSystemCommand):
@@ -10,14 +11,18 @@ class Upload(FileSystemCommand):
             'upload',
             'Upload a file',
             parameters={
-                'source': 'What file should we upload',
-                'destination': 'Where should we upload the file',
+                'source': 'The path to the file you want to upload',
+                'destination': 'The destination path where you want to upload the file',
             }
         )
 
     def execute_command(self, parameters, current_agent, client_sio):
         if len(parameters) != 2:
             self.help()
+            return
+        source_file = parameters[0]
+        if not os.path.exists(source_file):
+            display(f'{source_file} does not exist', 'ERROR')
             return
         base64_file_to_upload, key = xor_base64(open(parameters[0], 'rb').read())
         upload_task = {
@@ -34,3 +39,10 @@ class Upload(FileSystemCommand):
             }
         }
         client_sio.emit('task', upload_task)
+
+    @property
+    def usage(self) -> str:
+        return textwrap.dedent("""\
+        usage: 
+            upload <source> <destination>
+        """)

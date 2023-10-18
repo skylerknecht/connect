@@ -1,7 +1,5 @@
-import json
-
+import textwrap
 from .commands import FileSystemCommand
-from connect.convert import string_to_base64
 
 
 class Type(FileSystemCommand):
@@ -10,7 +8,7 @@ class Type(FileSystemCommand):
             'type',
             'Retrieve the contents of a file',
             parameters={
-                'file': 'What file contents should we retrieve'
+                'file': 'The path to the file you want to retrieve'
             }
         )
 
@@ -25,8 +23,15 @@ class Type(FileSystemCommand):
                 'type': 1,
                 'module': self.module,
                 'parameters': [
-                    string_to_base64(parameters[0])
+                    parameters[0]
                 ]
             }
         }
         client_sio.emit('task', type_task)
+
+    @property
+    def usage(self) -> str:
+        return textwrap.dedent("""\
+        usage: 
+            type <file>
+        """)

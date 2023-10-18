@@ -1,8 +1,5 @@
-import os
-import json
-
+import textwrap
 from .commands import MiscAgentCommand
-from connect.convert import string_to_base64, xor_base64
 
 
 class Spawn(MiscAgentCommand):
@@ -11,8 +8,8 @@ class Spawn(MiscAgentCommand):
             'spawn',
             'Spawn a new agent',
             parameters={
-                'uri': 'What is the listeners URI',
-                'key': 'What implant key to use',
+                'uri': 'The listener URI to connect to',
+                'key': 'The implant key to use',
             }
         )
 
@@ -33,3 +30,10 @@ class Spawn(MiscAgentCommand):
             }
         }
         client_sio.emit('task', upload_task)
+
+    @property
+    def usage(self) -> str:
+        return textwrap.dedent("""\
+        usage: 
+            spawn <uri> <key>
+        """)

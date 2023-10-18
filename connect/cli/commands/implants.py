@@ -1,6 +1,4 @@
-import json
 import textwrap
-
 from connect.output import display
 from connect.cli.commands.commands import ConnectCommand
 
@@ -11,12 +9,15 @@ class Implant(ConnectCommand):
             'implants',
             'Create and list implants.',
             parameters={
-                'create': 'Create a new implant.',
+                'action': 'The action to perform (e.g., create)',
             }
         )
 
     def execute_command(self, parameters, client_sio):
-        if len(parameters) < 1:
+        if len(parameters) > 1:
+            self.help()
+            return
+        if len(parameters) == 0:
             client_sio.emit('implant', {'list': None})
             return
         switch = parameters[0]
@@ -30,5 +31,5 @@ class Implant(ConnectCommand):
         return textwrap.dedent("""\
         usage:
             implants
-            implants create\
+            implants create
         """)

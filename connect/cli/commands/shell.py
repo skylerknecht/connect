@@ -1,7 +1,6 @@
-import json
+import textwrap
 
 from .commands import ExecutionCommand
-from connect.convert import string_to_base64
 
 
 class Shell(ExecutionCommand):
@@ -10,7 +9,7 @@ class Shell(ExecutionCommand):
             'shell',
             'Execute a command',
             parameters={
-                'command': 'What command should we execute'
+                'command': 'The command to execute (e.g., whoami)'
             }
         )
 
@@ -18,9 +17,6 @@ class Shell(ExecutionCommand):
         if not parameters:
             self.help()
             return
-        shell_arguments = []
-        for parameter in parameters:
-            shell_arguments.append(parameter)
         shell_task = {
             'create': {
                 'agent': current_agent,
@@ -28,8 +24,15 @@ class Shell(ExecutionCommand):
                 'type': 1,
                 'module': self.module,
                 'parameters': [
-                    *shell_arguments
+                    *parameters
                 ]
             }
         }
         client_sio.emit('task', shell_task)
+
+    @property
+    def usage(self) -> str:
+        return textwrap.dedent("""\
+        usage: 
+            shell <command>
+        """)

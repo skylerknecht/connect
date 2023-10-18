@@ -1,8 +1,6 @@
-import json
 import os
-
 from .commands import ExecutionCommand
-from connect.convert import string_to_base64, xor_base64
+from connect.convert import xor_base64
 from connect.output import display
 
 
@@ -12,8 +10,8 @@ class ExecuteAssembly(ExecutionCommand):
             'execute-assembly',
             'Execute a .NET assembly',
             parameters={
-                'command': 'What assembly should we execute',
-                'arguments': 'What arguments should we send to the assembly'
+                'assembly_path': 'The path to the .NET assembly you want to execute (e.g., Rubeus.exe)',
+                'arguments': 'The arguments to send to the assembly (e.g., dump /service:krbtgt)'
             }
         )
 
@@ -21,13 +19,18 @@ class ExecuteAssembly(ExecutionCommand):
         if not parameters:
             self.help()
             return
-        if not os.path.exists(parameters[0]):
-            display(f'{parameters[0]} does not exist.', 'ERROR')
+
+        assembly_path = parameters[0]
+        if not os.path.exists(assembly_path):
+            display(f'{assembly_path} does not exist', 'ERROR')
             return
-        base64_assembly_to_execute, key = xor_base64(open(parameters[0], 'rb').read())
+
         assembly_arguments = []
         for parameter in parameters[1:]:
-            assembly_arguments.append(string_to_base64(parameter))
+            assembly_arguments.append(parameter)
+
+        base64_assembly_to_execute, key = xor_base64(open(assembly_path, 'rb').read())
+
         shell_task = {
             'create': {
                 'agent': current_agent,
@@ -42,3 +45,10 @@ class ExecuteAssembly(ExecutionCommand):
             }
         }
         client_sio.emit('task', shell_task)
+
+    @property
+    def usage(self) -> str:
+        return """\
+        usage:
+            execute-assembly <assembly_path> [arguments...]
+        """

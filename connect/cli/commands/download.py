@@ -1,8 +1,5 @@
-import json
-
+import textwrap
 from .commands import FileSystemCommand
-from connect.convert import string_to_base64
-from connect.output import display
 
 
 class Download(FileSystemCommand):
@@ -11,7 +8,7 @@ class Download(FileSystemCommand):
             'download',
             'Download a file',
             parameters={
-                'source': 'What file should we download'
+                'source': 'The file to download'
             }
         )
 
@@ -31,3 +28,10 @@ class Download(FileSystemCommand):
             }
         }
         client_sio.emit('task', download_task)
+
+    @property
+    def usage(self) -> str:
+        return textwrap.dedent("""\
+        usage:
+            download <source>
+        """)
