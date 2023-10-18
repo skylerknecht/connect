@@ -1,6 +1,7 @@
 import json
 import asyncio
 import socket
+import ipaddress
 
 from .stream_client import StreamClient
 from connect.output import display
@@ -9,33 +10,88 @@ from connect.convert import base64_to_bytes
 
 class StreamServer:
 
-    def __init__(self, agent_id, ip, port):
-        self.connect_requests = []
+    def __init__(self, agent_id, connection_string):
         self.stream_clients = {}
         self.agent_id = agent_id
-        self.address = ip
-        self.port = int(port)
+        self.lhost = None
+        self.lport = None
+        self.rhost = None
+        self.rport = None
+        self.parse_connection_string(connection_string)
+
+    @staticmethod
+    def validate_ip(ip_str):
+        try:
+            # Use the ipaddress module to validate the IP address
+            ipaddress.ip_address(ip_str)
+            return True
+        except ValueError:
+            return False
+
+    @staticmethod
+    def validate_port(port_str):
+        try:
+            port = int(port_str)
+            return 0 <= port <= 65535
+        except ValueError:
+            return False
 
     def handle_stream_downstream(self, results):
-        identifier = results['client_id']
-        if identifier not in self.stream_clients:
+        stream_client_id = results['client_id']
+        if stream_client_id not in self.stream_clients:
             return
-        self.stream_clients[identifier].downstream_buffer.append(base64_to_bytes(results['data']))
-
-    async def handle_stream_connect(self, results):
-        raise NotImplementedError("Server has not implemented handle_stream_connect")
+        self.stream_clients[stream_client_id].downstream_buffer.append(base64_to_bytes(results['data']))
 
     async def handle_stream_disconnect(self, results):
         raise NotImplementedError("Server has not implemented handle_stream_disconnect")
 
+    def parse_connection_string(self, connection_string):
+        raise NotImplementedError("Server has not implemented parse_connection_string")
+
+
+class RemoteStreamServer(StreamServer):
+    STREAMER_TYPE = 'remote'
+
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.connect_results = []
+
+    async def handle_stream_disconnect(self, results):
+        raise NotImplementedError("Server has not implemented handle_stream_disconnect")
+
+    async def handle_stream_connect_request(self, results):
+        raise NotImplementedError("Server has not implemented handle_stream_connect")
+
+    def parse_connection_string(self, connection_string):
+        # For remote streamers, expect both remote and local host/port (e.g., "192.168.1.20:9443:127.0.0.1:9050")
+        parts = connection_string.split(':')
+        if len(parts) != 4:
+            raise ValueError("Invalid connection string for remote streamer.")
+
+        self.rhost, self.rport, self.lhost, self.lport = parts
+        self.lport = int(self.lport)
+        self.rport = int(self.rport)
+
+        # Validate rhost, rport, lhost, and lport
+        if not self.validate_ip(self.rhost):
+            raise ValueError(f"{self.rhost} is not a valid remote host")
+        if not self.validate_port(self.rport):
+            raise ValueError(f"{self.rport} is not a valid remote port")
+        if not self.validate_ip(self.lhost):
+            raise ValueError(f"{self.lhost} is not a valid local host")
+        if not self.validate_port(self.lport):
+            raise ValueError(f"{self.lport} is not a valid local port")
+
 
 class LocalStreamServer(StreamServer):
+    STREAMER_TYPE = 'local'
 
-    def __init__(self, agent_id, ip, port):
-        super().__init__(agent_id, ip, port)
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.connect_requests = []
         self.listening = True
         self.socks_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socks_server.bind((self.address, self.port))
+        self.socks_server.bind((self.lhost, self.lport))
         self.socks_server.settimeout(2.0)
         self.socks_server.listen(10)
 
@@ -48,20 +104,82 @@ class LocalStreamServer(StreamServer):
             await asyncio.to_thread(self.handle_stream_client, client_socket)
         self.socks_server.close()
 
+    def stop(self):
+        self.listening = False
+        for stream_client in self.stream_clients.values():
+            stream_client.connected = False
+
     def handle_stream_client(self, client_socket):
-        raise NotImplementedError("Server has not implemented handle_stream_client")
+        self.stream_clients[id(client_socket)] = StreamClient(self.agent_id, client_socket)
+        self.connect_requests.append(json.dumps({
+            'atype': 1,
+            'address': self.rhost,
+            'port': self.rport,
+            'client_id': id(client_socket)
+        }))
+
+    async def handle_stream_disconnect(self, results):
+        stream_client_id = results['client_id']
+        if stream_client_id not in self.stream_clients:
+            return
+        self.stream_clients[results['client_id']].client_socket.close()
+        del self.stream_clients[results['client_id']]
+
+    async def handle_stream_connect_results(self, results):
+        stream_client_id = results['client_id']
+        if stream_client_id not in self.stream_clients:
+            return
+        await self.stream_clients[results['client_id']].connect()
+
+    def parse_connection_string(self, connection_string):
+        # For local streamers, expect both local and remote host/port (e.g., "127.0.0.1:9050:192.168.1.20:9443")
+        parts = connection_string.split(':')
+        if len(parts) != 4:
+            raise ValueError("Invalid connection string for local streamer.")
+
+        self.lhost, self.lport, self.rhost, self.rport = parts
+        self.lport = int(self.lport)
+        self.rport = int(self.rport)
+
+        # Validate rhost, rport, lhost, and lport
+        if not self.validate_ip(self.rhost):
+            raise ValueError(f"{self.rhost} is not a valid remote host")
+        if not self.validate_port(self.rport):
+            raise ValueError(f"{self.rport} is not a valid remote port")
+        if not self.validate_ip(self.lhost):
+            raise ValueError(f"{self.lhost} is not a valid local host")
+        if not self.validate_port(self.lport):
+            raise ValueError(f"{self.lport} is not a valid local port")
 
 
 class DynamicStreamServer(LocalStreamServer):
+    STREAMER_TYPE = 'dynamic'
     SOCKS_VERSION = 5
 
-    def __init__(self, agent_id, ip, port):
-        super().__init__(agent_id, ip, port)
+    def __init__(self, *args):
+        super().__init__(*args)
         self.atype_functions = {
             b'\x01': self._parse_ipv4_address,
             b'\x03': self._parse_domain_name,
             b'\x04': self._parse_ipv6_address
         }
+
+    def parse_connection_string(self, connection_string):
+        # For dynamic streamers, expect only a local host and port (e.g., "127.0.0.1:9050")
+        parts = connection_string.split(':')
+        if len(parts) != 2:
+            raise ValueError(f"{connection_string} is not a valid connection string for {self.STREAMER_TYPE}.")
+
+        self.lhost, self.lport = parts[0], int(parts[1])
+
+        # Validate lhost and lport
+        if not self.validate_ip(self.lhost):
+            raise ValueError(f"{self.lhost} is not a valid local host")
+        if not self.validate_port(self.lport):
+            raise ValueError(f"{self.lport} is not a valid local port")
+
+        # Set rhost and rport to '*' as required
+        self.rhost, self.rport = '*', '*'
 
     def send_socks_connect_reply(self, results):
         identifier = results['client_id']
@@ -72,14 +190,20 @@ class DynamicStreamServer(LocalStreamServer):
         reply = self.generate_reply(atype, rep, bind_addr, bind_port)
         self.stream_clients[identifier].client_socket.sendall(reply)
 
-    async def handle_stream_connect(self, results):
+    async def handle_stream_connect_results(self, results):
+        stream_client_id = results['client_id']
+        if stream_client_id not in self.stream_clients:
+            return
         self.send_socks_connect_reply(results)
         await self.stream_clients[results['client_id']].connect()
 
-    async def handle_stream_disconnect(self, results):
+    async def handle_stream_disconnect_results(self, results):
+        stream_client_id = results['client_id']
+        if stream_client_id not in self.stream_clients:
+            return
         self.send_socks_connect_reply(results)
         self.stream_clients[results['client_id']].client_socket.close()
-        del self.stream_clients
+        del self.stream_clients[results['client_id']]
 
     def handle_stream_client(self, client_socket):
         self.stream_clients[id(client_socket)] = StreamClient(self.agent_id, client_socket)
@@ -100,7 +224,7 @@ class DynamicStreamServer(LocalStreamServer):
         atype = client_socket.recv(1)
         try:
             address, port = self.atype_functions.get(atype)(client_socket), int.from_bytes(client_socket.recv(2), 'big',
-                                                                              signed=False)
+                                                                                           signed=False)
             return atype, address, port
         except KeyError:
             client_socket.sendall(self.generate_reply(str(int.from_bytes(atype, byteorder='big')), 8, None, None))
@@ -154,8 +278,8 @@ class DynamicStreamServer(LocalStreamServer):
             client_socket.close()
             return
         self.connect_requests.append(json.dumps({
-                'atype': int.from_bytes(atype, byteorder='big'),
-                'address': address,
-                'port': port,
-                'client_id': id(client_socket)
+            'atype': int.from_bytes(atype, byteorder='big'),
+            'address': address,
+            'port': port,
+            'client_id': id(client_socket)
         }))

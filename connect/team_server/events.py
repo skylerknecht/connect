@@ -52,7 +52,8 @@ class TeamServerEvents:
                 new_implant = ImplantModel()
                 session.add(new_implant)
                 session.commit()
-                await self.sio_server.emit('success', f'Implant {new_implant.id} created their key is: {new_implant.key}')
+                await self.sio_server.emit('success',
+                                           f'Implant {new_implant.id} created their key is: {new_implant.key}')
                 return
 
             if list_implant:
@@ -75,14 +76,17 @@ class TeamServerEvents:
                     await self.sio_server.emit('error', f'Agent `{create_task["agent"]}` does not exist.')
                     return
 
-                parameters = ','.join(parameter for parameter in create_task.get('parameters', []))  # ToDo: If parameters are provided that are not a list then break
-                misc = ','.join(parameter for parameter in create_task.get('misc', []))  # ToDo: If misc is provided that is not a list then break
+                parameters = ','.join(parameter for parameter in create_task.get('parameters',
+                                                                                 []))  # ToDo: If parameters are provided that are not a list then break
+                misc = ','.join(parameter for parameter in
+                                create_task.get('misc', []))  # ToDo: If misc is provided that is not a list then break
                 module = create_task.get('module', None)
 
                 if not await self.load_module(agent, module, session):
                     return
 
-                new_task = TaskModel(agent=agent, method=create_task['method'], type=create_task['type'], parameters=parameters, misc=misc)
+                new_task = TaskModel(agent=agent, method=create_task['method'], type=create_task['type'],
+                                     parameters=parameters, misc=misc)
                 session.add(new_task)
                 await self.sio_server.emit('information', f'Scheduled task for method: `{new_task.method}`')
                 return
@@ -115,7 +119,8 @@ class TeamServerEvents:
         list_listener = 'list' in data.keys()
 
         if create_listener:
-            await self.listener_manager.create_listener(create_listener['ip'], create_listener['port'], self.task_manger, self.sio_server, self.stream_server_manager)
+            await self.listener_manager.create_listener(create_listener['ip'], create_listener['port'],
+                                                        self.task_manger, self.sio_server, self.stream_server_manager)
             return
 
         if stop_listener:
@@ -134,14 +139,19 @@ class TeamServerEvents:
 
     async def streamer(self, sid, data):
         create_streamer = data.get('create', None)
+        stop_streamer = data.get('stop', None)
         list_streamers = 'list' in data.keys()
 
         if create_streamer:
             agent_id = create_streamer['agent_id']
             stream_server_type = create_streamer['type']
-            ip = create_streamer['ip']
-            port = create_streamer['port']
-            await self.stream_server_manager.create_stream_server(stream_server_type, agent_id, ip, port)
+            connection_string = create_streamer['connection_string']
+            await self.stream_server_manager.create_stream_server(stream_server_type, agent_id, connection_string)
+            return
+
+        if stop_streamer:
+            agent_id = stop_streamer['agent_id']
+            await self.stream_server_manager.stop_stream_server(agent_id)
             return
 
         if list_streamers:

@@ -1,4 +1,4 @@
-from .stream_server import DynamicStreamServer
+from .stream_server import LocalStreamServer, RemoteStreamServer, DynamicStreamServer
 
 
 class StreamServerManager:
@@ -7,6 +7,8 @@ class StreamServerManager:
         self.sio_server = sio_server
         self.stream_servers = {}
         self.stream_server_types = {
+            'local': LocalStreamServer,
+            'remote': RemoteStreamServer,
             'dynamic': DynamicStreamServer
         }
 
@@ -21,8 +23,11 @@ class StreamServerManager:
         for streamer in self.stream_servers.values():
             info = {
                 'agent': streamer.agent_id,
-                'ip': streamer.address,
-                'port': streamer.port,
+                'type': streamer.STREAMER_TYPE,
+                'lhost': streamer.lhost,
+                'lport': streamer.lport,
+                'rhost': streamer.rhost,
+                'rport': streamer.rport,
             }
             streamer_info.append(info)
         return streamer_info
@@ -50,7 +55,12 @@ class StreamServerManager:
             })
         return stream_tasks
 
-    async def create_stream_server(self, server_type: str, agent_id: str, ip: str, port: int):
+    async def stop_stream_server(self, agent_id):
+        self.stream_servers[agent_id].stop()
+        await self.sio_server.emit('success' f'{agent_id} stopped streaming')
+        del self.stream_servers[agent_id]
+
+    async def create_stream_server(self, server_type: str, agent_id: str, connection_string: str):
         if server_type not in self.stream_server_types:
             await self.sio_server.emit('error', f'{server_type} is not a valid server type')
             return
@@ -59,18 +69,18 @@ class StreamServerManager:
             return
         server = self.stream_server_types[server_type]
         try:
-            server = server(agent_id, ip, port)
+            server = server(agent_id, connection_string)
         except Exception as e:
-            await self.sio_server.emit('error', f'Failed to start {server_type} on {ip}:{port} for {agent_id}: {e}')
+            await self.sio_server.emit('error', f'Failed to start {server_type} with {connection_string} for {agent_id}: {e}')
             return
         self.stream_servers[agent_id] = server
-        await self.sio_server.emit('success', f'Started {server_type} stream server on {ip}:{port} for {agent_id}')
+        await self.sio_server.emit('success', f'Started {server_type} stream server with {connection_string} for {agent_id}')
         await server.start()
 
     async def handle_stream_connect(self, agent_id, results):
         if agent_id not in self.stream_servers:
             return
-        await self.stream_servers[agent_id].handle_stream_connect(results)
+        await self.stream_servers[agent_id].handle_stream_connect_results(results)
 
     async def handle_stream_disconnect(self, agent_id, results):
         if agent_id not in self.stream_servers:
