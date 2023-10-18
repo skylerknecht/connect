@@ -76,7 +76,8 @@ class AgentModel(Base):
         if not self.check_in:
             return 'Not Connected'
         check_in_seconds = self.get_delta_seconds()
-        check_in_milliseconds = check_in_seconds * 1000
+        check_in_milliseconds = int(check_in_seconds * 1000)
+        check_in_seconds = int(check_in_seconds)
         check_in_minutes = check_in_seconds // 60
         check_in_hours = check_in_minutes // 60
 
@@ -92,7 +93,7 @@ class AgentModel(Base):
     def get_delta_seconds(self):
         if not self.check_in:
             return -1
-        return int((datetime.datetime.now() - self.check_in).total_seconds())
+        return (datetime.datetime.now() - self.check_in).total_seconds()
 
     def get_agent(self):
         return {

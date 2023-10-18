@@ -82,7 +82,7 @@ class TaskManager:
                 if agent:
                     batch_request = agent.get_tasks(session)
                     if not agent.check_in:
-                        await self.sio_team_server.emit('success', f'{agent.id} has successfully connected.')
+                        await self.sio_team_server.emit('success', f'Implant successfully upgraded to Agent {agent.id}')
                     agent.check_in = datetime.datetime.now()
                     session.add(agent)
                     continue
