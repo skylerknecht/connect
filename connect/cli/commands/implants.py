@@ -17,11 +17,11 @@ class Implant(ConnectCommand):
 
     def execute_command(self, parameters, client_sio):
         if len(parameters) < 1:
-            client_sio.emit('implant', json.dumps({'list': None}))
+            client_sio.emit('implant', {'list': None})
             return
         switch = parameters[0]
         if switch == 'create':
-            client_sio.emit('implant', json.dumps({'create': None}))
+            client_sio.emit('implant', {'create': None})
             return
         display(f'Invalid parameters: {" ".join(parameters)}', 'ERROR')
 

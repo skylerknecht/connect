@@ -19,4 +19,4 @@ class Drives(FileSystemCommand):
                 'module': self.module,
             }
         }
-        client_sio.emit('task', json.dumps(drives_task))
+        client_sio.emit('task', drives_task)

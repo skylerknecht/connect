@@ -18,4 +18,4 @@ class Kill(STDPapiAgentCommand):
                 'type': 1,
             }
         }
-        client_sio.emit('task', json.dumps(kill_task))
+        client_sio.emit('task', kill_task)

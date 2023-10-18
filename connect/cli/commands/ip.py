@@ -19,4 +19,4 @@ class IP(SystemInformationCommand):
                 'module': self.module
             }
         }
-        client_sio.emit('task', json.dumps(ip_task))
+        client_sio.emit('task', ip_task)

@@ -6,6 +6,7 @@ import sys
 from . import team_server
 from connect import BANNER
 from connect import decrease_debug_level, increase_debug_level
+from connect import display
 
 # Stop profiling and print the results
 parser = argparse.ArgumentParser(description=BANNER, formatter_class=argparse.RawTextHelpFormatter,
@@ -22,4 +23,5 @@ while True:
         if user_input == 'd':
             decrease_debug_level()
     except KeyboardInterrupt:
-        sys.exit()
+        display( 'Shutting down', 'INFORMATION')
+        sys.exit(0)

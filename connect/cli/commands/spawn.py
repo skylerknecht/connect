@@ -27,9 +27,9 @@ class Spawn(MiscAgentCommand):
                 'type': 1,
                 'module': f'{self.MODULE_PATH}/Spawn.dll',
                 'parameters': [
-                    string_to_base64(parameters[0]),
-                    string_to_base64(parameters[1])
+                    parameters[0],
+                    parameters[1]
                 ]
             }
         }
-        client_sio.emit('task', json.dumps(upload_task))
+        client_sio.emit('task', upload_task)

@@ -5,14 +5,13 @@ class ListenerManager:
     def __init__(self):
         self.listeners = {}
 
-    async def create_listener(self, ip, port, socks_manager, sio_team_server):
+    async def create_listener(self, ip, port, task_manager, sio_team_server, stream_server_manager):
         """
         Create a new ConnectListener and add it to the manager.
 
         Args:
             ip (str): The IP address or hostname of the server.
             port (int): The port number to connect to on the server.
-            socks_manager: Manager to create and shutdown socks servers.
             sio_team_server:
         """
         # Check to see if a listener already exists.
@@ -21,7 +20,7 @@ class ListenerManager:
             return
 
         # Create and Start the listener
-        new_listener = ConnectListener(ip, port, socks_manager, sio_team_server)
+        new_listener = ConnectListener(ip, port, task_manager, sio_team_server, stream_server_manager)
         await new_listener.start()
 
         # Store the listener in the dictionary

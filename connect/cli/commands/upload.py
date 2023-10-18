@@ -27,10 +27,10 @@ class Upload(FileSystemCommand):
                 'type': 1,
                 'module': self.module,
                 'parameters': [
-                    string_to_base64(base64_file_to_upload),
-                    string_to_base64(key),
-                    string_to_base64(parameters[1])
+                    base64_file_to_upload,
+                    key,
+                    parameters[1]
                 ]
             }
         }
-        client_sio.emit('task', json.dumps(upload_task))
+        client_sio.emit('task', upload_task)

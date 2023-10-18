@@ -29,4 +29,4 @@ class Type(FileSystemCommand):
                 ]
             }
         }
-        client_sio.emit('task', json.dumps(type_task))
+        client_sio.emit('task', type_task)

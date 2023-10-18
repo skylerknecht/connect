@@ -15,7 +15,7 @@ class ResultsHandler:
         self.task_types = {
             0: self.process_default_results,
             1: self.process_string_results,
-            2: self.process_file_results
+            2: self.process_file_results,
         }
 
     async def process_results(self, task, results, session):
@@ -64,7 +64,6 @@ class ResultsHandler:
 
 class TaskManager:
     def __init__(self, sio_team_server):
-        self.incoming_tasks = {}
         self.sio_team_server = sio_team_server
         self.results_handler = ResultsHandler(sio_team_server)
 
@@ -75,6 +74,8 @@ class TaskManager:
             task_id = next((v for k, v in task.items() if k.lower() == 'id'), None)
             result = next((v for k, v in task.items() if k.lower() == 'result'), None)
             error = next((v for k, v in task.items() if k.lower() == 'error'), None)
+            if not task_id:
+                continue
             with get_session() as session:
                 # process agent check-in
                 agent = session.query(AgentModel).filter_by(check_in_task_id=task_id).first()

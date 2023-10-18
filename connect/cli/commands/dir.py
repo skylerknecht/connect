@@ -25,8 +25,8 @@ class Dir(FileSystemCommand):
                 'type': 1,
                 'module': self.module,
                 'parameters': [
-                    string_to_base64(parameters[0])
+                    parameters[0]
                 ]
             }
         }
-        client_sio.emit('task', json.dumps(dir_task))
+        client_sio.emit('task', dir_task)

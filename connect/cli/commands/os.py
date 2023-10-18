@@ -19,4 +19,4 @@ class OS(SystemInformationCommand):
                 'module': self.module
             }
         }
-        client_sio.emit('task', json.dumps(os_task))
+        client_sio.emit('task', os_task)

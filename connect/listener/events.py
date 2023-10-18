@@ -8,18 +8,18 @@ from connect.server.models import AgentModel, get_session
 
 class ListenerEvents:
 
-    def __init__(self, sio_server, sio_team_server, task_manager, socks_manager):
-        self.socks_manager = socks_manager
+    def __init__(self, sio_server, sio_team_server, task_manager, stream_server_manager):
         self.sio_team_server = sio_team_server
         self.sio_server = sio_server
-        self.sio_server.on('socks', self.socks)
-        self.sio_server.on('socks_connect_results', self.socks_connect_results)
-        self.sio_server.on('socks_downstream_results', self.socks_downstream_results)
+        self.sio_server.on('stream_connect_results', self.stream_connect_results)
+        self.sio_server.on('stream_disconnect_results', self.stream_disconnect_results)
+        self.sio_server.on('stream_downstream_results', self.stream_downstream_results)
         self.sio_server.on('batch_response', self.batch_response)
         self.sio_server.on('connect', self.connect)
         self.sio_server.on('disconnect', self.disconnect)
         self.sio_server.on('pong', self.pong)
         self.task_manager = task_manager
+        self.stream_server_manager = stream_server_manager
         self.agent_id_to_sid = {}
         self.sid_to_agent_id = {}
 
@@ -51,21 +51,14 @@ class ListenerEvents:
     async def batch_response(self, sid, data):
         await self.task_manager.parse_batch_response([data])
 
-    async def socks(self, sid):
+    async def stream_connect_results(self, sid, results):
         agent_id = self.sid_to_agent_id[sid]
-        if agent_id in self.socks_manager.socks_servers:
-            await self.sio_team_server.emit('information', f'Attempting to shutdown socks server for Agent {agent_id}')
-            await self.socks_manager.shutdown_socks_server(agent_id, self.sio_team_server)
-        else:
-            await self.sio_team_server.emit('information', f'Attempting to start socks server for Agent {agent_id}')
-            await self.socks_manager.create_socks_server(agent_id, '127.0.0.1', random.randint(9050, 9100), self.sio_team_server)
+        await self.stream_server_manager.handle_stream_connect(agent_id, results)
 
-    async def socks_connect_results(self, sid, results):
-        threading.Thread(
-            target=self.socks_manager.handle_socks_task_results,
-            args=('socks_connect', json.loads(results),),
-            daemon=True
-        ).start()
+    async def stream_disconnect_results(self, sid, results):
+        agent_id = self.sid_to_agent_id[sid]
+        await self.stream_server_manager.handle_stream_disconnect(agent_id, results)
 
-    async def socks_downstream_results(self, sid, results):
-        self.socks_manager.handle_socks_task_results('socks_downstream', json.loads(results))
+    async def stream_downstream_results(self, sid, results):
+        agent_id = self.sid_to_agent_id[sid]
+        self.stream_server_manager.handle_stream_downstream(agent_id, results)

@@ -23,4 +23,4 @@ class Agent(ConnectCommand):
         except ValueError:
             display('Seconds must be an integer', 'ERROR')
             return
-        client_sio.emit('agent', json.dumps({'list': {'seconds': seconds}}))
+        client_sio.emit('agent', {'list': {'seconds': seconds}})

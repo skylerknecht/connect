@@ -19,4 +19,4 @@ class PID(SystemInformationCommand):
                 'module': self.module
             }
         }
-        client_sio.emit('task', json.dumps(pid_task))
+        client_sio.emit('task', pid_task)

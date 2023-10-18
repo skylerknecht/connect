@@ -20,7 +20,7 @@ class Shell(ExecutionCommand):
             return
         shell_arguments = []
         for parameter in parameters:
-            shell_arguments.append(string_to_base64(parameter))
+            shell_arguments.append(parameter)
         shell_task = {
             'create': {
                 'agent': current_agent,
@@ -32,4 +32,4 @@ class Shell(ExecutionCommand):
                 ]
             }
         }
-        client_sio.emit('task', json.dumps(shell_task))
+        client_sio.emit('task', shell_task)

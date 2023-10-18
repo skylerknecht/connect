@@ -26,8 +26,8 @@ class Download(FileSystemCommand):
                 'type': 2,
                 'module': self.module,
                 'parameters': [
-                    string_to_base64(parameters[0]),
+                    parameters[0],
                 ]
             }
         }
-        client_sio.emit('task', json.dumps(download_task))
+        client_sio.emit('task', download_task)

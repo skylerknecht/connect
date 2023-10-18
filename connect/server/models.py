@@ -1,6 +1,5 @@
 import datetime
 import os
-import threading
 
 from contextlib import contextmanager
 from connect.output import display
@@ -14,13 +13,12 @@ Base = declarative_base()
 # Create a database engine and session
 engine = create_engine('sqlite:///instance/connect.db')
 Session = sessionmaker(bind=engine)
-lock = threading.Lock()
 
 
 @contextmanager
 def get_session():
-    #with lock:
     session = Session()
+    #while True:
     try:
         yield session
         session.commit()

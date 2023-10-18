@@ -18,4 +18,4 @@ class Interactive(STDPapiAgentCommand):
                 'type': 0,
             }
         }
-        client_sio.emit('task', json.dumps(interactive_task))
+        client_sio.emit('task', interactive_task)

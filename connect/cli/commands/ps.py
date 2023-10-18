@@ -19,4 +19,4 @@ class PS(ProcessesCommand):
                 'module': self.module
             }
         }
-        client_sio.emit('task', json.dumps(ps_task))
+        client_sio.emit('task', ps_task)

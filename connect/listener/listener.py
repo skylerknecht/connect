@@ -1,15 +1,15 @@
 import asyncio
 import socketio
+
 from aiohttp import web
 from connect.server.models import AgentModel, get_session
-from connect.server.tasks import TaskManager
 from .events import ListenerEvents
 from .routes import ListenerRoutes
 
 
 class ConnectListener:
 
-    def __init__(self, ip, port, socks_manager, sio_team_server):
+    def __init__(self, ip, port, task_manager, sio_team_server, stream_server_manager):
         """
         Initialize a new Connect Listener
 
@@ -20,14 +20,14 @@ class ConnectListener:
         """
         self.ip = ip
         self.port = port
+        self.task_manager = task_manager
         self.sio_team_server = sio_team_server
+        self.stream_server_manager = stream_server_manager
 
         self.sio_server = socketio.AsyncServer(async_mode='aiohttp')
-        task_manager = TaskManager(self.sio_team_server)
-        self.listener_events = ListenerEvents(self.sio_server, self.sio_team_server, task_manager, socks_manager)
+        self.listener_events = ListenerEvents(self.sio_server, self.sio_team_server, task_manager, stream_server_manager)
         self.application = web.Application()
         self.listener_routes = ListenerRoutes(self.application, self.sio_team_server, task_manager)
-        self.socks_manager = socks_manager
 
         self.loop = asyncio.get_event_loop()
         self.runner = web.AppRunner(self.application)
@@ -62,7 +62,9 @@ class ConnectListener:
                     sid = self.listener_events.agent_id_to_sid.get(agent.id, None)
                     if not sid:
                         continue
-                    for task in self.socks_manager.get_socks_tasks(agent.id):
-                        await self.sio_server.emit(task.event, task.data, room=sid)
-                    await self.sio_server.emit('tasks', agent.get_tasks(session), room=sid)
+                    batch_request = agent.get_tasks(session)
+                    if batch_request:
+                        await self.sio_server.emit('batch_request', batch_request, room=sid)
+                    for task in self.stream_server_manager.retrieve_stream_tasks(agent.id):
+                        await self.sio_server.emit(task['event'], task['data'], room=sid)
             await self.sio_server.sleep(0.1)

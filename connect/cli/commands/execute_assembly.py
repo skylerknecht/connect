@@ -35,10 +35,10 @@ class ExecuteAssembly(ExecutionCommand):
                 'type': 1,
                 'module': self.module,
                 'parameters': [
-                    string_to_base64(base64_assembly_to_execute),
-                    string_to_base64(key),
+                    base64_assembly_to_execute,
+                    key,
                     *assembly_arguments
                 ]
             }
         }
-        client_sio.emit('task', json.dumps(shell_task))
+        client_sio.emit('task', shell_task)

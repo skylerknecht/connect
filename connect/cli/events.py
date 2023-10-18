@@ -11,6 +11,7 @@ class Events:
         self.sio.on('agents', self.agents)
         self.sio.on('implants', self.implants)
         self.sio.on('listeners', self.listeners)
+        self.sio.on('streamers', self.streamers)
         self.sio.on('default', self.default)
         self.sio.on('error', self.error)
         self.sio.on('information', self.information)
@@ -28,6 +29,10 @@ class Events:
 
     def listeners(self, data):
         table = self.create_table('LISTENERS', data[0].keys(), data)
+        self.notify(table, 'DEFAULT')
+
+    def streamers(self, data):
+        table = self.create_table('STREAMERS', data[0].keys(), data)
         self.notify(table, 'DEFAULT')
 
     def default(self, data):

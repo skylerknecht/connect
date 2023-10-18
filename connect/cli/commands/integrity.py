@@ -19,4 +19,4 @@ class Integrity(SystemInformationCommand):
                 'module': self.module
             }
         }
-        client_sio.emit('task', json.dumps(integrity_task))
+        client_sio.emit('task', integrity_task)

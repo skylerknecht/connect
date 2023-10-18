@@ -18,7 +18,7 @@ class Listeners(ConnectCommand):
 
     def execute_command(self, parameters, client_sio):
         if len(parameters) < 1:
-            client_sio.emit('listener', json.dumps({'list': None}))
+            client_sio.emit('listener', {'list': None})
             return
         switch = parameters[0]
         if switch == 'create':
@@ -36,7 +36,7 @@ class Listeners(ConnectCommand):
                     'port': int(parameters[2]),
                 }
             }
-            client_sio.emit('listener', json.dumps(listener_task))
+            client_sio.emit('listener', listener_task)
             return
         if switch == 'stop':
             try:
@@ -53,7 +53,7 @@ class Listeners(ConnectCommand):
                     'port': int(parameters[2]),
                 }
             }
-            client_sio.emit('listener', json.dumps(listener_task))
+            client_sio.emit('listener', listener_task)
             return
         display(f'Invalid parameters: {" ".join(parameters)}', 'ERROR')
 

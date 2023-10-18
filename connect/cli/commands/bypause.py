@@ -19,4 +19,4 @@ class ByPause(MiscAgentCommand):
                 'module': f'{self.MODULE_PATH}/Bypause.dll'
             }
         }
-        client_sio.emit('task', json.dumps(bypause_task))
+        client_sio.emit('task', bypause_task)

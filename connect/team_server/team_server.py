@@ -5,7 +5,6 @@ from . import events
 from aiohttp import web
 from connect.generate import string_identifier
 from connect.output import display
-from connect.socks import manager
 
 
 class TeamServer:
@@ -17,7 +16,7 @@ class TeamServer:
         self.sio_server = socketio.AsyncServer(async_mode='aiohttp')
 
     def run(self, arguments):
-        events.TeamServerEvents(f'http://{arguments.ip}:{arguments.port}/', self.key, self.sio_server, manager.SocksManager())
+        events.TeamServerEvents(f'http://{arguments.ip}:{arguments.port}/', self.key, self.sio_server)
         self.sio_server.attach(self.application)
         runner = web.AppRunner(self.application)
         loop = asyncio.new_event_loop()

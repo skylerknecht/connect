@@ -19,4 +19,4 @@ class Hostname(SystemInformationCommand):
                 'module': self.module
             }
         }
-        client_sio.emit('task', json.dumps(hostname_task))
+        client_sio.emit('task', hostname_task)

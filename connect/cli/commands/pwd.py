@@ -19,4 +19,4 @@ class PWD(FileSystemCommand):
                 'module': self.module
             }
         }
-        client_sio.emit('task', json.dumps(pwd_task))
+        client_sio.emit('task', pwd_task)

@@ -19,4 +19,4 @@ class Whoami(SystemInformationCommand):
                 'module': self.module
             }
         }
-        client_sio.emit('task', json.dumps(whoami_task))
+        client_sio.emit('task', whoami_task)

@@ -17,7 +17,7 @@ from .pid import PID
 from .ps import PS
 from .pwd import PWD
 from .shell import Shell
-from .socks import Socks
+from .streamers import Streamers
 from .spawn import Spawn
 from .type import Type as _Type
 from .upload import Upload
@@ -42,7 +42,7 @@ pid = PID()
 ps = PS()
 pwd = PWD()
 shell = Shell()
-socks = Socks()
+socks = Streamers()
 spawn = Spawn()
 _type = _Type()
 upload = Upload()
