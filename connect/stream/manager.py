@@ -55,9 +55,8 @@ class StreamServerManager:
             })
         return stream_tasks
 
-    async def stop_stream_server(self, agent_id):
+    def stop_stream_server(self, agent_id):
         self.stream_servers[agent_id].stop()
-        await self.sio_server.emit('success' f'{agent_id} stopped streaming')
         del self.stream_servers[agent_id]
 
     async def create_stream_server(self, server_type: str, agent_id: str, connection_string: str):
