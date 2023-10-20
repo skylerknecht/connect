@@ -151,8 +151,7 @@ class TeamServerEvents:
 
         if stop_streamer:
             agent_id = stop_streamer['agent_id']
-            self.stream_server_manager.stop_stream_server(agent_id)
-            await self.sio_server.emit('success', f'{agent_id} is no longer streaming')
+            await self.stream_server_manager.stop_stream_server(agent_id)
             return
 
         if list_streamers:
