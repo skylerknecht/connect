@@ -40,7 +40,4 @@ class StreamClient:
         self.client_socket.close()
 
     def create_upstream_task(self, data):
-        self.upstream_buffer.append(json.dumps({
-            'data': bytes_to_base64(data),
-            'client_id': id(self.client_socket)
-        }))
+        self.upstream_buffer.append(bytes_to_base64(data))

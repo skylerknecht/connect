@@ -1,11 +1,10 @@
 import argparse
 import threading
-import curses
 import sys
+import time
 
 from . import team_server
 from connect import BANNER
-from connect import decrease_debug_level, increase_debug_level
 from connect import display
 
 # Stop profiling and print the results
@@ -17,11 +16,7 @@ parser.add_argument('--ssl', nargs=2, metavar=('CERT', 'KEY'), help='Use SSL.')
 threading.Thread(target=team_server.run, args=(parser.parse_args(),), daemon=True).start()
 while True:
     try:
-        user_input = input('(debug)~# ')
-        if user_input == 'i':
-            increase_debug_level()
-        if user_input == 'd':
-            decrease_debug_level()
+        time.sleep(10)
     except KeyboardInterrupt:
         display( 'Shutting down', 'INFORMATION')
         sys.exit(0)

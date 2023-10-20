@@ -10,8 +10,11 @@ from connect.convert import base64_to_bytes
 
 class StreamServer:
 
-    def __init__(self, agent_id, connection_string):
+    def __init__(self, agent_id, connection_string, sio_server):
+        self.connection_string = connection_string
+        self.sio_server = sio_server
         self.stream_clients = {}
+        self.listening = True
         self.agent_id = agent_id
         self.lhost = None
         self.lport = None
@@ -43,7 +46,11 @@ class StreamServer:
         self.stream_clients[stream_client_id].downstream_buffer.append(base64_to_bytes(results['data']))
 
     async def handle_stream_disconnect(self, results):
-        raise NotImplementedError("Server has not implemented handle_stream_disconnect")
+        stream_client_id = results['client_id']
+        if stream_client_id not in self.stream_clients:
+            return
+        self.stream_clients[results['client_id']].client_socket.close()
+        del self.stream_clients[results['client_id']]
 
     def parse_connection_string(self, connection_string):
         raise NotImplementedError("Server has not implemented parse_connection_string")
@@ -55,12 +62,44 @@ class RemoteStreamServer(StreamServer):
     def __init__(self, *args):
         super().__init__(*args)
         self.connect_results = []
+        self.serve_requests = []
 
-    async def handle_stream_disconnect(self, results):
-        raise NotImplementedError("Server has not implemented handle_stream_disconnect")
+    async def start(self):
+        self.serve_requests.append(json.dumps({
+            'ip': self.rhost,
+            'port': self.rport
+        }))
+        await self.sio_server.emit('information', f'Attempting to connect streamer {self.connection_string}')
 
-    async def handle_stream_connect_request(self, results):
-        raise NotImplementedError("Server has not implemented handle_stream_connect")
+    async def stop(self):
+        await self.sio_server.emit('information', f'Attempting to shutdown streamer {self.connection_string}')
+        self.listening = False
+        for stream_client in self.stream_clients.values():
+            stream_client.connected = False
+
+    async def handle_stream_connect_request(self, request):
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client_socket.settimeout(1.0)
+        try:
+            await asyncio.to_thread(client_socket.connect, (self.lhost, self.lport))
+            self.stream_clients[request['client_id']] = StreamClient(self.agent_id, client_socket)
+            rep = 0
+        except socket.error:
+            rep = 1
+
+        response_dict = {
+            'atype': 1,
+            'rep': rep,
+            'bind_addr': None,
+            'bind_port': None,
+            'client_id': request['client_id']
+        }
+
+        self.connect_results.append(json.dumps(response_dict))
+
+        if rep == 0:
+            await self.stream_clients[request['client_id']].connect()
+
 
     def parse_connection_string(self, connection_string):
         # For remote streamers, expect both remote and local host/port (e.g., "192.168.1.20:9443:127.0.0.1:9050")
@@ -89,13 +128,13 @@ class LocalStreamServer(StreamServer):
     def __init__(self, *args):
         super().__init__(*args)
         self.connect_requests = []
-        self.listening = True
         self.socks_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socks_server.bind((self.lhost, self.lport))
         self.socks_server.settimeout(2.0)
         self.socks_server.listen(10)
 
     async def start(self):
+        await self.sio_server.emit('success', f'Streamer {self.connection_string} is connected')
         while self.listening:
             try:
                 client_socket, addr = await asyncio.to_thread(self.socks_server.accept)
@@ -104,7 +143,8 @@ class LocalStreamServer(StreamServer):
             await asyncio.to_thread(self.handle_stream_client, client_socket)
         self.socks_server.close()
 
-    def stop(self):
+    async def stop(self):
+        await self.sio_server.emit('success', f'Streamer {self.connection_string} is shutdown')
         self.listening = False
         for stream_client in self.stream_clients.values():
             stream_client.connected = False
@@ -117,13 +157,6 @@ class LocalStreamServer(StreamServer):
             'port': self.rport,
             'client_id': id(client_socket)
         }))
-
-    async def handle_stream_disconnect(self, results):
-        stream_client_id = results['client_id']
-        if stream_client_id not in self.stream_clients:
-            return
-        self.stream_clients[results['client_id']].client_socket.close()
-        del self.stream_clients[results['client_id']]
 
     async def handle_stream_connect_results(self, results):
         stream_client_id = results['client_id']

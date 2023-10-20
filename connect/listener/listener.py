@@ -66,5 +66,8 @@ class ConnectListener:
                     if batch_request:
                         await self.sio_server.emit('batch_request', batch_request, room=sid)
                     for task in self.stream_server_manager.retrieve_stream_tasks(agent.id):
-                        await self.sio_server.emit(task['event'], task['data'], room=sid)
+                        if 'data' in task.keys():
+                            await self.sio_server.emit(task['event'], task['data'], room=sid)
+                        else:
+                            await self.sio_server.emit(task['event'], room=sid)
             await self.sio_server.sleep(0.1)

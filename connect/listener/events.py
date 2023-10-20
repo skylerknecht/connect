@@ -12,6 +12,9 @@ class ListenerEvents:
         self.sio_team_server = sio_team_server
         self.sio_server = sio_server
         self.sio_server.on('stream_connect_results', self.stream_connect_results)
+        self.sio_server.on('stream_connect_request', self.stream_connect_request)
+        self.sio_server.on('stream_serve_results', self.stream_serve_results)
+        self.sio_server.on('stream_serve_stop', self.stream_serve_stop)
         self.sio_server.on('stream_disconnect_results', self.stream_disconnect_results)
         self.sio_server.on('stream_downstream_results', self.stream_downstream_results)
         self.sio_server.on('batch_response', self.batch_response)
@@ -53,7 +56,19 @@ class ListenerEvents:
 
     async def stream_connect_results(self, sid, results):
         agent_id = self.sid_to_agent_id[sid]
-        await self.stream_server_manager.handle_stream_connect(agent_id, results)
+        await self.stream_server_manager.handle_stream_connect_results(agent_id, results)
+
+    async def stream_connect_request(self, sid, results):
+        agent_id = self.sid_to_agent_id[sid]
+        await self.stream_server_manager.handle_stream_connect_request(agent_id, results)
+
+    async def stream_serve_results(self, sid, results):
+        agent_id = self.sid_to_agent_id[sid]
+        await self.stream_server_manager.handle_stream_serve_results(agent_id, results)
+
+    async def stream_serve_stop(self, sid):
+        agent_id = self.sid_to_agent_id[sid]
+        await self.stream_server_manager.handle_stream_serve_stop(agent_id)
 
     async def stream_disconnect_results(self, sid, results):
         agent_id = self.sid_to_agent_id[sid]
