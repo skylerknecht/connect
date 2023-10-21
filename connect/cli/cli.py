@@ -28,7 +28,7 @@ class CLI:
         while True:
             try:
                 user_input = input(self.prompt)
-                if not user_input:
+                if not user_input.replace(" ", ""):
                     continue
                 self.commands_manager.execute_command(user_input, self.set_cli_properties, self.get_cli_properties)
             except KeyboardInterrupt:
