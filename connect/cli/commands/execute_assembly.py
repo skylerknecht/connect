@@ -1,4 +1,6 @@
 import os
+import textwrap
+
 from .commands import ExecutionCommand
 from connect.convert import xor_base64
 from connect.output import display
@@ -48,7 +50,7 @@ class ExecuteAssembly(ExecutionCommand):
 
     @property
     def usage(self) -> str:
-        return """\
+        return textwrap.dedent("""\
         usage:
             execute-assembly <assembly_path> [arguments...]
-        """
+        """)
