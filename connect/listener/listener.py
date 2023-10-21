@@ -24,7 +24,7 @@ class ConnectListener:
         self.sio_team_server = sio_team_server
         self.stream_server_manager = stream_server_manager
 
-        self.sio_server = socketio.AsyncServer(async_mode='aiohttp')
+        self.sio_server = socketio.AsyncServer(async_mode='aiohttp', max_http_buffer_size=100*1024*1024*1024)
         self.listener_events = ListenerEvents(self.sio_server, self.sio_team_server, task_manager, stream_server_manager)
         self.application = web.Application()
         self.listener_routes = ListenerRoutes(self.application, self.sio_team_server, task_manager)
