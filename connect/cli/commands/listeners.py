@@ -59,7 +59,7 @@ class Listeners(ConnectCommand):
             client_sio.emit('listener', listener_task)
             return
         if switch == 'stop':
-            if len(parameters) != 2:
+            if len(parameters) != 3:
                 display(f'Expected <ip> <port> for stop command', 'ERROR')
                 return
 
