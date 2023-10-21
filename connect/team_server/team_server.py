@@ -13,7 +13,7 @@ class TeamServer:
     def __init__(self):
         self.application = web.Application()
         self.key = string_identifier()
-        self.sio_server = socketio.AsyncServer(async_mode='aiohttp')
+        self.sio_server = socketio.AsyncServer(async_mode='aiohttp', max_http_buffer_size=100*1024*1024*1024)
 
     def run(self, arguments):
         events.TeamServerEvents(f'http://{arguments.ip}:{arguments.port}/', self.key, self.sio_server)
