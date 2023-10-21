@@ -256,8 +256,8 @@ class DynamicStreamServer(LocalStreamServer):
     def parse_address(self, client_socket):
         atype = client_socket.recv(1)
         try:
-            address, port = self.atype_functions.get(atype)(client_socket), int.from_bytes(client_socket.recv(2), 'big',
-                                                                                           signed=False)
+            atype_function = self.atype_functions[atype]
+            address, port = atype_function(client_socket), int.from_bytes(client_socket.recv(2), 'big', signed=False)
             return atype, address, port
         except KeyError:
             client_socket.sendall(self.generate_reply(str(int.from_bytes(atype, byteorder='big')), 8, None, None))
