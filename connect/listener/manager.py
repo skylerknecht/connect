@@ -21,7 +21,11 @@ class ListenerManager:
 
         # Create and Start the listener
         new_listener = ConnectListener(ip, port, task_manager, sio_team_server, stream_server_manager)
-        await new_listener.start()
+        try:
+            await new_listener.start()
+        except Exception as e:
+            await sio_team_server.emit('error', f'{e}')
+            return
 
         # Store the listener in the dictionary
         self.listeners[(ip, port)] = new_listener
